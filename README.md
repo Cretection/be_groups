@@ -30,7 +30,6 @@ Das original Projekt wurde unter der "GPL-2.0+" veröffentlicht und wird von mir
 # English Version
 ## Description
 TYPO3 Rights-Management for backend user groups
-
 ## Community
 You are a TYPO3 developer and you like the idea of this extension? I am glad about any support!
 
