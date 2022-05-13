@@ -27,6 +27,7 @@ Mein besonderer Dank geht an ``Michael Klapper``!
 Das original Projekt wurde unter der "GPL-2.0+" veröffentlicht und wird von mir unter der "GPL-3.0+" gestellt.
 
 -----
+
 # English Version
 ## Description
 TYPO3 Rights-Management for backend user groups
