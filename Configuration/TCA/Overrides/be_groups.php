@@ -423,7 +423,7 @@ $GLOBALS['TCA']['be_groups']['types']['5'] = array (
         title,
         tx_begroups_kind,
         description,
-        --div--;LLL:EXT:be_groups/Resources/Private/Language/locallang_db.xlf:be_groups.tabs.file_mount,
+        --div--;LLL:EXT:be_groups/Resources/Private/Language/locallang_db.xlf:be_groups.tabs.file_mounts,
         file_mountpoints,
         file_permissions,
 ');
@@ -433,7 +433,7 @@ $GLOBALS['TCA']['be_groups']['types']['6'] = array (
         title,
         tx_begroups_kind,
         description,
-        --div--;LLL:EXT:be_groups/Resources/Private/Language/locallang_db.xlf:be_groups.tabs.db_mount,
+        --div--;LLL:EXT:be_groups/Resources/Private/Language/locallang_db.xlf:be_groups.tabs.db_mounts,
         db_mountpoints,'
 );
 

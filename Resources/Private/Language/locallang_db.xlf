@@ -147,7 +147,21 @@
             <trans-unit id="be_groups.tabs.ws_cat" xml:space="preserve">
                 <source>Workspaces and Categories</source>
             </trans-unit>
+            <trans-unit id="be_groups.tabs.file_mounts" xml:space="preserve">
+                <source>File mounts</source>
+            </trans-unit>
+            <trans-unit id="be_groups.tabs.db_mounts" xml:space="preserve">
+                <source>Page Mounts</source>
+            </trans-unit>
+            <trans-unit id="be_groups.tabs.tsconfig" xml:space="preserve">
+                <source>TSconfig</source>
+            </trans-unit>
+            <trans-unit id="be_groups.tabs.workspace_rights" xml:space="preserve">
+                <source>Workspaces</source>
+            </trans-unit>
+            <trans-unit id="be_groups.tabs.category_perms" xml:space="preserve">
+                <source>Categories</source>
+            </trans-unit>
         </body>
     </file>
 </xliff>
-
