@@ -30,6 +30,7 @@ defined('TYPO3_MODE') or die();
 
 use TYPO3\CMS\Core\Utility\PathUtility;
 use TYPO3\CMS\Core\Utility\ExtensionManagementUtility;
+use Cretection\BeGroups\Service\TceMain;
 
 $ll = 'LLL:EXT:be_groups/Resources/Private/Language/locallang_db.xlf:';
 
@@ -276,7 +277,7 @@ $filePermissions = '--div--;LLL:EXT:be_groups/Resources/Private/Language/localla
 
 // register the new types field
 $GLOBALS['TCA']['be_groups']['ctrl']['default_sortby']      = 'ORDER BY tx_begroups_kind, title ASC';
-$GLOBALS['TCA']['be_groups']['ctrl']['label_userFunc']      = 'Cretection\BeGroups\Service\TceMain\LabelHelper::class->getCombinedTitle';
+$GLOBALS['TCA']['be_groups']['ctrl']['label_userFunc']      = 'Cretection\BeGroups\Service\TceMain\LabelHelper->getCombinedTitle';
 $GLOBALS['TCA']['be_groups']['ctrl']['type']                = 'tx_begroups_kind';
 $GLOBALS['TCA']['be_groups']['ctrl']['typeicon_column']     = 'tx_begroups_kind';
 $GLOBALS['TCA']['be_groups']['ctrl']['typeicon_classes']    = array (
