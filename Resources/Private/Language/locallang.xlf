@@ -4,7 +4,7 @@
 		<header/>
 		<body>
 			<trans-unit id="label.prefix.0">
-				<source></source>
+				<source>Default: </source>
 			</trans-unit>
 			<trans-unit id="label.prefix.1">
 				<source>R: </source>
