@@ -29,7 +29,7 @@
 $EM_CONF[$_EXTKEY] = array(
   'title' => 'Improved backend groups management interface.',
   'description' => 'This extension provide several new options to restructure large amount of be_groups records.',
-  'category' => 'misc',
+  'category' => 'be',
   'author_company' => 'Cretection',
   'author' => 'Jonathan Starck',
   'author_email' => 'info@cretection.it',
