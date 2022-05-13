@@ -1,7 +1,6 @@
 <?php
 
 namespace Cretection\BeGroups\Service\TceMain;
-
 use TYPO3\CMS\Extbase\Utility\LocalizationUtility;
 
 /***************************************************************
