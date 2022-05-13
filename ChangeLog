@@ -1,3 +1,14 @@
+# ChangeLog
+
+11-05-2022 Jonathan Starck <info@cretection.it>
+    * Change Namespace AOE to Cretection because I am not part of AOE
+    * Replace deprecated functions like "\TYPO3\CMS\Core\Utility\ExtensionManagementUtility::siteRelPath()"
+    * Comment out deprecated functions like "\TYPO3\CMS\Backend\Utility\BackendUtility()"
+    * Code clean up
+    * Add svg-Icons
+    * Modified README.md
+    * Modified .xlf Files
+    
 02-03-2016 Tomas Norre Mikkelsen <tomas.mikkelsen@aoe.com>
 	* Replace deprecated function calls like "t3lib_div"
 	* Switched to namespaces

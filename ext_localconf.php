@@ -6,4 +6,4 @@ if (is_array($configurationArray) && array_key_exists('explicitAllow', $configur
 	$GLOBALS['TYPO3_CONF_VARS']['BE']['explicitADmode'] = 'explicitAllow';
 }
 
-$GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['t3lib/class.t3lib_tcemain.php']['processDatamapClass'][] = \AOE\BeGroups\Service\TceMain\ProcessFieldArray::class;
+$GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['t3lib/class.t3lib_tcemain.php']['processDatamapClass'][] = Cretection\BeGroups\Service\TceMain\ProcessFieldArray::class;

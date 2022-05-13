@@ -4,7 +4,7 @@
 		<header/>
 		<body>
 			<trans-unit id="label.prefix.0">
-				<source></source>
+				<source>Default: </source>
 			</trans-unit>
 			<trans-unit id="label.prefix.1">
 				<source>R: </source>
@@ -30,6 +30,9 @@
 			<trans-unit id="label.prefix.8">
 				<source>WS: </source>
 			</trans-unit>
+			<trans-unit id="label.prefix.9">
+				<source>C: </source>
+			</trans-unit>			
 		</body>
 	</file>
 </xliff>

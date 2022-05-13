@@ -1,86 +1,153 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes" ?>
 <xliff version="1.0">
-	<file source-language="en" datatype="plaintext" original="messages" date="2012-07-06T08:52:08Z" product-name="be_groups">
-		<header/>
-		<body>
-			<trans-unit id="be_groups.tx_begroups_kind" xml:space="preserve">
-				<source>Kind of</source>
-			</trans-unit>
-			<trans-unit id="be_groups.tabs.page_access" xml:space="preserve">
-				<source>Page access group</source>
-			</trans-unit>
-			<trans-unit id="be_groups.tabs.file_mount" xml:space="preserve">
-				<source>File mount</source>
-			</trans-unit>
-			<trans-unit id="be_groups.tabs.db_mount" xml:space="preserve">
-				<source>Page mount</source>
-			</trans-unit>
-			<trans-unit id="be_groups.tabs.tsconfig" xml:space="preserve">
-				<source>UserTSconfig</source>
-			</trans-unit>
-			<trans-unit id="be_groups.tabs.mountAndWs" xml:space="preserve">
-				<source>Mount and WS</source>
-			</trans-unit>
-			<trans-unit id="be_groups.tabs.rights" xml:space="preserve">
-				<source>Rights</source>
-			</trans-unit>
-			<trans-unit id="be_groups.tabs.language" xml:space="preserve">
-				<source>Language</source>
-			</trans-unit>
-			<trans-unit id="be_groups.tabs.custom_options" xml:space="preserve">
-				<source>Access custom modul options</source>
-			</trans-unit>
-			<trans-unit id="be_groups.tabs.workspace_rights" xml:space="preserve">
-				<source>Access workspace</source>
-			</trans-unit>
-			<trans-unit id="be_groups.tabs.modul_rights" xml:space="preserve">
-				<source>Access modul</source>
-			</trans-unit>
-			<trans-unit id="be_groups.tabs.table_rights" xml:space="preserve">
-				<source>Access tables</source>
-			</trans-unit>
-			<trans-unit id="be_groups.tabs.page_rights" xml:space="preserve">
-				<source>Access page</source>
-			</trans-unit>
-			<trans-unit id="be_groups.tabs.exclude_rights" xml:space="preserve">
-				<source>Access excludefields</source>
-			</trans-unit>
-			<trans-unit id="be_groups.tabs.pagecontent_rights" xml:space="preserve">
-				<source>Access pagecontent</source>
-			</trans-unit>
-			<trans-unit id="be_groups.tabs.language_rights" xml:space="preserve">
-				<source>Access languages</source>
-			</trans-unit>
-			<trans-unit id="be_groups.tabs.file_permissions" xml:space="preserve">
-				<source>File permissions</source>
-			</trans-unit>
-			<trans-unit id="be_groups.tx_begroups_kind.I.0" xml:space="preserve">
-				<source>Default all</source>
-			</trans-unit>
-			<trans-unit id="be_groups.tx_begroups_kind.I.1" xml:space="preserve">
-				<source>Rights</source>
-			</trans-unit>
-			<trans-unit id="be_groups.tx_begroups_kind.I.2" xml:space="preserve">
-				<source>Language</source>
-			</trans-unit>
-			<trans-unit id="be_groups.tx_begroups_kind.I.3" xml:space="preserve">
-				<source>Meta</source>
-			</trans-unit>
-			<trans-unit id="be_groups.tx_begroups_kind.I.4" xml:space="preserve">
-				<source>Page access group</source>
-			</trans-unit>
-			<trans-unit id="be_groups.tx_begroups_kind.I.5" xml:space="preserve">
-				<source>File mount</source>
-			</trans-unit>
-			<trans-unit id="be_groups.tx_begroups_kind.I.6" xml:space="preserve">
-				<source>Page mount</source>
-			</trans-unit>
-			<trans-unit id="be_groups.tx_begroups_kind.I.7" xml:space="preserve">
-				<source>TSconfig</source>
-			</trans-unit>
-			<trans-unit id="be_groups.tx_begroups_kind.I.8" xml:space="preserve">
-				<source>Workspace</source>
-			</trans-unit>
-		</body>
-	</file>
+    <file source-language="en" datatype="plaintext" original="messages" date="2022-05-12T16:34:45Z" product-name="be-groups">
+        <header/>
+        <body>
+            <trans-unit id="be_groups.tx_begroups_kind" xml:space="preserve">
+                <source>Kind of</source>
+            </trans-unit>
+            <trans-unit id="be_groups.tx_begroups_kind.I.0" xml:space="preserve">
+                <source>Default all</source>
+            </trans-unit>
+            <trans-unit id="be_groups.tx_begroups_kind.I.1" xml:space="preserve">
+                <source>Rights</source>
+            </trans-unit>
+            <trans-unit id="be_groups.tx_begroups_kind.I.2" xml:space="preserve">
+                <source>Language</source>
+            </trans-unit>
+            <trans-unit id="be_groups.tx_begroups_kind.I.3" xml:space="preserve">
+                <source>Meta</source>
+            </trans-unit>
+            <trans-unit id="be_groups.tx_begroups_kind.I.4" xml:space="preserve">
+                <source>Page access group</source>
+            </trans-unit>
+            <trans-unit id="be_groups.tx_begroups_kind.I.5" xml:space="preserve">
+                <source>File mount</source>
+            </trans-unit>
+            <trans-unit id="be_groups.tx_begroups_kind.I.6" xml:space="preserve">
+                <source>Page mount</source>
+            </trans-unit>
+            <trans-unit id="be_groups.tx_begroups_kind.I.7" xml:space="preserve">
+                <source>TSconfig</source>
+            </trans-unit>
+            <trans-unit id="be_groups.tx_begroups_kind.I.8" xml:space="preserve">
+                <source>Workspace</source>
+            </trans-unit>
+            <trans-unit id="be_groups.tx_begroups_kind.I.9" xml:space="preserve">
+                <source>Category</source>
+            </trans-unit>
+            <trans-unit id="be_groups.subgroup.rights" xml:space="preserve">
+                <source>Rights</source>
+            </trans-unit>
+            <trans-unit id="be_groups.subgroup.rights.div" xml:space="preserve">
+                <source>Groups of kind "Rights"</source>
+            </trans-unit>
+            <trans-unit id="be_groups.subgroup.rights" xml:space="preserve">
+                <source>Rights</source>
+            </trans-unit>
+            <trans-unit id="be_groups.subgroup.rights.description" xml:space="preserve">
+                <source>Select a group of kind "Rights" whose rights are to be inherited</source>
+            </trans-unit>
+            <trans-unit id="be_groups.subgroup.rights.div" xml:space="preserve">
+                <source>Groups of kind "Rights"</source>
+            </trans-unit>
+            <trans-unit id="be_groups.subgroup.languages" xml:space="preserve">
+                <source>Languages</source>
+            </trans-unit>
+            <trans-unit id="be_groups.subgroup.languages.description" xml:space="preserve">
+                <source></source>
+            </trans-unit>
+            <trans-unit id="be_groups.subgroup.languages.div" xml:space="preserve">
+                <source>Groups of kind "Language"</source>
+            </trans-unit>
+            <trans-unit id="be_groups.subgroup.page_access" xml:space="preserve">
+                <source>Page access group</source>
+            </trans-unit>
+            <trans-unit id="be_groups.subgroup.page_access.description" xml:space="preserve">
+                <source></source>
+            </trans-unit>
+            <trans-unit id="be_groups.subgroup.page_access.div" xml:space="preserve">
+                <source>Groups of kind "Page access group"</source>
+            </trans-unit>
+            <trans-unit id="be_groups.subgroup.file_mounts" xml:space="preserve">
+                <source>File mounts</source>
+            </trans-unit>
+            <trans-unit id="be_groups.subgroup.file_mounts.description" xml:space="preserve">
+                <source></source>
+            </trans-unit>
+            <trans-unit id="be_groups.subgroup.file_mounts.div" xml:space="preserve">
+                <source>Groups of kind "File mount"</source>
+            </trans-unit>
+            <trans-unit id="be_groups.subgroup.page_mounts" xml:space="preserve">
+                <source>Page mounts</source>
+            </trans-unit>
+            <trans-unit id="be_groups.subgroup.page_mounts.description" xml:space="preserve">
+                <source></source>
+            </trans-unit>
+            <trans-unit id="be_groups.subgroup.page_mounts.div" xml:space="preserve">
+                <source>Groups of kind "Page mount"</source>
+            </trans-unit>
+            <trans-unit id="be_groups.subgroup.tsconfig" xml:space="preserve">
+                <source>TSconfig</source>
+            </trans-unit>
+            <trans-unit id="be_groups.subgroup.tsconfig.description" xml:space="preserve">
+                <source></source>
+            </trans-unit>
+            <trans-unit id="be_groups.subgroup.tsconfig.div" xml:space="preserve">
+                <source>Groups of kind "TSconfig"</source>
+            </trans-unit>
+            <trans-unit id="be_groups.subgroup.workspaces" xml:space="preserve">
+                <source>Workspaces</source>
+            </trans-unit>
+            <trans-unit id="be_groups.subgroup.workspaces.description" xml:space="preserve">
+                <source></source>
+            </trans-unit>
+            <trans-unit id="be_groups.subgroup.workspaces.div" xml:space="preserve">
+                <source>Groups of kind "Workspace"</source>
+            </trans-unit>
+            <trans-unit id="be_groups.subgroup.categories" xml:space="preserve">
+                <source>Categories</source>
+            </trans-unit>
+            <trans-unit id="be_groups.subgroup.categories.description" xml:space="preserve">
+                <source></source>
+            </trans-unit>
+            <trans-unit id="be_groups.subgroup.categories.div" xml:space="preserve">
+                <source>Groups of kind "Category"</source>
+            </trans-unit>
+            <trans-unit id="be_groups.tabs.modul_rights" xml:space="preserve">
+                <source>Access modules</source>
+            </trans-unit>
+            <trans-unit id="be_groups.tabs.table_rights" xml:space="preserve">
+                <source>Access tables</source>
+            </trans-unit>
+            <trans-unit id="be_groups.tabs.page_rights" xml:space="preserve">
+                <source>Access pages</source>
+            </trans-unit>
+            <trans-unit id="be_groups.tabs.file_permissions" xml:space="preserve">
+                <source>File permissions</source>
+            </trans-unit>
+            <trans-unit id="be_groups.tabs.widget_rights" xml:space="preserve">
+                <source>Access widgets</source>
+            </trans-unit>
+            <trans-unit id="be_groups.tabs.mfa_rights" xml:space="preserve">
+                <source>Access mfa</source>
+            </trans-unit>
+            <trans-unit id="be_groups.tabs.language_rights" xml:space="preserve">
+                <source>Access languages</source>
+            </trans-unit>
+            <trans-unit id="be_groups.tabs.rights" xml:space="preserve">
+                <source>Rights</source>
+            </trans-unit>
+            <trans-unit id="be_groups.tabs.mounts" xml:space="preserve">
+                <source>Mounts</source>
+            </trans-unit>
+            <trans-unit id="be_groups.tabs.languages" xml:space="preserve">
+                <source>Languages</source>
+            </trans-unit>
+            <trans-unit id="be_groups.tabs.ws_cat" xml:space="preserve">
+                <source>Workspaces and Categories</source>
+            </trans-unit>
+        </body>
+    </file>
 </xliff>
+

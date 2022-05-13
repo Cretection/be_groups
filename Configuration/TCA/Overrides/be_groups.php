@@ -1,185 +1,304 @@
 <?php
-if (!defined ('TYPO3_MODE')) die ('Access denied.');
+defined('TYPO3_MODE') or die();
 
-$beGroupKindIconPath = \TYPO3\CMS\Core\Utility\ExtensionManagementUtility::siteRelPath('be_groups') . "Resources/Public/Images/selicon_be_groups_tx_begroups_kind_";
+/***************************************************************
+ *  Copyright notice
+ * 
+ *  (c) 2022 Jonathan Starck <info@cretection.it>
+ *
+ *  Originally
+ *  (c) 2012 Michael Klapper <michael.klapper@morphodo.com>
+ *
+ *  All rights reserved
+ *
+ *  This script is part of the TYPO3 project. The TYPO3 project is
+ *  free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  The GNU General Public License can be found at
+ *  http://www.gnu.org/copyleft/gpl.html.
+ *
+ *  This script is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  This copyright notice MUST APPEAR in all copies of the script!
+ ***************************************************************/
 
-$tempColumns = array (
-    "tx_begroups_kind" => array (
-        "exclude" => 1,
-        "label"   => "LLL:EXT:be_groups/Resources/Private/Language/locallang_db.xml:be_groups.tx_begroups_kind",
-        "config"  => array (
-            "type"  => "select",
-            "renderType" => "selectSingle",
-            "showIconTable" => true,
-            "items" => array (
-                array("LLL:EXT:be_groups/Resources/Private/Language/locallang_db.xml:be_groups.tx_begroups_kind.I.0", "0", $beGroupKindIconPath . "0.gif"),
-                array("LLL:EXT:be_groups/Resources/Private/Language/locallang_db.xml:be_groups.tx_begroups_kind.I.1", "1", $beGroupKindIconPath . "1.gif"),
-                array("LLL:EXT:be_groups/Resources/Private/Language/locallang_db.xml:be_groups.tx_begroups_kind.I.2", "2", $beGroupKindIconPath . "2.gif"),
-                array("LLL:EXT:be_groups/Resources/Private/Language/locallang_db.xml:be_groups.tx_begroups_kind.I.3", "3", $beGroupKindIconPath . "3.gif"),
-                array("LLL:EXT:be_groups/Resources/Private/Language/locallang_db.xml:be_groups.tx_begroups_kind.I.4", "4", $beGroupKindIconPath . "4.gif"),
-                array("LLL:EXT:be_groups/Resources/Private/Language/locallang_db.xml:be_groups.tx_begroups_kind.I.5", "5", $beGroupKindIconPath . "5.gif"),
-                array("LLL:EXT:be_groups/Resources/Private/Language/locallang_db.xml:be_groups.tx_begroups_kind.I.6", "6", $beGroupKindIconPath . "6.gif"),
-                array("LLL:EXT:be_groups/Resources/Private/Language/locallang_db.xml:be_groups.tx_begroups_kind.I.7", "7", $beGroupKindIconPath . "7.gif"),
-                array("LLL:EXT:be_groups/Resources/Private/Language/locallang_db.xml:be_groups.tx_begroups_kind.I.8", "8", $beGroupKindIconPath . "8.gif"),
-            ),
+use TYPO3\CMS\Core\Utility\PathUtility;
+use TYPO3\CMS\Core\Utility\ExtensionManagementUtility;
+
+$ll = 'LLL:EXT:be_groups/Resources/Private/Language/locallang_db.xlf:';
+
+$beGroupKindIconPath = PathUtility::stripPathSitePrefix(ExtensionManagementUtility::extPath('be_groups')) . "Resources/Public/Icons/svgs/selicon_be_groups_tx_begroups_kind_";
+
+
+$tempColumns = [
+    'tx_begroups_kind' => [
+        'exclude' => 1,
+        'label'   => $ll . 'be_groups.tx_begroups_kind',
+        'config'  => [
+            'type'  => 'select',
+            'renderType' => 'selectSingle',
+            'showIconTable' => 1,
+            "items" => [
+                [$ll . 'be_groups.tx_begroups_kind.I.0', '0', $beGroupKindIconPath . '0.svg'],
+                [$ll . 'be_groups.tx_begroups_kind.I.1', '1', $beGroupKindIconPath . '1.svg'],
+                [$ll . 'be_groups.tx_begroups_kind.I.2', '2', $beGroupKindIconPath . '2.svg'],
+                [$ll . 'be_groups.tx_begroups_kind.I.3', '3', $beGroupKindIconPath . '3.svg'],
+                [$ll . 'be_groups.tx_begroups_kind.I.4', '4', $beGroupKindIconPath . '4.svg'],
+                [$ll . 'be_groups.tx_begroups_kind.I.5', '5', $beGroupKindIconPath . '5.svg'],
+                [$ll . 'be_groups.tx_begroups_kind.I.6', '6', $beGroupKindIconPath . '6.svg'],
+                [$ll . 'be_groups.tx_begroups_kind.I.7', '7', $beGroupKindIconPath . '7.svg'],
+                [$ll . 'be_groups.tx_begroups_kind.I.8', '8', $beGroupKindIconPath . '8.svg'],
+                [$ll . 'be_groups.tx_begroups_kind.I.9', '9', $beGroupKindIconPath . '9.svg'],
+            ],
             "size"     => 1,
             "maxitems" => 1,
-        )
-    ),
-    'subgroup_fm' => array(
+        ],
+    ],
+    'subgroup_r' => [
         'exclude' => 1,
-        "label"   => 'LLL:EXT:be_groups/Resources/Private/Language/locallang_db.xml:be_groups.tabs.file_mount',
-        "config"  => array (
+        'label'   => $ll . 'be_groups.subgroup.rights',
+        'description' => $ll . 'be_groups.subgroup.rights.description',
+        'config'  => [
             'type' => 'select',
             'renderType' => 'selectCheckBox',
-            'foreign_table' => 'be_groups',
-            'foreign_table_where' => ' AND be_groups.tx_begroups_kind = 5',
-            'size' => 10,
-            'maxitems' => 999,
-            'minitems' => 0,
-            'multiple' => TRUE,
-        )
-    ),
-    'subgroup_pm' => array(
-        'exclude' => 1,
-        "label"   => 'LLL:EXT:be_groups/Resources/Private/Language/locallang_db.xml:be_groups.tabs.db_mount',
-        "config"  => array (
-            'type' => 'select',
-            'renderType' => 'selectCheckBox',
-            'foreign_table' => 'be_groups',
-            'foreign_table_where' => ' AND be_groups.tx_begroups_kind = 6',
-            'size' => 10,
-            'maxitems' => 999,
-            'minitems' => 0,
-            'multiple' => TRUE,
-        )
-    ),
-    'subgroup_ws' => array(
-        'exclude' => 1,
-        "label"   => 'LLL:EXT:be_groups/Resources/Private/Language/locallang_db.xml:be_groups.tabs.workspace_rights',
-        "config"  => array (
-            'type' => 'select',
-            'renderType' => 'selectCheckBox',
-            'foreign_table' => 'be_groups',
-            'foreign_table_where' => ' AND be_groups.tx_begroups_kind = 8',
-            'size' => 10,
-            'maxitems' => 999,
-            'minitems' => 0,
-            'multiple' => TRUE,
-        )
-    ),
-    'subgroup_r' => array(
-        'exclude' => 1,
-        "label"   => 'LLL:EXT:be_groups/Resources/Private/Language/locallang_db.xml:be_groups.tabs.rights',
-        "config"  => array (
-            'type' => 'select',
-            'renderType' => 'selectCheckBox',
+            'appearance' => [
+                'expandAll' => 1,
+            ],
+            'items' => [
+                [
+                    $ll . 'be_groups.subgroup.rights.div',
+                    '--div--',
+                ],
+            ],
             'foreign_table' => 'be_groups',
             'foreign_table_where' => ' AND be_groups.tx_begroups_kind = 1',
             'size' => 10,
             'maxitems' => 999,
             'minitems' => 0,
-            'multiple' => TRUE,
-        )
-    ),
-    'subgroup_pa' => array(
+            'multiple' => 1,
+        ],
+    ],
+    'subgroup_l' => [
         'exclude' => 1,
-        "label"   => 'LLL:EXT:be_groups/Resources/Private/Language/locallang_db.xml:be_groups.tabs.page_access',
-        "config"  => array (
+        'label'   => $ll . 'be_groups.subgroup.languages',
+        'description' => $ll . 'be_groups.subgroup.languages.description',
+        'config'  => [
             'type' => 'select',
             'renderType' => 'selectCheckBox',
-            'foreign_table' => 'be_groups',
-            'foreign_table_where' => ' AND be_groups.tx_begroups_kind = 4',
-            'size' => 10,
-            'maxitems' => 999,
-            'minitems' => 0,
-            'multiple' => TRUE,
-        )
-    ),
-    'subgroup_ts' => array(
-        'exclude' => 1,
-        "label"   => 'LLL:EXT:be_groups/Resources/Private/Language/locallang_db.xml:be_groups.tabs.tsconfig',
-        "config"  => array (
-            'type' => 'select',
-            'renderType' => 'selectCheckBox',
-            'foreign_table' => 'be_groups',
-            'foreign_table_where' => ' AND be_groups.tx_begroups_kind = 7',
-            'size' => 10,
-            'maxitems' => 999,
-            'minitems' => 0,
-            'multiple' => TRUE,
-        )
-    ),
-    'subgroup_l' => array(
-        'exclude' => 1,
-        "label"   => 'LLL:EXT:be_groups/Resources/Private/Language/locallang_db.xml:be_groups.tabs.language',
-        "config"  => array (
-            'type' => 'select',
-            'renderType' => 'selectCheckBox',
+            'appearance' => [
+                'newRecordLinkPosition' => 'bottom',
+                'expandAll' => 1,
+                'expandSingle' => 1,
+            ],
+            'items' => [
+                [
+                    $ll . 'be_groups.subgroup.languages.div',
+                    '--div--',
+                ],
+            ],
             'foreign_table' => 'be_groups',
             'foreign_table_where' => ' AND be_groups.tx_begroups_kind = 2',
             'size' => 10,
             'maxitems' => 999,
             'minitems' => 0,
-            'multiple' => TRUE,
-            'appearance' => array(
-                'newRecordLinkPosition' => 'bottom',
-                'collapseAll' => 1,
-                'expandSingle' => 1,
-            ),
-        )
-    ),
-);
+            'multiple' => 1,
+        ],
+    ],
+    'subgroup_pa' => [
+        'exclude' => 1,
+        'label'   => $ll . 'be_groups.subgroup.page_access',
+        'description' => $ll . 'be_groups.subgroup.page_access.description',
+        'config'  => [
+            'type' => 'select',
+            'renderType' => 'selectCheckBox',
+            'appearance' => [
+                'expandAll' => 1,
+            ],
+            'items' => [
+                [
+                    $ll . 'be_groups.subgroup.page_access.div',
+                    '--div--',
+                ],
+            ],
+            'foreign_table' => 'be_groups',
+            'foreign_table_where' => ' AND be_groups.tx_begroups_kind = 4',
+            'size' => 10,
+            'maxitems' => 999,
+            'minitems' => 0,
+            'multiple' => 1,
+        ],
+    ],
+    'subgroup_fm' => [
+        'exclude' => 1,
+        'label'   => $ll . 'be_groups.subgroup.file_mounts',
+        'description' => $ll . 'be_groups.subgroup.file_mounts.description',
+        'config'  => [
+            'type' => 'select',
+            'renderType' => 'selectCheckBox',
+            'appearance' => [
+                'expandAll' => 1,
+            ],
+            'items' => [
+                [
+                    $ll . 'be_groups.subgroup.file_mounts.div',
+                    '--div--',
+                ],
+            ],
+            'foreign_table' => 'be_groups',
+            'foreign_table_where' => ' AND be_groups.tx_begroups_kind = 5',
+            'size' => 10,
+            'maxitems' => 999,
+            'minitems' => 0,
+            'multiple' => 1,
+        ],
+    ],
+    'subgroup_pm' => [
+        'exclude' => 1,
+        'label'   => $ll . 'be_groups.subgroup.page_mounts',
+        'description' => $ll . 'be_groups.subgroup.page_mounts.description',
+        'config'  => [
+            'type' => 'select',
+            'renderType' => 'selectCheckBox',
+            'appearance' => [
+                'expandAll' => 1,
+            ],
+            'items' => [
+                [
+                    $ll . 'be_groups.subgroup.page_mounts.div',
+                    '--div--',
+                ],
+            ],
+            'foreign_table' => 'be_groups',
+            'foreign_table_where' => ' AND be_groups.tx_begroups_kind = 6',
+            'size' => 10,
+            'maxitems' => 999,
+            'minitems' => 0,
+            'multiple' => 1,
+        ],
+    ],
+    'subgroup_ts' => [
+        'exclude' => 1,
+        'label'   => $ll . 'be_groups.subgroup.tsconfig',
+        'description' => $ll . 'be_groups.subgroup.tsconfig.description',
+        'config'  => [
+            'type' => 'select',
+            'renderType' => 'selectCheckBox',
+            'appearance' => [
+                'expandAll' => 1,
+            ],
+            'items' => [
+                [
+                    $ll . 'be_groups.subgroup.tsconfig.div',
+                    '--div--',
+                ],
+            ],
+            'foreign_table' => 'be_groups',
+            'foreign_table_where' => ' AND be_groups.tx_begroups_kind = 7',
+            'size' => 10,
+            'maxitems' => 999,
+            'minitems' => 0,
+            'multiple' => 1,
+        ],
+    ],
+    'subgroup_ws' => [
+        'exclude' => 1,
+        'label'   => $ll . 'be_groups.subgroup.workspaces',
+        'description' => $ll . 'be_groups.subgroup.workspaces.description',
+        'config'  => [
+            'type' => 'select',
+            'renderType' => 'selectCheckBox',
+            'appearance' => [
+                'expandAll' => 1,
+            ],
+            'items' => [
+                [
+                    $ll . 'be_groups.subgroup.workspaces.div',
+                    '--div--',
+                ],
+            ],
+            'foreign_table' => 'be_groups',
+            'foreign_table_where' => ' AND be_groups.tx_begroups_kind = 8',
+            'size' => 10,
+            'maxitems' => 999,
+            'minitems' => 0,
+            'multiple' => 1,
+        ],
+    ],
+    'subgroup_cat' => [
+        'exclude' => 1,
+        'label'   => $ll . 'be_groups.subgroup.categories',
+        'description' => $ll . 'be_groups.subgroup.categories.description',
+        'config'  => [
+            'type' => 'select',
+            'renderType' => 'selectCheckBox',
+            'appearance' => [
+                'expandAll' => 1,
+            ],
+            'items' => [
+                [
+                    $ll . 'be_groups.subgroup.categories.div',
+                    '--div--'
+                ],
+            ],
+            'foreign_table' => 'be_groups',
+            'foreign_table_where' => ' AND be_groups.tx_begroups_kind = 9',
+            'size' => 10,
+            'maxitems' => 999,
+            'minitems' => 0,
+            'multiple' => 1,
+        ],
+    ],
+];
 
-\TYPO3\CMS\Core\Utility\ExtensionManagementUtility::addTCAcolumns("be_groups", $tempColumns, 1);
-\TYPO3\CMS\Core\Utility\ExtensionManagementUtility::addToAllTCAtypes("be_groups","tx_begroups_kind;;;;1-1-1",'','after:title');
+
+ExtensionManagementUtility::addTCAcolumns("be_groups", $tempColumns, 1);
+ExtensionManagementUtility::addToAllTCAtypes("be_groups","tx_begroups_kind;;;;1-1-1",'','after:title');
 unset($tempColumns);
 
 
-$tabExtended       = '';
+/* $tabExtended       = '';
 $tabExtendedFields = '';
-if (\TYPO3\CMS\Core\Utility\ExtensionManagementUtility::isLoaded('tt_news')) {
+if (ExtensionManagementUtility::isLoaded('news')) {
     $tabExtendedFields .= 'tt_news_categorymounts;;;;1-1-1, ';
-}
-if (\TYPO3\CMS\Core\Utility\ExtensionManagementUtility::isLoaded('dam')) {
-    $tabExtendedFields .= 'tx_dam_mountpoints;;;;1-1-1, ';
-}
-if (\TYPO3\CMS\Core\Utility\ExtensionManagementUtility::isLoaded('templavoila')) {
-    $tabExtendedFields .= 'tx_templavoila_access;;;;1-1-1, ';
-}
-if (\TYPO3\CMS\Core\Utility\ExtensionManagementUtility::isLoaded('snowbabel')) {
-    $tabExtendedFields .= 'tx_snowbabel_extensions;;;;1-1-1,tx_snowbabel_languages;;;;1-1-1, ';
 }
 if (trim($tabExtendedFields) != '') {
     $tabExtended = '--div--;LLL:EXT:core/Resources/Private/Language/Form/locallang_tabs.xlf:extended, ' . $tabExtendedFields;
 }
 
 $filePermissions = '--div--;LLL:EXT:be_groups/Resources/Private/Language/locallang_db.xlf:be_groups.tabs.file_permissions, file_permissions,';
-
+ */
 
 // register the new types field
-$GLOBALS['TCA']['be_groups']['ctrl']['default_sortby'] = 'ORDER BY tx_begroups_kind, title ASC';
-$GLOBALS['TCA']['be_groups']['ctrl']['label_userFunc'] = 'AOE\\BeGroups\\Service\\TceMain\\LabelHelper->getCombinedTitle';
-$GLOBALS['TCA']['be_groups']['ctrl']['type']            = 'tx_begroups_kind';
-$GLOBALS['TCA']['be_groups']['ctrl']['typeicon_column'] = 'tx_begroups_kind';
-$GLOBALS['TCA']['be_groups']['ctrl']['typeicons']       = array (
-    '1' => $beGroupKindIconPath . '1.gif',
-    '2' => $beGroupKindIconPath . '2.gif',
-    '3' => $beGroupKindIconPath . '3.gif',
-    '4' => $beGroupKindIconPath . '4.gif',
-    '5' => $beGroupKindIconPath . '5.gif',
-    '6' => $beGroupKindIconPath . '6.gif',
-    '7' => $beGroupKindIconPath . '7.gif',
-    '8' => $beGroupKindIconPath . '8.gif',
+$GLOBALS['TCA']['be_groups']['ctrl']['default_sortby']      = 'ORDER BY tx_begroups_kind, title ASC';
+$GLOBALS['TCA']['be_groups']['ctrl']['label_userFunc']      = 'Cretection\BeGroups\Service\TceMain\LabelHelper->getCombinedTitle';
+$GLOBALS['TCA']['be_groups']['ctrl']['type']                = 'tx_begroups_kind';
+$GLOBALS['TCA']['be_groups']['ctrl']['typeicon_column']     = 'tx_begroups_kind';
+$GLOBALS['TCA']['be_groups']['ctrl']['typeicon_classes']    = array (
+    '0' => 'tx_begroups_kind_0',
+    '1' => 'tx_begroups_kind_1',
+    '2' => 'tx_begroups_kind_2',
+    '3' => 'tx_begroups_kind_3',
+    '4' => 'tx_begroups_kind_4',
+    '5' => 'tx_begroups_kind_5',
+    '6' => 'tx_begroups_kind_6',
+    '7' => 'tx_begroups_kind_7',
+    '8' => 'tx_begroups_kind_8',
+    '9' => 'tx_begroups_kind_9',
 );
 
 
 // Improve visibility of subgroups in usergroup field to show only META groups
 $GLOBALS['TCA']['be_users']['columns']['usergroup']['config']['foreign_table_where'] = ' AND hide_in_lists = 0 ORDER BY be_groups.tx_begroups_kind, be_groups.title';
-$GLOBALS['TCA']['be_groups']['columns']['file_mountpoints']['config']['renderType']= 'selectCheckBox';
-$GLOBALS['TCA']['be_groups']['columns']['file_mountpoints']['config']['wizards'] = null;
+/* $GLOBALS['TCA']['be_groups']['columns']['file_mountpoints']['config']['renderType']= 'selectCheckBox';
+$GLOBALS['TCA']['be_groups']['columns']['file_mountpoints']['config']['wizards'] = null; */
 $GLOBALS['TCA']['be_groups']['columns']['subgroup']['config']['foreign_table_where'] = 'AND tx_begroups_kind NOT IN(3) AND NOT(be_groups.uid = ###THIS_UID###) AND be_groups.hidden=0 ORDER BY be_groups.tx_begroups_kind,be_groups.title';
-$GLOBALS['TCA']['be_groups']['columns']['subgroup']['config']['wizards']['add'] = array(
+/*$GLOBALS['TCA']['be_groups']['columns']['subgroup']['config']['wizards']['add'] = array(
     'icon' => 'action-add',
     'params' => array(
         'pid' => 0,
@@ -191,7 +310,7 @@ $GLOBALS['TCA']['be_groups']['columns']['subgroup']['config']['wizards']['add'] 
     ),
     'title' => 'LLL:EXT:lang/locallang_tca.xml:be_users.usergroup_add_title',
     'type' => 'script',
-);
+); */
 
 /**
 0 = all
@@ -203,15 +322,146 @@ $GLOBALS['TCA']['be_groups']['columns']['subgroup']['config']['wizards']['add'] 
 6 = starting point of page tree
 7 = tsconfig
 8 = workspace
+9 = category
  */
 
 // define the new types and their showitems
-$GLOBALS['TCA']['be_groups']['types']['0'] = array ('showitem' => 'hidden;;;;1-1-1, title;;;;2-2-2,tx_begroups_kind, description, subgroup;;;;3-3-3, --div--;LLL:EXT:lang/locallang_tca.xml:be_groups.tabs.base_rights, inc_access_lists;;;;1-1-1, groupMods, tables_select, tables_modify, pagetypes_select, non_exclude_fields, explicit_allowdeny , allowed_languages;;;;2-2-2, custom_options;;;;3-3-3, --div--;LLL:EXT:lang/locallang_tca.xml:be_groups.tabs.mounts_and_workspaces, db_mountpoints;;;;1-1-1,file_mountpoints, fileoper_perms, workspace_perms;;;;2-2-2, --div--;LLL:EXT:lang/locallang_tca.xml:be_groups.tabs.options, lockToDomain;;;;1-1-1, hide_in_lists;;;;2-2-2, TSconfig;;;;3-3-3, --div--;LLL:EXT:lang/locallang_tca.xml:be_groups.tabs.extended');
-$GLOBALS['TCA']['be_groups']['types']['1'] = array ('showitem' => 'hidden;;;;1-1-1, title;;;;2-2-2,tx_begroups_kind, description, --div--;LLL:EXT:be_groups/Resources/Private/Language/locallang_db.xml:be_groups.tabs.modul_rights, groupMods, --div--;LLL:EXT:be_groups/Resources/Private/Language/locallang_db.xlf:be_groups.tabs.table_rights, tables_select, tables_modify, non_exclude_fields, --div--;LLL:EXT:be_groups/Resources/Private/Language/locallang_db.xlf:be_groups.tabs.page_rights, pagetypes_select, explicit_allowdeny, ' . $filePermissions . $tabExtended . ' --div--;LLL:EXT:lang/locallang_tca.xml:be_groups.tabs.options, lockToDomain;;;;1-1-1, hide_in_lists;;;;2-2-2');
-$GLOBALS['TCA']['be_groups']['types']['2'] = array ('showitem' => 'hidden;;;;1-1-1, title;;;;2-2-2,tx_begroups_kind, description, --div--;LLL:EXT:be_groups/Resources/Private/Language/locallang_db.xml:be_groups.tabs.language_rights, allowed_languages, --div--;LLL:EXT:lang/locallang_tca.xml:be_groups.tabs.options, lockToDomain;;;;1-1-1, hide_in_lists;;;;2-2-2');
-$GLOBALS['TCA']['be_groups']['types']['3'] = array ('showitem' => 'hidden;;;;1-1-1, title;;;;2-2-2,tx_begroups_kind, description, --div--;LLL:EXT:be_groups/Resources/Private/Language/locallang_db.xml:be_groups.tabs.rights, subgroup_r,subgroup_pa,subgroup_ts, --div--;LLL:EXT:be_groups/Resources/Private/Language/locallang_db.xml:be_groups.tabs.mountAndWs, subgroup_fm,subgroup_pm,subgroup_ws, --div--;LLL:EXT:be_groups/Resources/Private/Language/locallang_db.xml:be_groups.tabs.language, subgroup_l, --div--;LLL:EXT:lang/locallang_tca.xml:be_groups.tabs.options, lockToDomain;;;;1-1-1, hide_in_lists;;;;2-2-2');
-$GLOBALS['TCA']['be_groups']['types']['4'] = array ('showitem' => 'hidden;;;;1-1-1, title;;;;2-2-2,tx_begroups_kind, description, --div--;LLL:EXT:lang/locallang_tca.xml:be_groups.tabs.options, lockToDomain;;;;1-1-1, hide_in_lists;;;;2-2-2');
-$GLOBALS['TCA']['be_groups']['types']['5'] = array ('showitem' => 'hidden;;;;1-1-1, title;;;;2-2-2,tx_begroups_kind, description, --div--;LLL:EXT:be_groups/Resources/Private/Language/locallang_db.xml:be_groups.tabs.file_mount, file_mountpoints, fileoper_perms, --div--;LLL:EXT:lang/locallang_tca.xml:be_groups.tabs.options, lockToDomain;;;;1-1-1, hide_in_lists;;;;2-2-2');
-$GLOBALS['TCA']['be_groups']['types']['6'] = array ('showitem' => 'hidden;;;;1-1-1, title;;;;2-2-2,tx_begroups_kind, description, --div--;LLL:EXT:be_groups/Resources/Private/Language/locallang_db.xml:be_groups.tabs.db_mount, db_mountpoints, --div--;LLL:EXT:lang/locallang_tca.xml:be_groups.tabs.options, lockToDomain;;;;1-1-1, hide_in_lists;;;;2-2-2');
-$GLOBALS['TCA']['be_groups']['types']['7'] = array ('showitem' => 'hidden;;;;1-1-1, title;;;;2-2-2,tx_begroups_kind, description, --div--;LLL:EXT:be_groups/Resources/Private/Language/locallang_db.xml:be_groups.tabs.tsconfig, TSconfig, --div--;LLL:EXT:lang/locallang_tca.xml:be_groups.tabs.options, lockToDomain;;;;1-1-1, hide_in_lists;;;;2-2-2');
-$GLOBALS['TCA']['be_groups']['types']['8'] = array ('showitem' => 'hidden;;;;1-1-1, title;;;;2-2-2,tx_begroups_kind, description, --div--;LLL:EXT:be_groups/Resources/Private/Language/locallang_db.xml:be_groups.tabs.workspace_rights, workspace_perms;;;;2-2-2, --div--;LLL:EXT:lang/locallang_tca.xml:be_groups.tabs.options, lockToDomain;;;;1-1-1, hide_in_lists;;;;2-2-2');
+$GLOBALS['TCA']['be_groups']['types']['0'] = array (
+    'showitem' => '--div--;LLL:EXT:core/Resources/Private/Language/Form/locallang_tabs.xlf:general,
+        title,
+        tx_begroups_kind,
+        subgroup,
+        --div--;LLL:EXT:core/Resources/Private/Language/locallang_tca.xlf:be_groups.tabs.base_rights,
+        groupMods,
+        availableWidgets,
+        mfa_providers,
+        tables_select,
+        tables_modify,
+        pagetypes_select,
+        non_exclude_fields,
+        explicit_allowdeny,
+        allowed_languages,
+        custom_options,
+        --div--;LLL:EXT:core/Resources/Private/Language/locallang_tca.xlf:be_groups.tabs.mounts_and_workspaces,
+        workspace_perms,
+        db_mountpoints,
+        file_mountpoints,
+        file_permissions,
+        category_perms,
+        --div--;LLL:EXT:core/Resources/Private/Language/locallang_tca.xlf:be_groups.tabs.options,
+        TSconfig,
+        --div--;LLL:EXT:core/Resources/Private/Language/Form/locallang_tabs.xlf:access,
+        hidden,
+        --div--;LLL:EXT:core/Resources/Private/Language/Form/locallang_tabs.xlf:notes,
+        description,
+        --div--;LLL:EXT:core/Resources/Private/Language/Form/locallang_tabs.xlf:extended'
+);
+$GLOBALS['TCA']['be_groups']['types']['1'] = array (
+    'showitem' => '
+        hidden,
+        title,
+        tx_begroups_kind,
+        description,
+        --div--;LLL:EXT:be_groups/Resources/Private/Language/locallang_db.xlf:be_groups.tabs.modul_rights,
+        groupMods,
+        --div--;LLL:EXT:be_groups/Resources/Private/Language/locallang_db.xlf:be_groups.tabs.table_rights,
+        tables_select,
+        tables_modify,
+        non_exclude_fields,
+        --div--;LLL:EXT:be_groups/Resources/Private/Language/locallang_db.xlf:be_groups.tabs.page_rights,
+        pagetypes_select,
+        explicit_allowdeny,
+        custom_options,
+        --div--;LLL:EXT:be_groups/Resources/Private/Language/locallang_db.xlf:be_groups.tabs.file_permissions,
+        file_permissions,
+        --div--;LLL:EXT:be_groups/Resources/Private/Language/locallang_db.xlf:be_groups.tabs.widget_rights,
+        availableWidgets,
+        --div--;LLL:EXT:be_groups/Resources/Private/Language/locallang_db.xlf:be_groups.tabs.mfa_rights,
+        mfa_providers,
+');
+$GLOBALS['TCA']['be_groups']['types']['2'] = array (
+    'showitem' => '
+        hidden,
+        title,
+        tx_begroups_kind,
+        description,
+        --div--;LLL:EXT:be_groups/Resources/Private/Language/locallang_db.xlf:be_groups.tabs.language_rights,
+        allowed_languages,
+');
+
+$GLOBALS['TCA']['be_groups']['types']['3'] = array (
+    'showitem' => '
+        hidden,
+        title,
+        tx_begroups_kind,
+        description,
+        --div--;LLL:EXT:be_groups/Resources/Private/Language/locallang_db.xlf:be_groups.tabs.rights,
+        subgroup_r,
+        subgroup_pa,
+        subgroup_ts,
+        --div--;LLL:EXT:be_groups/Resources/Private/Language/locallang_db.xlf:be_groups.tabs.mounts,
+        subgroup_fm,
+        subgroup_pm,
+        --div--;LLL:EXT:be_groups/Resources/Private/Language/locallang_db.xlf:be_groups.tabs.languages,
+        subgroup_l,
+        --div--;LLL:EXT:be_groups/Resources/Private/Language/locallang_db.xlf:be_groups.tabs.ws_cat,
+        subgroup_ws,
+        subgroup_cat,
+');
+
+$GLOBALS['TCA']['be_groups']['types']['4'] = array (
+    'showitem' => '
+        hidden,
+        title,
+        tx_begroups_kind,
+        description,
+');
+
+$GLOBALS['TCA']['be_groups']['types']['5'] = array (
+    'showitem' => '
+        hidden,
+        title,
+        tx_begroups_kind,
+        description,
+        --div--;LLL:EXT:be_groups/Resources/Private/Language/locallang_db.xlf:be_groups.tabs.file_mount,
+        file_mountpoints,
+        file_permissions,
+');
+$GLOBALS['TCA']['be_groups']['types']['6'] = array (
+    'showitem' => '
+        hidden,
+        title,
+        tx_begroups_kind,
+        description,
+        --div--;LLL:EXT:be_groups/Resources/Private/Language/locallang_db.xlf:be_groups.tabs.db_mount,
+        db_mountpoints,'
+);
+
+$GLOBALS['TCA']['be_groups']['types']['7'] = array (
+    'showitem' => '
+        hidden,
+        title,
+        tx_begroups_kind,
+        description,
+        --div--;LLL:EXT:be_groups/Resources/Private/Language/locallang_db.xlf:be_groups.tabs.tsconfig,
+        TSconfig,
+');
+$GLOBALS['TCA']['be_groups']['types']['8'] = array (
+    'showitem' => '
+        hidden,
+        title,
+        tx_begroups_kind,
+        description,
+        --div--;LLL:EXT:be_groups/Resources/Private/Language/locallang_db.xlf:be_groups.tabs.workspace_rights,
+        workspace_perms,
+');
+
+$GLOBALS['TCA']['be_groups']['types']['9'] = array (
+    'showitem' => '
+        hidden,
+        title,
+        tx_begroups_kind,
+        description,
+        --div--;LLL:EXT:be_groups/Resources/Private/Language/locallang_db.xlf:be_groups.tabs.category_perms,
+        category_perms,
+');

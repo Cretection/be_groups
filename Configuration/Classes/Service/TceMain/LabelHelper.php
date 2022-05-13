@@ -1,4 +1,9 @@
 <?php
+
+namespace Cretection\BeGroups\Service\TceMain;
+
+use TYPO3\CMS\Extbase\Utility\LocalizationUtility;
+
 /***************************************************************
  *  Copyright notice
  * 
@@ -26,26 +31,24 @@
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
 
-$EM_CONF[$_EXTKEY] = array(
-  'title' => 'Improved backend groups management interface.',
-  'description' => 'This extension provide several new options to restructure large amount of be_groups records.',
-  'category' => 'misc',
-  'author_company' => 'Cretection',
-  'author' => 'Jonathan Starck',
-  'author_email' => 'info@cretection.it',
-  'state' => 'beta',
-  'uploadfolder' => false,
-  'createDirs' => '',
-  'clearCacheOnLoad' => 1,
-  'version' => '0.0.1',
-  'constraints' => array(
-      'depends' => array(
-          'php' => '7.2.0-8.2.99',
-          'typo3' => '11.4.0-11.5.99',
-      ),
-      'conflicts' => array(
-      ),
-      'suggests' => array(
-      ),
-  ),
-);
+/**
+ * This class prepend the label of record sub-type.
+ *
+ * @author Michael Klapper <michael.klapper@morphodo.com>
+ */
+class LabelHelper {
+
+	/**
+	 * Retrieve a custom label
+	 *
+	 * @param array $params Current record
+	 * @param object $pObj
+	 * @access public
+	 * @return string
+	 */
+	public function getCombinedTitle(&$params, &$pObj) {
+		$key = 'label.prefix.' . $params['row']['tx_begroups_kind'];
+		$label = LocalizationUtility::translate($key, 'be_groups');
+		$params['title'] = $label . $params['row']['title'];
+	}
+}
