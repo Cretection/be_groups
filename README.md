@@ -7,7 +7,7 @@ English version below
 TYPO3 Rechte-Management für Backend-Benutzergruppen.
 
 ## Community
-Du bist TYPO3 Entwickler und dir gefällt die Idee dieser Extension? Ich freue mich über jede Unterstützung!
+Du bist TYPO3 Entwickler und dir gefällt die Idee dieser Extension? Ich freue mich über jede Unterstützung! :-)
 
 ## ToDo
 * hide_in_lists entfernen: https://docs.typo3.org/c/typo3/cms-core/main/en-us/Changelog/9.0/Breaking-81534-DatabaseFieldBe_groupshide_in_listsDropped.html#breaking-81534-database-field-be-groups-hide-in-lists-dropped
@@ -31,7 +31,7 @@ Das original Projekt wurde unter der "GPL-2.0+" veröffentlicht und wird von mir
 ## Description
 TYPO3 Rights-Management for backend user groups
 ## Community
-You are a TYPO3 developer and you like the idea of this extension? I am glad about any support!
+You are a TYPO3 developer and you like the idea of this extension? I am glad about any support! :-)
 
 ## ToDo
 * hide_in_lists entfernen: https://docs.typo3.org/c/typo3/cms-core/main/en-us/Changelog/9.0/Breaking-81534-DatabaseFieldBe_groupshide_in_listsDropped.html#breaking-81534-database-field-be-groups-hide-in-lists-dropped
