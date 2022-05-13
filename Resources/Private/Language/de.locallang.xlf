@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<xliff version="1.0">
+  <file source-language="en" datatype="plaintext" original="messages" date="2012-03-52T13:03:52Z" product-name="be_groups" target-language="de">
+    <header/>
+    <body>
+      <trans-unit id="label.prefix.0">
+        <source>Default: </source>
+        <target state="needs-translation">Default: </target>
+      </trans-unit>
+      <trans-unit id="label.prefix.1">
+        <source>R: </source>
+        <target state="needs-translation">R: </target>
+      </trans-unit>
+      <trans-unit id="label.prefix.2">
+        <source>L: </source>
+        <target state="needs-translation">L: </target>
+      </trans-unit>
+      <trans-unit id="label.prefix.3">
+        <source>META: </source>
+        <target state="needs-translation">META: </target>
+      </trans-unit>
+      <trans-unit id="label.prefix.4">
+        <source>PA: </source>
+        <target state="needs-translation">PA: </target>
+      </trans-unit>
+      <trans-unit id="label.prefix.5">
+        <source>FM: </source>
+        <target state="needs-translation">FM: </target>
+      </trans-unit>
+      <trans-unit id="label.prefix.6">
+        <source>PM: </source>
+        <target state="needs-translation">PM: </target>
+      </trans-unit>
+      <trans-unit id="label.prefix.7">
+        <source>UserTSconfig: </source>
+        <target state="needs-translation">UserTSconfig: </target>
+      </trans-unit>
+      <trans-unit id="label.prefix.8">
+        <source>WS: </source>
+        <target state="needs-translation">WS: </target>
+      </trans-unit>
+      <trans-unit id="label.prefix.9">
+        <source>C: </source>
+        <target state="needs-translation">C: </target>
+      </trans-unit>
+    </body>
+  </file>
+</xliff>
