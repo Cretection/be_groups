@@ -1,4 +1,5 @@
 # TYPO3 Extension ``be_groups``
+[![Crowdin](https://badges.crowdin.net/typo3-extension-begroups/localized.svg)](https://crowdin.com/project/typo3-extension-begroups)
 
 English version below
 
@@ -26,8 +27,7 @@ Mein besonderer Dank geht an ``Michael Klapper``!
 Das original Projekt wurde unter der "GPL-2.0+" veröffentlicht und wird von mir unter der "GPL-3.0+" gestellt.
 
 -----
-
-# TYPO3 Extension ``be_groups``
+# English Version
 ## Description
 TYPO3 Rights-Management for backend user groups
 
