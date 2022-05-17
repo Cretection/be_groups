@@ -1,5 +1,8 @@
 # TYPO3 Extension ``be_groups``
+[![Latest Stable Version](http://poser.pugx.org/cretection/be-groups/v)](https://packagist.org/packages/cretection/be-groups)
+[![Monthly Downloads](http://poser.pugx.org/cretection/be-groups/d/monthly)](https://packagist.org/packages/cretection/be-groups)
 [![Crowdin](https://badges.crowdin.net/typo3-extension-begroups/localized.svg)](https://crowdin.com/project/typo3-extension-begroups)
+[![License](http://poser.pugx.org/cretection/be-groups/license)](https://packagist.org/packages/cretection/be-groups)
 
 English version below
 
