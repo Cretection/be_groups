@@ -10,6 +10,6 @@
    :alt: Total Downloads
    :target: https://packagist.org/packages/cretection/be-groups
 
-.. image:: https://badges.crowdin.net/typo3-extension-begroups/localized.svg
+.. image:: https://img.shields.io/badge/dynamic/json?color=red&label=de&style=for-the-badge&query=%24.progress.0.data.translationProgress&url=https%3A%2F%2Fbadges.awesome-crowdin.com%2Fstats-15268188-515442.json
    :alt: Crowdin Translation
    :target: https://crowdin.com/project/typo3-extension-begroups
