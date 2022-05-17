@@ -4,7 +4,7 @@
 [![Crowdin](https://badges.crowdin.net/typo3-extension-begroups/localized.svg)](https://crowdin.com/project/typo3-extension-begroups)
 [![License](http://poser.pugx.org/cretection/be-groups/license)](https://packagist.org/packages/cretection/be-groups)
 
-(English version below)[#english-version]
+(English version below)[./README.md#english-version]
 
 ## Beschreibung
 TYPO3 Rechte-Management für Backend-Benutzergruppen.
