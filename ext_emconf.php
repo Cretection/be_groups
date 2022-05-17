@@ -36,7 +36,7 @@
     'uploadfolder' => false,
     'createDirs' => '',
     'clearCacheOnLoad' => 1,
-    'version' => '0.0.4',
+    'version' => '0.0.5',
     'constraints' => [
       'depends' => [
         'php' => '7.2.0-8.2.99',
