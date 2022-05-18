@@ -1,7 +1,3 @@
-============================
-TYPO3 Extension ``be_groups``
-============================
-
 .. image:: https://poser.pugx.org/cretection/be-groups/v/stable.svg?style=for-the-badge
    :alt: Latest Stable Version
    :target: https://extensions.typo3.org/extension/be_groups/
@@ -22,8 +18,13 @@ TYPO3 Extension ``be_groups``
    :alt: TYPO3 11
    :target: https://get.typo3.org/version/11
 
+============================
+TYPO3 Extension ``be_groups``
+============================
 
 This extension provide several new options to restructure large amount of be_groups records.
+
+
 
 .. table:: Reference sources
    :align: left
