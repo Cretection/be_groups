@@ -17,6 +17,10 @@
 .. image:: https://img.shields.io/badge/TYPO3-11-orange.svg?style=for-the-badge&logo=typo3
    :alt: TYPO3 11
    :target: https://get.typo3.org/version/11
+   
+.. image:: http://poser.pugx.org/cretection/be-groups/license?style=for-the-badge
+   :alt: License
+   :target: https://packagist.org/packages/cretection/be-groups
 
 ============================
 TYPO3 Extension ``be_groups``
