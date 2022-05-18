@@ -26,12 +26,13 @@ This extension provide several new options to restructure large amount of be_gro
 
 .. table:: Reference sources
    :align: left
-+-------------+------------------------------------------------------------+
-| Repository  | https://github.com/cretection/be_groups                    |
-+-------------+------------------------------------------------------------+
-| Read online | https://docs.typo3.org/p/cretection/be-groups/main/en-us/  |
-+-------------+------------------------------------------------------------+
-| Packagist   | https://packagist.org/packages/cretection/be-groups        |
-+-------------+------------------------------------------------------------+
-| TER         | https://extensions.typo3.org/extension/be_groups           |
-+-------------+------------------------------------------------------------+
++-----------------------+------------------------------------------------------------+
+| Documentation         | https://docs.typo3.org/p/cretection/be-groups/main/en-us/  |
++-----------------------+------------------------------------------------------------+
+| Extension Repository  | https://extensions.typo3.org/extension/be_groups           |
++-----------------------+------------------------------------------------------------+
+| Packagist             | https://packagist.org/packages/cretection/be-groups        |
++-----------------------+------------------------------------------------------------+
+| GIT Repository        | https://github.com/cretection/be_groups                    |
++-----------------------+------------------------------------------------------------+
+
