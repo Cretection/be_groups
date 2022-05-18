@@ -1,3 +1,5 @@
+.. include:: Documentation/Includes.rst.txt
+
 .. image:: https://poser.pugx.org/cretection/be-groups/v/stable.svg?style=for-the-badge
    :alt: Latest Stable Version
    :target: https://extensions.typo3.org/extension/be_groups/
