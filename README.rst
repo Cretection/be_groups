@@ -38,3 +38,23 @@ This extension provide several new options to restructure large amount of be_gro
 | GIT Repository        | https://github.com/cretection/be_groups                    |
 +-----------------------+------------------------------------------------------------+
 
+1.  ==========  for the first  level
+2.  ----------  for the second level
+3.  ~~~~~~~~~~  for the third  level
+4.  """"""""""  for the fourth level
+
+Authors and Acknowledgements
+==========
+ 
+The original project was developed by AOE GmbH. The following developers were responsible for the development:
+ * Michael Klapper <michael.klapper@aoe.com>
+ * Tomas Norre Mikkelsen <tomas.mikkelsen@aoe.com>
+ * Martin Tepper <martin.tepper@aoe.com>
+I saw the extension in use during my internship at AOE GmbH and thought it was a pity that it was not released. While searching for a similar extension I stumbled across the now publicly available source code on https://github.com/AOEpeople/be_groups and tried to reactivate the extension for TYPO3 11.
+
+My special thanks go to ``Michael Klapper``!
+
+
+License
+==========
+The original project was released under the "GPL-2.0+" and is put by me under the "GPL-3.0+".
