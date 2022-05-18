@@ -52,15 +52,16 @@ I am glad about any support! :-)
 ToDo
 ----------
 
-.. rst-class:: dl-parameters
-
 parameterAbc
-   :sep:`|` :aspect:`Condition:` required
-   :sep:`|` :aspect:`Type:` string
-   :sep:`|` :aspect:`Default:` ''
+   Text describing parameterAbc ...
+   
+parameterBcd
+   :sep:`|` :aspect:`Condition:` optional
+   :sep:`|` :aspect:`Type:` boolean
+   :sep:`|` :aspect:`Default:` false
    :sep:`|`
 
-   Text describing parameterAbc ...
+   Text describing parameterBcd ...
 
 
 Authors and Acknowledgements
