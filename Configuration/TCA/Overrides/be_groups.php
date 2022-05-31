@@ -295,7 +295,7 @@ $GLOBALS['TCA']['be_groups']['ctrl']['typeicon_classes']    = array (
 
 
 // Improve visibility of subgroups in usergroup field to show only META groups
-$GLOBALS['TCA']['be_users']['columns']['usergroup']['config']['foreign_table_where'] = ' AND hide_in_lists = 0 ORDER BY be_groups.tx_begroups_kind, be_groups.title';
+$GLOBALS['TCA']['be_users']['columns']['usergroup']['config']['foreign_table_where'] = 'ORDER BY be_groups.tx_begroups_kind, be_groups.title';
 /* $GLOBALS['TCA']['be_groups']['columns']['file_mountpoints']['config']['renderType']= 'selectCheckBox';
 $GLOBALS['TCA']['be_groups']['columns']['file_mountpoints']['config']['wizards'] = null; */
 $GLOBALS['TCA']['be_groups']['columns']['subgroup']['config']['foreign_table_where'] = 'AND tx_begroups_kind NOT IN(3) AND NOT(be_groups.uid = ###THIS_UID###) AND be_groups.hidden=0 ORDER BY be_groups.tx_begroups_kind,be_groups.title';
