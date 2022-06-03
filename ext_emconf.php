@@ -27,6 +27,7 @@
  ***************************************************************/
 
   $EM_CONF[$_EXTKEY] = [
+    'title' => 'Improved backend groups management interface.',
     'description' => 'This extension provide several new options to restructure large amount of be_groups records.',
     'category' => 'be',
     'author_company' => 'Cretection',
