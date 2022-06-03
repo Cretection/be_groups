@@ -297,7 +297,7 @@ $GLOBALS['TCA']['be_groups']['ctrl']['typeicon_classes']    = array (
 
 
 if (ExtensionManagementUtility::isLoaded('be_groups') && array_key_exists('onlyShowMetaGroup', $extconf) && $extconf['onlyShowMetaGroup'] === '1') {
-    $GLOBALS['TCA']['be_users']['columns']['usergroup']['config']['foreign_table_where'] = 'WHERE be_groups.tx_begroups_kind = 3 ORDER BY be_groups.tx_begroups_kind, be_groups.title';
+    $GLOBALS['TCA']['be_users']['columns']['usergroup']['config']['foreign_table_where'] = 'AND be_groups.tx_begroups_kind = 3 ORDER BY be_groups.tx_begroups_kind, be_groups.title';
 } else {
     $GLOBALS['TCA']['be_users']['columns']['usergroup']['config']['foreign_table_where'] = 'ORDER BY be_groups.tx_begroups_kind, be_groups.title';
 }
