@@ -30,12 +30,14 @@ defined('TYPO3_MODE') or die();
 
 use TYPO3\CMS\Core\Utility\PathUtility;
 use TYPO3\CMS\Core\Utility\ExtensionManagementUtility;
+use TYPO3\CMS\Core\Utility\GeneralUtility;
+use TYPO3\CMS\Core\Configuration\ExtensionConfiguration;
 use Cretection\BeGroups\Service\TceMain;
 
 $ll = 'LLL:EXT:be_groups/Resources/Private/Language/locallang_db.xlf:';
 
 $beGroupKindIconPath = PathUtility::stripPathSitePrefix(ExtensionManagementUtility::extPath('be_groups')) . "Resources/Public/Icons/svgs/selicon_be_groups_tx_begroups_kind_";
-
+$extconf = GeneralUtility::makeInstance(ExtensionConfiguration::class)->get('be_groups');
 
 $tempColumns = [
     'tx_begroups_kind' => [
@@ -294,8 +296,15 @@ $GLOBALS['TCA']['be_groups']['ctrl']['typeicon_classes']    = array (
 );
 
 
+if (ExtensionManagementUtility::isLoaded('be_groups') && array_key_exists('onlyShowMetaGroup', $extconf) && $extconf['onlyShowMetaGroup'] === '1') {
+    $GLOBALS['TCA']['be_users']['columns']['usergroup']['config']['foreign_table_where'] = 'WHERE be_groups.tx_begroups_kind = 3 ORDER BY be_groups.tx_begroups_kind, be_groups.title';
+} else {
+    $GLOBALS['TCA']['be_users']['columns']['usergroup']['config']['foreign_table_where'] = 'ORDER BY be_groups.tx_begroups_kind, be_groups.title';
+}
+
+
+
 // Improve visibility of subgroups in usergroup field to show only META groups
-$GLOBALS['TCA']['be_users']['columns']['usergroup']['config']['foreign_table_where'] = 'ORDER BY be_groups.tx_begroups_kind, be_groups.title';
 /* $GLOBALS['TCA']['be_groups']['columns']['file_mountpoints']['config']['renderType']= 'selectCheckBox';
 $GLOBALS['TCA']['be_groups']['columns']['file_mountpoints']['config']['wizards'] = null; */
 $GLOBALS['TCA']['be_groups']['columns']['subgroup']['config']['foreign_table_where'] = 'AND tx_begroups_kind NOT IN(3) AND NOT(be_groups.uid = ###THIS_UID###) AND be_groups.hidden=0 ORDER BY be_groups.tx_begroups_kind,be_groups.title';

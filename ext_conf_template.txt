@@ -1,2 +1,5 @@
 # cat=basic//10; type=boolean; label= Explicit allow/deny mode: Sets the general mode for selector box values. This option enable the "explicitAllow"
 explicitAllow = 0
+
+# cat=basic//10; type=boolean; label= Only meta groups for the backend user: If this option is set, only groups of type Meta are displayed as groups for a backend user.
+onlyShowMetaGroup = 1
