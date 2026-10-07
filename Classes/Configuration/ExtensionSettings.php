@@ -33,6 +33,19 @@ final readonly class ExtensionSettings
     ) {}
 
     /**
+     * Whether the option "onlyShowMetaGroup" of be_groups 0.0.x is still enabled in the configuration.
+     */
+    public function isLegacyOnlyShowMetaGroupEnabled(): bool
+    {
+        try {
+            $value = $this->extensionConfiguration->get(self::EXTENSION_KEY, 'onlyShowMetaGroup');
+        } catch (ExtensionConfigurationExtensionNotConfiguredException|ExtensionConfigurationPathDoesNotExistException) {
+            return false;
+        }
+        return in_array($value, [true, 1, '1'], true);
+    }
+
+    /**
      * Whether groups of kind "classic" may be created and assigned to users.
      * Enabled unless explicitly switched off, so that installing the extension never locks anybody out.
      */

@@ -24,23 +24,11 @@ use TYPO3\TestingFramework\Core\Unit\UnitTestCase;
 final class GroupKindTest extends UnitTestCase
 {
     #[Test]
-    public function rolesAndClassicGroupsAreNoBuildingBlocks(): void
-    {
-        self::assertFalse(GroupKind::isBuildingBlock(GroupKind::Role->value));
-        self::assertFalse(GroupKind::isBuildingBlock(GroupKind::Classic->value));
-        self::assertFalse(GroupKind::isBuildingBlock(''));
-    }
-
-    #[Test]
-    public function everyOtherKindIsABuildingBlock(): void
+    public function onlyRolesAndClassicGroupsAreNoBuildingBlocks(): void
     {
         foreach (GroupKind::cases() as $kind) {
-            if ($kind === GroupKind::Role || $kind === GroupKind::Classic) {
-                continue;
-            }
-            self::assertTrue(GroupKind::isBuildingBlock($kind->value), $kind->value);
+            self::assertSame($kind !== GroupKind::Role && $kind !== GroupKind::Classic, $kind->isBuildingBlock(), $kind->value);
         }
-        self::assertTrue(GroupKind::isBuildingBlock('kind_of_another_extension'));
     }
 
     #[Test]

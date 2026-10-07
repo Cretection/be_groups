@@ -22,7 +22,7 @@ use TYPO3\CMS\Core\Database\Query\QueryBuilder;
 use TYPO3\CMS\Core\Database\Query\Restriction\DeletedRestriction;
 
 /**
- * Read access to be_groups records. Hidden groups are included, deleted ones are not.
+ * Read access to be_groups records. Hidden groups are always included, deleted ones only where stated.
  *
  * @internal
  */
@@ -35,6 +35,9 @@ final readonly class BackendGroupRepository
     ) {}
 
     /**
+     * Returns the requested fields of a group, including soft-deleted groups:
+     * the DataHandler writes to them as well, so the rules have to see them.
+     *
      * @param list<string> $fieldNames
      */
     public function findFieldsByUid(int $uid, array $fieldNames): ?DatabaseRow
@@ -42,7 +45,8 @@ final readonly class BackendGroupRepository
         if ($uid <= 0) {
             return null;
         }
-        $queryBuilder = $this->createQueryBuilder();
+        $queryBuilder = $this->connectionPool->getQueryBuilderForTable(self::TABLE);
+        $queryBuilder->getRestrictions()->removeAll();
         $row = $queryBuilder
             ->select('uid', ...$fieldNames)
             ->from(self::TABLE)
@@ -55,7 +59,7 @@ final readonly class BackendGroupRepository
     }
 
     /**
-     * Returns the kind of every given group, indexed by uid. Missing groups are not part of the result.
+     * Returns the kind of every given non-deleted group, indexed by uid. Missing or deleted groups are not part of the result.
      *
      * @param list<int> $uids
      * @return array<int, string>
@@ -84,14 +88,15 @@ final readonly class BackendGroupRepository
     }
 
     /**
-     * Returns complete records of the given kinds, indexed by uid.
+     * Returns complete records of the given kinds, including soft-deleted ones, indexed by uid.
      *
      * @param list<string> $kinds
      * @return array<int, DatabaseRow>
      */
-    public function findByKinds(array $kinds): array
+    public function findByKindsIncludingDeleted(array $kinds): array
     {
-        $queryBuilder = $this->createQueryBuilder();
+        $queryBuilder = $this->connectionPool->getQueryBuilderForTable(self::TABLE);
+        $queryBuilder->getRestrictions()->removeAll();
         $result = $queryBuilder
             ->select('*')
             ->from(self::TABLE)
@@ -110,13 +115,14 @@ final readonly class BackendGroupRepository
     }
 
     /**
-     * Returns the subgroup lists of all groups that have subgroups, indexed by uid.
+     * Returns the subgroup lists of all groups that have subgroups, including soft-deleted groups, indexed by uid.
      *
      * @return array<int, string>
      */
-    public function findSubgroupLists(): array
+    public function findSubgroupListsIncludingDeleted(): array
     {
-        $queryBuilder = $this->createQueryBuilder();
+        $queryBuilder = $this->connectionPool->getQueryBuilderForTable(self::TABLE);
+        $queryBuilder->getRestrictions()->removeAll();
         $result = $queryBuilder
             ->select('uid', 'subgroup')
             ->from(self::TABLE)

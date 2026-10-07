@@ -18,9 +18,9 @@ namespace Cretection\BeGroups\Domain\Kind;
 /**
  * The group kinds shipped with be_groups.
  *
- * The values are stored in be_groups.tx_begroups_kind and are part of the
- * public API. Further kinds may be added by other extensions as plain TCA
- * types; every kind that is neither "role" nor "classic" is a building block.
+ * The values are stored in be_groups.tx_begroups_kind and are part of the public API.
+ * Other extensions may add further kinds as TCA items and types; which kinds are valid
+ * is decided by the KindRegistry, not by this enum.
  */
 enum GroupKind: string
 {
@@ -38,9 +38,9 @@ enum GroupKind: string
 
     public const FIELD_NAME = 'tx_begroups_kind';
 
-    public static function isBuildingBlock(string $kind): bool
+    public function isBuildingBlock(): bool
     {
-        return $kind !== '' && $kind !== self::Role->value && $kind !== self::Classic->value;
+        return $this !== self::Role && $this !== self::Classic;
     }
 
     public function iconIdentifier(): string

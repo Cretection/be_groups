@@ -17,14 +17,17 @@ namespace Cretection\BeGroups\Tests\Functional\DataHandling;
 
 use Cretection\BeGroups\Configuration\ExtensionSettings;
 use Cretection\BeGroups\DataHandling\GroupKindRules;
+use Cretection\BeGroups\DataHandling\RelationList;
 use Cretection\BeGroups\DataHandling\RuleViolationReporter;
-use Cretection\BeGroups\DataHandling\UidList;
 use Cretection\BeGroups\Domain\Kind\GroupKind;
 use Cretection\BeGroups\Domain\Kind\KindFieldResolver;
+use Cretection\BeGroups\Domain\Kind\KindRegistry;
 use Cretection\BeGroups\Domain\Repository\BackendGroupRepository;
 use Cretection\BeGroups\Domain\Repository\BackendUserRepository;
 use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
+use TYPO3\CMS\Core\Database\Connection;
 use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\CMS\Core\DataHandling\DataHandler;
 use TYPO3\CMS\Core\Localization\LanguageServiceFactory;
@@ -37,18 +40,21 @@ use TYPO3\TestingFramework\Core\Functional\FunctionalTestCase;
 #[CoversClass(BackendGroupRepository::class)]
 #[CoversClass(BackendUserRepository::class)]
 #[CoversClass(ExtensionSettings::class)]
-#[CoversClass(UidList::class)]
+#[CoversClass(RelationList::class)]
+#[CoversClass(KindRegistry::class)]
 #[CoversClass(GroupKind::class)]
 final class GroupKindRulesTest extends FunctionalTestCase
 {
-    protected array $testExtensionsToLoad = ['cretection/be-groups'];
+    protected array $testExtensionsToLoad = [
+        'cretection/be-groups',
+        __DIR__ . '/../Fixtures/Extensions/be_groups_test_fields',
+    ];
 
     protected function setUp(): void
     {
         parent::setUp();
         $this->importCSVDataSet(__DIR__ . '/Fixtures/GroupsAndUsers.csv');
-        $backendUser = $this->setUpBackendUser(1);
-        $GLOBALS['LANG'] = $this->get(LanguageServiceFactory::class)->createFromUserPreferences($backendUser);
+        $this->setUpBackendUserWithLanguage(1);
     }
 
     #[Test]
@@ -177,6 +183,152 @@ final class GroupKindRulesTest extends FunctionalTestCase
         self::assertEquals(1, $logEntries[0]['userid']);
     }
 
+    #[Test]
+    public function relationsToGroupsCreatedInTheSameDatamapAreKept(): void
+    {
+        $dataHandler = $this->processDatamap(['be_groups' => [
+            'NEW1' => ['pid' => 0, 'title' => 'DBM site B', 'tx_begroups_kind' => 'db_mount'],
+            'NEW2' => ['pid' => 0, 'title' => 'R site B', 'tx_begroups_kind' => 'role', 'subgroup' => 'NEW1,1'],
+        ]]);
+
+        $roleUid = $dataHandler->substNEWwithIDs['NEW2'] ?? null;
+        self::assertIsInt($roleUid);
+        self::assertSame($dataHandler->substNEWwithIDs['NEW1'] . ',1', $this->getRecord('be_groups', $roleUid)['subgroup']);
+    }
+
+    #[Test]
+    public function buildingBlocksCreatedInTheSameDatamapCannotBeAssignedToUsers(): void
+    {
+        $this->processDatamap([
+            'be_groups' => ['NEW1' => ['pid' => 0, 'title' => 'ACL new', 'tx_begroups_kind' => 'acl']],
+            'be_users' => [2 => ['usergroup' => '5,NEW1,6']],
+        ]);
+
+        self::assertSame('5,6', $this->getRecord('be_users', 2)['usergroup']);
+    }
+
+    /**
+     * @return array<string, array{string}>
+     */
+    public static function alternativeNotationDataProvider(): array
+    {
+        return [
+            'uid|label' => ['6,1|ACL editing'],
+            'url-encoded uid' => ['6,%31'],
+            'table-prefixed uid' => ['6,be_groups_1'],
+        ];
+    }
+
+    #[Test]
+    #[DataProvider('alternativeNotationDataProvider')]
+    public function alternativeNotationsCannotBypassTheUserRule(string $usergroup): void
+    {
+        $this->writeUser(1, ['usergroup' => $usergroup]);
+
+        self::assertSame('6', $this->getRecord('be_users', 1)['usergroup']);
+    }
+
+    #[Test]
+    public function deletedGroupsFollowTheRulesAsWell(): void
+    {
+        $this->writeGroup(8, ['TSconfig' => 'options.clearCache.all = 1', 'subgroup' => '5']);
+
+        $group = $this->getRecord('be_groups', 8);
+        self::assertSame('', $group['TSconfig']);
+        self::assertSame('', $group['subgroup']);
+    }
+
+    #[Test]
+    public function numericLegacyKindIsNeverAccepted(): void
+    {
+        $this->writeGroup(2, ['tx_begroups_kind' => '0', 'groupMods' => 'web_layout']);
+
+        $group = $this->getRecord('be_groups', 2);
+        self::assertSame('db_mount', $group['tx_begroups_kind']);
+        self::assertSame('', $group['groupMods']);
+    }
+
+    #[Test]
+    public function groupWithNumericLegacyKindCannotBeAddedToRole(): void
+    {
+        $this->get(ConnectionPool::class)->getConnectionForTable('be_groups')
+            ->update('be_groups', ['tx_begroups_kind' => '0'], ['uid' => 3]);
+
+        $this->writeGroup(6, ['subgroup' => '1,2,3']);
+
+        self::assertSame('1,2', $this->getRecord('be_groups', 6)['subgroup']);
+    }
+
+    #[Test]
+    public function dataOfOtherExtensionsIsNotTouched(): void
+    {
+        $this->writeGroup(6, ['title' => 'R editor (renamed)', 'tx_test_sync_id' => 'sync-6']);
+        $this->writeGroup(2, ['tx_test_sync_id' => 'sync-2']);
+
+        self::assertSame('sync-6', $this->getRecord('be_groups', 6)['tx_test_sync_id']);
+        self::assertSame('sync-2', $this->getRecord('be_groups', 2)['tx_test_sync_id']);
+    }
+
+    #[Test]
+    public function kindFromTcaDefaultsIsUsedForTheRules(): void
+    {
+        $this->setUpBackendUserWithLanguage(3);
+
+        $dataHandler = $this->processDatamap(['be_groups' => ['NEW1' => [
+            'pid' => 0,
+            'title' => 'Imported without kind',
+            'groupMods' => 'web_layout',
+            'db_mountpoints' => '1',
+        ]]]);
+
+        $uid = $dataHandler->substNEWwithIDs['NEW1'] ?? null;
+        self::assertIsInt($uid);
+        $group = $this->getRecord('be_groups', $uid);
+        self::assertSame('acl', $group['tx_begroups_kind']);
+        self::assertSame('web_layout', $group['groupMods']);
+        self::assertSame('', $group['db_mountpoints']);
+    }
+
+    #[Test]
+    public function removingTheDefaultLanguagePermissionIsReported(): void
+    {
+        $this->writeGroup(9, ['tx_begroups_kind' => 'db_mount']);
+
+        self::assertSame('', $this->getRecord('be_groups', 9)['allowed_languages']);
+        $logData = $this->get(ConnectionPool::class)->getConnectionForTable('sys_log')
+            ->select(['log_data'], 'sys_log', ['type' => 4, 'recuid' => 9])
+            ->fetchOne();
+        self::assertIsString($logData);
+        self::assertStringContainsString('allowed_languages', $logData);
+    }
+
+    #[Test]
+    public function eachCorrectionIsLoggedOnce(): void
+    {
+        $this->writeGroup(2, ['groupMods' => 'web_layout', 'TSconfig' => 'x']);
+
+        $logEntries = $this->get(ConnectionPool::class)->getConnectionForTable('sys_log')
+            ->select(['uid'], 'sys_log', ['type' => 4, 'recuid' => 2])
+            ->fetchAllAssociative();
+        self::assertCount(1, $logEntries);
+    }
+
+    #[Test]
+    public function storedRelationsThatBreakTheRulesAreKept(): void
+    {
+        $this->writeGroup(7, ['title' => 'R other (renamed)', 'subgroup' => '5,1']);
+        $this->writeUser(4, ['realName' => 'Mixed', 'usergroup' => '6,1']);
+
+        self::assertSame('5,1', $this->getRecord('be_groups', 7)['subgroup']);
+        self::assertSame('6,1', $this->getRecord('be_users', 4)['usergroup']);
+    }
+
+    private function setUpBackendUserWithLanguage(int $uid): void
+    {
+        $backendUser = $this->setUpBackendUser($uid);
+        $GLOBALS['LANG'] = $this->get(LanguageServiceFactory::class)->createFromUserPreferences($backendUser);
+    }
+
     /**
      * @param array<string, string> $fields
      */
@@ -220,8 +372,11 @@ final class GroupKindRulesTest extends FunctionalTestCase
      */
     private function getRecord(string $table, int $uid): array
     {
-        $record = $this->get(ConnectionPool::class)->getConnectionForTable($table)
-            ->select(['*'], $table, ['uid' => $uid])
+        $queryBuilder = $this->get(ConnectionPool::class)->getQueryBuilderForTable($table);
+        $queryBuilder->getRestrictions()->removeAll();
+        $record = $queryBuilder->select('*')->from($table)
+            ->where($queryBuilder->expr()->eq('uid', $queryBuilder->createNamedParameter($uid, Connection::PARAM_INT)))
+            ->executeQuery()
             ->fetchAssociative();
         self::assertIsArray($record);
         return $record;

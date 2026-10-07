@@ -17,10 +17,11 @@ namespace Cretection\BeGroups\Tests\Functional\DataHandling;
 
 use Cretection\BeGroups\Configuration\ExtensionSettings;
 use Cretection\BeGroups\DataHandling\GroupKindRules;
+use Cretection\BeGroups\DataHandling\RelationList;
 use Cretection\BeGroups\DataHandling\RuleViolationReporter;
-use Cretection\BeGroups\DataHandling\UidList;
 use Cretection\BeGroups\Domain\Kind\GroupKind;
 use Cretection\BeGroups\Domain\Kind\KindFieldResolver;
+use Cretection\BeGroups\Domain\Kind\KindRegistry;
 use Cretection\BeGroups\Domain\Repository\BackendGroupRepository;
 use Cretection\BeGroups\Domain\Repository\BackendUserRepository;
 use PHPUnit\Framework\Attributes\CoversClass;
@@ -37,7 +38,8 @@ use TYPO3\TestingFramework\Core\Functional\FunctionalTestCase;
 #[CoversClass(KindFieldResolver::class)]
 #[CoversClass(BackendGroupRepository::class)]
 #[CoversClass(BackendUserRepository::class)]
-#[CoversClass(UidList::class)]
+#[CoversClass(RelationList::class)]
+#[CoversClass(KindRegistry::class)]
 #[CoversClass(GroupKind::class)]
 final class GroupKindRulesWithClassicGroupsDisabledTest extends FunctionalTestCase
 {
@@ -63,6 +65,14 @@ final class GroupKindRulesWithClassicGroupsDisabledTest extends FunctionalTestCa
     public function classicGroupsCanNotBeCreatedWhileDisabled(): void
     {
         $dataHandler = $this->processDatamap(['be_groups' => ['NEW1' => ['pid' => 0, 'title' => 'Classic', 'tx_begroups_kind' => 'classic']]]);
+
+        self::assertArrayNotHasKey('NEW1', $dataHandler->substNEWwithIDs);
+    }
+
+    #[Test]
+    public function newGroupsWithoutKindAreRejectedWhileDisabled(): void
+    {
+        $dataHandler = $this->processDatamap(['be_groups' => ['NEW1' => ['pid' => 0, 'title' => 'Imported without kind', 'groupMods' => 'web_layout']]]);
 
         self::assertArrayNotHasKey('NEW1', $dataHandler->substNEWwithIDs);
     }

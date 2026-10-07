@@ -12,12 +12,13 @@ defined('TYPO3') or die();
     $kindField = GroupKind::FIELD_NAME;
     $labels = 'be_groups.db:';
 
-    $availableKinds = array_filter(
+    $availableKinds = array_values(array_filter(
         GroupKind::cases(),
         static fn(GroupKind $kind): bool => $kind !== GroupKind::Workspace || ExtensionManagementUtility::isLoaded('workspaces'),
-    );
+    ));
 
     // The kind selector, grouped into roles, building blocks and the legacy "classic" kind.
+    // Whether "classic" may be chosen is decided at runtime (KindSelection form data provider).
     $items = [];
     foreach ($availableKinds as $kind) {
         $items[] = [
@@ -108,29 +109,25 @@ defined('TYPO3') or die();
         ];
     }
 
-    // A role is composed from building blocks only, grouped by their kind.
-    $buildingBlockGroups = [];
+    // The members of a role are grouped by kind. The list is not filtered: a filtered select drops
+    // stored values that are not part of its items on every save. Which groups may be added is
+    // enforced by the DataHandler rules, and the order of the members (TSconfig) is kept.
+    $memberGroups = [];
     foreach ($availableKinds as $kind) {
-        if (GroupKind::isBuildingBlock($kind->value)) {
-            $buildingBlockGroups[$kind->value] = $labels . 'kind.' . $kind->value;
+        if ($kind->isBuildingBlock()) {
+            $memberGroups[$kind->value] = $labels . 'kind.' . $kind->value;
         }
     }
+    $memberGroups[GroupKind::Role->value] = $labels . 'kind.group.notAllowedInRole.role';
+    $memberGroups[GroupKind::Classic->value] = $labels . 'kind.group.notAllowedInRole.classic';
     $GLOBALS['TCA'][$table]['types'][GroupKind::Role->value]['columnsOverrides']['subgroup'] = [
         'description' => $labels . 'be_groups.subgroup.role.description',
         'config' => [
-            'renderType' => 'selectCheckBox',
-            'foreign_table_where' => sprintf(
-                'AND {#be_groups}.{#%s} NOT IN (\'%s\', \'%s\') AND NOT({#be_groups}.{#uid} = ###THIS_UID###) ORDER BY be_groups.title',
-                $kindField,
-                GroupKind::Role->value,
-                GroupKind::Classic->value,
-            ),
             'foreign_table_item_group' => $kindField,
-            'itemGroups' => $buildingBlockGroups,
-            'appearance' => [
-                'expandAll' => true,
-            ],
-            'maxitems' => 9999,
+            'itemGroups' => $memberGroups,
         ],
     ];
+
+    // Roles combine many building blocks: allow more members than the 255 characters of the core.
+    $GLOBALS['TCA'][$table]['columns']['subgroup']['config']['dbFieldLength'] = 2048;
 })();

@@ -18,10 +18,12 @@ namespace Cretection\BeGroups\DataHandling;
 use Cretection\BeGroups\Configuration\ExtensionSettings;
 use Cretection\BeGroups\Domain\Kind\GroupKind;
 use Cretection\BeGroups\Domain\Kind\KindFieldResolver;
+use Cretection\BeGroups\Domain\Kind\KindRegistry;
 use Cretection\BeGroups\Domain\Repository\BackendGroupRepository;
 use Cretection\BeGroups\Domain\Repository\BackendUserRepository;
 use Cretection\BeGroups\Domain\Repository\DatabaseRow;
 use Symfony\Component\DependencyInjection\Attribute\Autoconfigure;
+use TYPO3\CMS\Backend\Utility\BackendUtility;
 use TYPO3\CMS\Core\DataHandling\DataHandler;
 use TYPO3\CMS\Core\Utility\MathUtility;
 
@@ -29,28 +31,38 @@ use TYPO3\CMS\Core\Utility\MathUtility;
  * Enforces the rules of the group kind model on every write through the DataHandler,
  * no matter whether it originates from a backend form, an import or the API.
  *
- * R1: A group carries values only in the fields its kind displays.
- * R2: A role consists of building blocks only.
+ * R1: A group carries permissions only in the fields its kind displays.
+ * R2: A role only gets building blocks added.
  * R3: Building blocks have no subgroups (follows from R1).
- * R4: Users are assigned roles only (and "classic" groups while they are allowed).
+ * R4: Users only get roles assigned (and "classic" groups while they are allowed).
  *
- * Rules never throw. They correct the incoming data or skip the record and report
- * each intervention, so imports and synchronisation tools keep working.
+ * Relations that are already stored are never removed by R2 and R4, so switching off
+ * "classic" groups or migrating never takes away access. Rules never throw: they correct
+ * the incoming data or skip the record. Corrections are reported after all operations,
+ * so nothing is logged for a save that is aborted (e.g. by the sudo mode).
+ *
+ * A new instance is created for every DataHandler run.
  *
  * @internal
  */
-#[Autoconfigure(public: true)]
-final readonly class GroupKindRules
+#[Autoconfigure(public: true, shared: false)]
+final class GroupKindRules
 {
     private const GROUPS_TABLE = 'be_groups';
     private const USERS_TABLE = 'be_users';
 
+    /**
+     * @var list<array{table: string, id: string|int, labelKey: string, logMessage: string, arguments: array<string, string>}>
+     */
+    private array $pendingCorrections = [];
+
     public function __construct(
-        private KindFieldResolver $kindFieldResolver,
-        private BackendGroupRepository $backendGroupRepository,
-        private BackendUserRepository $backendUserRepository,
-        private ExtensionSettings $extensionSettings,
-        private RuleViolationReporter $reporter,
+        private readonly KindRegistry $kindRegistry,
+        private readonly KindFieldResolver $kindFieldResolver,
+        private readonly BackendGroupRepository $backendGroupRepository,
+        private readonly BackendUserRepository $backendUserRepository,
+        private readonly ExtensionSettings $extensionSettings,
+        private readonly RuleViolationReporter $reporter,
     ) {}
 
     /**
@@ -71,6 +83,21 @@ final readonly class GroupKindRules
         }
     }
 
+    public function processDatamap_afterAllOperations(DataHandler $dataHandler): void
+    {
+        foreach ($this->pendingCorrections as $correction) {
+            $this->reporter->reportCorrection(
+                $dataHandler->BE_USER,
+                $correction['table'],
+                $correction['id'],
+                $correction['labelKey'],
+                $correction['logMessage'],
+                $correction['arguments'],
+            );
+        }
+        $this->pendingCorrections = [];
+    }
+
     /**
      * @param array<string, mixed> $incomingFieldArray
      * @return bool false if the record must not be written at all
@@ -82,7 +109,7 @@ final readonly class GroupKindRules
         if ($uid !== null) {
             $currentRecord = $this->backendGroupRepository->findFieldsByUid($uid, [GroupKind::FIELD_NAME, 'subgroup']);
             if ($currentRecord === null) {
-                // Unknown or deleted record: the DataHandler rejects the write itself.
+                // The record does not exist at all: the DataHandler rejects the write itself.
                 return true;
             }
         }
@@ -92,16 +119,28 @@ final readonly class GroupKindRules
             return false;
         }
 
-        $this->removeForeignFieldValues($incomingFieldArray, $kind, $uid, $id, $dataHandler);
+        $this->removeForeignFieldValues($incomingFieldArray, $kind, $uid, $id);
         if ($kind === GroupKind::Role->value) {
-            $this->restrictRoleToBuildingBlocks($incomingFieldArray, $currentRecord, $uid, $id, $dataHandler);
+            $this->rejectAddedRelations(
+                $incomingFieldArray,
+                'subgroup',
+                $currentRecord?->get('subgroup') ?? '',
+                fn(?string $memberKind): bool => $memberKind !== null && $this->kindRegistry->isBuildingBlock($memberKind),
+                [$id, $uid],
+                $dataHandler,
+                self::GROUPS_TABLE,
+                $id,
+                'rules.subgroupsRejected',
+                'Only building blocks can be added to a role. Rejected groups: {uids}',
+            );
         }
         return true;
     }
 
     /**
-     * Determines the kind the record will have after saving and enforces that
-     * "classic" groups cannot be created while they are disabled.
+     * Determines the kind the record has after saving and makes sure the DataHandler stores
+     * exactly this kind. Unknown kinds are ignored; "classic" groups cannot be created
+     * while they are disabled.
      *
      * @param array<string, mixed> $incomingFieldArray
      * @return string|null The resulting kind, or null if the record must be skipped
@@ -109,63 +148,101 @@ final readonly class GroupKindRules
     private function resolveKind(array &$incomingFieldArray, ?DatabaseRow $currentRecord, string|int $id, DataHandler $dataHandler): ?string
     {
         $currentKind = $currentRecord?->get(GroupKind::FIELD_NAME);
-        $hasIncomingKind = array_key_exists(GroupKind::FIELD_NAME, $incomingFieldArray);
-        $incomingKind = $hasIncomingKind && is_scalar($incomingFieldArray[GroupKind::FIELD_NAME])
-            ? trim((string)$incomingFieldArray[GroupKind::FIELD_NAME])
-            : null;
-
-        if ($hasIncomingKind && ($incomingKind === null || !$this->isSelectableKind($incomingKind))) {
-            // Unknown values are never stored; the record keeps its kind (or gets the default kind).
-            unset($incomingFieldArray[GroupKind::FIELD_NAME]);
-            $this->reporter->reportCorrection(
-                $dataHandler->BE_USER,
-                self::GROUPS_TABLE,
-                $id,
-                'rules.unknownKind',
-                'The unknown kind "{kind}" has been ignored.',
-                ['kind' => $this->describeUntrustedValue($incomingKind)],
-            );
-            $incomingKind = null;
-        }
-
-        $kind = $incomingKind ?? $currentKind ?? GroupKind::Classic->value;
-        $isChangeToClassic = $kind === GroupKind::Classic->value && $currentKind !== GroupKind::Classic->value;
-        if (!$isChangeToClassic || $this->extensionSettings->isClassicGroupsAllowed()) {
-            return $kind;
+        $incomingKind = null;
+        if (array_key_exists(GroupKind::FIELD_NAME, $incomingFieldArray)) {
+            $rawKind = $incomingFieldArray[GroupKind::FIELD_NAME];
+            $candidate = is_scalar($rawKind) ? trim((string)$rawKind) : '';
+            if ($candidate === $currentKind || $this->kindRegistry->isKind($candidate)) {
+                $incomingKind = $candidate;
+            } else {
+                unset($incomingFieldArray[GroupKind::FIELD_NAME]);
+                $this->addCorrection(
+                    self::GROUPS_TABLE,
+                    $id,
+                    'rules.unknownKind',
+                    'The unknown kind "{kind}" has been ignored.',
+                    ['kind' => $this->describeUntrustedValue($candidate)],
+                );
+            }
         }
 
         if ($currentKind === null) {
+            $kind = $incomingKind ?? $this->getDefaultKind($incomingFieldArray, $dataHandler);
+            if ($kind === GroupKind::Classic->value && !$this->extensionSettings->isClassicGroupsAllowed()) {
+                $this->reporter->reportRejection(
+                    $dataHandler->BE_USER,
+                    self::GROUPS_TABLE,
+                    $id,
+                    'rules.classicNotAllowed',
+                    'Creating groups of kind "classic" is disabled. The group has not been created.',
+                    [],
+                );
+                return null;
+            }
+            // The rules are evaluated for this kind, so the DataHandler must store exactly this kind.
+            $incomingFieldArray[GroupKind::FIELD_NAME] = $kind;
+            return $kind;
+        }
+
+        $kind = $incomingKind ?? $currentKind;
+        if ($kind === GroupKind::Classic->value && $currentKind !== GroupKind::Classic->value && !$this->extensionSettings->isClassicGroupsAllowed()) {
+            unset($incomingFieldArray[GroupKind::FIELD_NAME]);
             $this->reporter->reportRejection(
                 $dataHandler->BE_USER,
                 self::GROUPS_TABLE,
                 $id,
                 'rules.classicNotAllowed',
-                'Creating groups of kind "classic" is disabled. The group has not been created.',
+                'Changing groups to kind "classic" is disabled. The group keeps its kind.',
                 [],
             );
-            return null;
+            return $currentKind;
         }
-
-        unset($incomingFieldArray[GroupKind::FIELD_NAME]);
-        $this->reporter->reportRejection(
-            $dataHandler->BE_USER,
-            self::GROUPS_TABLE,
-            $id,
-            'rules.classicNotAllowed',
-            'Changing groups to kind "classic" is disabled. The group keeps its kind.',
-            [],
-        );
-        return $currentKind;
+        return $kind;
     }
 
     /**
-     * R1 + R3: Empties every permission field the kind does not display, both in the
-     * incoming data and in the stored record. TCA default values of new records are
-     * overridden as well (e.g. the default file permissions of be_groups).
+     * The kind a new record gets when the datamap contains none, determined in the same order as
+     * the DataHandler does: TCA default, overridden by user TSconfig, overridden by page TSconfig.
+     *
+     * @param array<array-key, mixed> $fieldArray
+     */
+    private function getDefaultKind(array $fieldArray, DataHandler $dataHandler): string
+    {
+        $pid = $fieldArray['pid'] ?? 0;
+        $pageUid = MathUtility::canBeInterpretedAsInteger($pid) && (int)$pid > 0 ? (int)$pid : 0;
+        $candidates = [
+            $this->kindRegistry->getDefaultKind(),
+            $this->getKindFromTcaDefaults($dataHandler->BE_USER->getTSConfig()),
+            $this->getKindFromTcaDefaults(BackendUtility::getPagesTSconfig($pageUid)),
+        ];
+        $kind = GroupKind::Classic->value;
+        foreach ($candidates as $candidate) {
+            if (is_string($candidate) && $this->kindRegistry->isKind($candidate)) {
+                $kind = $candidate;
+            }
+        }
+        return $kind;
+    }
+
+    /**
+     * @param array<mixed> $tsConfig
+     */
+    private function getKindFromTcaDefaults(array $tsConfig): ?string
+    {
+        $tables = $tsConfig['TCAdefaults.'] ?? null;
+        $fields = is_array($tables) ? ($tables[self::GROUPS_TABLE . '.'] ?? null) : null;
+        $kind = is_array($fields) ? ($fields[GroupKind::FIELD_NAME] ?? null) : null;
+        return is_string($kind) ? $kind : null;
+    }
+
+    /**
+     * R1 + R3: Empties every permission field the kind does not display, both in the incoming data
+     * and in the stored record. New records are covered completely, so TCA and TSconfig default
+     * values (e.g. the default file permissions) never end up in a building block.
      *
      * @param array<string, mixed> $incomingFieldArray
      */
-    private function removeForeignFieldValues(array &$incomingFieldArray, string $kind, ?int $uid, string|int $id, DataHandler $dataHandler): void
+    private function removeForeignFieldValues(array &$incomingFieldArray, string $kind, ?int $uid, string|int $id): void
     {
         $foreignFields = $this->kindFieldResolver->getForeignFieldsWithEmptyValue($kind);
         if ($foreignFields === []) {
@@ -175,15 +252,20 @@ final readonly class GroupKindRules
         $storedValues = $uid === null ? [] : ($this->backendGroupRepository->findFieldsByUid($uid, array_keys($foreignFields))->values ?? []);
         $removedFields = [];
         foreach ($foreignFields as $fieldName => $emptyValue) {
-            if ($this->hasValue($incomingFieldArray[$fieldName] ?? null) || $this->hasValue($storedValues[$fieldName] ?? null)) {
+            $incomingHasValue = array_key_exists($fieldName, $incomingFieldArray)
+                && !$this->kindFieldResolver->isEmptyValue($fieldName, $incomingFieldArray[$fieldName]);
+            $storedHasValue = array_key_exists($fieldName, $storedValues)
+                && !$this->kindFieldResolver->isEmptyValue($fieldName, $storedValues[$fieldName]);
+            if ($incomingHasValue || $storedHasValue) {
                 $removedFields[] = $fieldName;
             }
-            $incomingFieldArray[$fieldName] = $emptyValue;
+            if ($uid === null || $incomingHasValue || $storedHasValue || array_key_exists($fieldName, $incomingFieldArray)) {
+                $incomingFieldArray[$fieldName] = $emptyValue;
+            }
         }
 
         if ($removedFields !== []) {
-            $this->reporter->reportCorrection(
-                $dataHandler->BE_USER,
+            $this->addCorrection(
                 self::GROUPS_TABLE,
                 $id,
                 'rules.foreignFieldsRemoved',
@@ -194,111 +276,128 @@ final readonly class GroupKindRules
     }
 
     /**
-     * R2: Newly added subgroups of a role must be existing building blocks.
-     * Already stored references are kept and reported by the audit instead.
-     *
-     * @param array<string, mixed> $incomingFieldArray
-     */
-    private function restrictRoleToBuildingBlocks(array &$incomingFieldArray, ?DatabaseRow $currentRecord, ?int $uid, string|int $id, DataHandler $dataHandler): void
-    {
-        if (!array_key_exists('subgroup', $incomingFieldArray)) {
-            return;
-        }
-        $incoming = UidList::fromValue($incomingFieldArray['subgroup']);
-        $stored = UidList::fromValue($currentRecord?->get('subgroup') ?? '');
-        $addedUids = $incoming->withoutUidsOf($stored);
-        if ($addedUids === []) {
-            $incomingFieldArray['subgroup'] = $incoming->toString();
-            return;
-        }
-
-        $kinds = $this->backendGroupRepository->findKindsByUids($addedUids);
-        $rejectedUids = [];
-        foreach ($addedUids as $addedUid) {
-            $isSelfReference = $addedUid === $uid;
-            if ($isSelfReference || !GroupKind::isBuildingBlock($kinds[$addedUid] ?? '')) {
-                $rejectedUids[] = $addedUid;
-            }
-        }
-
-        $incomingFieldArray['subgroup'] = $incoming->without($rejectedUids)->toString();
-        if ($rejectedUids !== []) {
-            $this->reporter->reportCorrection(
-                $dataHandler->BE_USER,
-                self::GROUPS_TABLE,
-                $id,
-                'rules.subgroupsRejected',
-                'Only building blocks can be added to a role. Rejected groups: {uids}',
-                ['uids' => implode(', ', $rejectedUids)],
-            );
-        }
-    }
-
-    /**
      * R4: Newly assigned groups of a user must be roles (or "classic" groups while allowed).
-     * Already stored assignments are kept, so switching off "classic" groups never removes access.
      *
      * @param array<string, mixed> $incomingFieldArray
      */
     private function processUser(array &$incomingFieldArray, string|int $id, DataHandler $dataHandler): void
     {
-        if (!array_key_exists('usergroup', $incomingFieldArray)) {
-            return;
-        }
         $uid = $this->getUid($id);
-        $incoming = UidList::fromValue($incomingFieldArray['usergroup']);
-        $stored = UidList::fromValue($uid === null ? '' : ($this->backendUserRepository->findUsergroupListByUid($uid) ?? ''));
-        $addedUids = $incoming->withoutUidsOf($stored);
-        if ($addedUids === []) {
-            return;
-        }
-
-        $assignableKinds = [GroupKind::Role->value];
-        if ($this->extensionSettings->isClassicGroupsAllowed()) {
-            $assignableKinds[] = GroupKind::Classic->value;
-        }
-        $kinds = $this->backendGroupRepository->findKindsByUids($addedUids);
-        $rejectedUids = [];
-        foreach ($addedUids as $addedUid) {
-            if (!in_array($kinds[$addedUid] ?? '', $assignableKinds, true)) {
-                $rejectedUids[] = $addedUid;
-            }
-        }
-        if ($rejectedUids === []) {
-            return;
-        }
-
-        // The order of the usergroup list matters (TSconfig inheritance), so only rejected entries are removed.
-        $incomingFieldArray['usergroup'] = $incoming->without($rejectedUids)->toString();
-        $this->reporter->reportCorrection(
-            $dataHandler->BE_USER,
+        $classicGroupsAllowed = $this->extensionSettings->isClassicGroupsAllowed();
+        $this->rejectAddedRelations(
+            $incomingFieldArray,
+            'usergroup',
+            $uid === null ? '' : ($this->backendUserRepository->findUsergroupListByUid($uid) ?? ''),
+            static fn(?string $groupKind): bool => $groupKind === GroupKind::Role->value
+                || ($classicGroupsAllowed && $groupKind === GroupKind::Classic->value),
+            [],
+            $dataHandler,
             self::USERS_TABLE,
             $id,
             'rules.usergroupsRejected',
             'Only roles can be assigned to users. Rejected groups: {uids}',
-            ['uids' => implode(', ', $rejectedUids)],
         );
+    }
+
+    /**
+     * Removes newly added relations to groups whose kind is not accepted. Stored relations are kept
+     * and the order of the list is preserved (it matters for the TSconfig inheritance).
+     *
+     * @param array<string, mixed> $incomingFieldArray
+     * @param \Closure(?string): bool $isAcceptedKind
+     * @param list<int|string|null> $selfReferences entries that would reference the record itself
+     */
+    private function rejectAddedRelations(
+        array &$incomingFieldArray,
+        string $fieldName,
+        string $storedValue,
+        \Closure $isAcceptedKind,
+        array $selfReferences,
+        DataHandler $dataHandler,
+        string $table,
+        string|int $id,
+        string $labelKey,
+        string $logMessage,
+    ): void {
+        if (!array_key_exists($fieldName, $incomingFieldArray)) {
+            return;
+        }
+        $incoming = RelationList::fromValue($incomingFieldArray[$fieldName]);
+        $addedEntries = $incoming->getEntriesMissingIn(RelationList::fromValue($storedValue));
+        $kinds = $this->resolveKinds($addedEntries, $dataHandler);
+
+        $rejectedEntries = [];
+        foreach ($addedEntries as $entry) {
+            if (in_array($entry, $selfReferences, true) || !$isAcceptedKind($kinds[$entry] ?? null)) {
+                $rejectedEntries[] = $entry;
+            }
+        }
+        $incomingFieldArray[$fieldName] = $incoming->without($rejectedEntries)->toString();
+
+        if ($rejectedEntries !== []) {
+            $this->addCorrection($table, $id, $labelKey, $logMessage, ['uids' => implode(', ', $rejectedEntries)]);
+        }
+    }
+
+    /**
+     * Resolves the kind of referenced groups: stored groups by their uid, groups created in the
+     * same datamap by their NEW placeholder. Unresolvable references get no kind.
+     *
+     * @param list<int|string> $entries
+     * @return array<int|string, string>
+     */
+    private function resolveKinds(array $entries, DataHandler $dataHandler): array
+    {
+        $uidsByEntry = [];
+        $kinds = [];
+        foreach ($entries as $entry) {
+            if (is_int($entry)) {
+                $uidsByEntry[$entry] = $entry;
+                continue;
+            }
+            $substitutedUid = $dataHandler->substNEWwithIDs[$entry] ?? null;
+            if (is_int($substitutedUid)) {
+                $uidsByEntry[$entry] = $substitutedUid;
+                continue;
+            }
+            $pendingRecord = $dataHandler->datamap[self::GROUPS_TABLE][$entry] ?? null;
+            if (is_array($pendingRecord)) {
+                $pendingKind = $pendingRecord[GroupKind::FIELD_NAME] ?? null;
+                $kinds[$entry] = is_string($pendingKind) && $this->kindRegistry->isKind($pendingKind)
+                    ? $pendingKind
+                    : $this->getDefaultKind($pendingRecord, $dataHandler);
+            }
+        }
+
+        $storedKinds = $this->backendGroupRepository->findKindsByUids(array_values($uidsByEntry));
+        foreach ($uidsByEntry as $entry => $uid) {
+            if (isset($storedKinds[$uid])) {
+                $kinds[$entry] = $storedKinds[$uid];
+            }
+        }
+        return $kinds;
+    }
+
+    /**
+     * @param array<string, string> $arguments
+     */
+    private function addCorrection(string $table, string|int $id, string $labelKey, string $logMessage, array $arguments): void
+    {
+        $this->pendingCorrections[] = [
+            'table' => $table,
+            'id' => $id,
+            'labelKey' => $labelKey,
+            'logMessage' => $logMessage,
+            'arguments' => $arguments,
+        ];
     }
 
     /**
      * Untrusted input is only repeated in messages and logs if it looks like a kind identifier.
      */
-    private function describeUntrustedValue(?string $value): string
+    private function describeUntrustedValue(string $value): string
     {
-        return $value !== null && preg_match('/^[a-z0-9_]{1,64}$/', $value) === 1 ? $value : '(invalid value)';
-    }
-
-    private function isSelectableKind(string $kind): bool
-    {
-        return $kind === GroupKind::Classic->value || $this->kindFieldResolver->isKnownKind($kind);
-    }
-
-    private function hasValue(mixed $value): bool
-    {
-        if (is_array($value)) {
-            return $value !== [];
-        }
-        return $value !== null && $value !== '' && $value !== '0' && $value !== 0;
+        return preg_match('/^[A-Za-z0-9_-]{1,64}$/', $value) === 1 ? $value : '(invalid value)';
     }
 
     private function getUid(string|int $id): ?int

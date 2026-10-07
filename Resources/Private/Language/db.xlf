@@ -55,13 +55,46 @@
         <source>Building blocks</source>
       </trans-unit>
       <trans-unit id="be_groups.subgroup.role.description">
-        <source>Select the building blocks this role consists of. Users with this role receive all permissions of the selected building blocks.</source>
+        <source>Select the building blocks this role consists of, in the order of their TSconfig precedence. Users with this role receive all permissions of the selected building blocks. Roles and classic groups cannot be added.</source>
       </trans-unit>
       <trans-unit id="be_users.usergroup.description">
-        <source>Assign roles. Building blocks are not assigned to users directly but combined in roles.</source>
+        <source>Assign roles. Building blocks are not assigned to users directly but combined in roles; assigning them here is rejected when saving.</source>
       </trans-unit>
       <trans-unit id="extConf.allowClassicGroups">
         <source>Allow classic groups: groups of kind "classic" can be created and assigned to users. Switch this off after migrating to roles and building blocks to enforce the clean model. Existing assignments keep working.</source>
+      </trans-unit>
+      <trans-unit id="kind.group.notAllowedInRole.role">
+        <source>Roles (cannot be added to a role)</source>
+      </trans-unit>
+      <trans-unit id="kind.group.notAllowedInRole.classic">
+        <source>Classic groups (cannot be added to a role)</source>
+      </trans-unit>
+      <trans-unit id="kind.group.notAssignable.acl">
+        <source>Access rights (building blocks, assign through a role)</source>
+      </trans-unit>
+      <trans-unit id="kind.group.notAssignable.page_group">
+        <source>Page permission group (building blocks, assign through a role)</source>
+      </trans-unit>
+      <trans-unit id="kind.group.notAssignable.db_mount">
+        <source>Page tree mount (building blocks, assign through a role)</source>
+      </trans-unit>
+      <trans-unit id="kind.group.notAssignable.file_mount">
+        <source>File mount (building blocks, assign through a role)</source>
+      </trans-unit>
+      <trans-unit id="kind.group.notAssignable.file_operations">
+        <source>File operations (building blocks, assign through a role)</source>
+      </trans-unit>
+      <trans-unit id="kind.group.notAssignable.category_mount">
+        <source>Category mount (building blocks, assign through a role)</source>
+      </trans-unit>
+      <trans-unit id="kind.group.notAssignable.language">
+        <source>Languages (building blocks, assign through a role)</source>
+      </trans-unit>
+      <trans-unit id="kind.group.notAssignable.tsconfig">
+        <source>TSconfig (building blocks, assign through a role)</source>
+      </trans-unit>
+      <trans-unit id="kind.group.notAssignable.workspace">
+        <source>Workspace (building blocks, assign through a role)</source>
       </trans-unit>
     </body>
   </file>

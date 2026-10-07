@@ -16,15 +16,20 @@ declare(strict_types=1);
 namespace Cretection\BeGroups\Domain\Kind;
 
 use TYPO3\CMS\Core\Schema\Field\FieldTypeInterface;
+use TYPO3\CMS\Core\Schema\Field\RelationalFieldTypeInterface;
 use TYPO3\CMS\Core\Schema\TcaSchema;
 use TYPO3\CMS\Core\Schema\TcaSchemaFactory;
 
 /**
- * Determines which be_groups fields a group kind may use.
+ * Determines which permission fields a group of a certain kind may carry.
  *
- * TYPO3 evaluates every permission field of every group of a user, regardless of
- * what the backend form shows. A building block must therefore only carry values
- * in the fields its form actually displays ("what is not visible, must not apply").
+ * TYPO3 evaluates every permission field of every group of a user, regardless of what
+ * the backend form shows. A group may therefore only carry permissions in the fields
+ * its form displays ("what is not visible must not apply").
+ *
+ * Only permission fields are managed: the permission fields of the core and every field
+ * that is shown in the form of a role or building block. Other data on be_groups, such as
+ * identifiers of synchronisation tools, is never touched.
  *
  * @internal
  */
@@ -33,72 +38,111 @@ final readonly class KindFieldResolver
     public const TABLE = 'be_groups';
 
     /**
-     * Fields that never grant permissions and are therefore allowed for every kind.
+     * The permission fields of be_groups in TYPO3 14 (and of EXT:dashboard).
+     */
+    private const CORE_PERMISSION_FIELDS = [
+        'subgroup', 'db_mountpoints', 'file_mountpoints', 'file_permissions', 'workspace_perms',
+        'pagetypes_select', 'tables_modify', 'tables_select', 'non_exclude_fields', 'explicit_allowdeny',
+        'allowed_languages', 'custom_options', 'groupMods', 'mfa_providers', 'TSconfig', 'tsconfig_includes',
+        'category_perms', 'availableWidgets',
+    ];
+
+    /**
+     * Fields that never grant permissions.
      */
     private const NEUTRAL_FIELDS = ['title', 'description', 'hidden', GroupKind::FIELD_NAME];
 
     /**
-     * Field types that can safely be reset to an empty value via the DataHandler.
+     * Field types that can safely be reset through the DataHandler.
      */
     private const CLEARABLE_STRING_TYPES = ['select', 'group', 'category', 'text', 'input', 'passthrough', 'link', 'email', 'color', 'slug'];
     private const CLEARABLE_INTEGER_TYPES = ['check', 'number', 'radio'];
 
     public function __construct(
         private TcaSchemaFactory $tcaSchemaFactory,
+        private KindRegistry $kindRegistry,
     ) {}
 
     /**
-     * Whether the kind has its own form (TCA type). Kinds without a form are
-     * treated like "classic", because TYPO3 shows them with the default form.
+     * Whether the rules for building blocks and roles apply to the kind:
+     * it is configured, has its own form and is not "classic".
      */
-    public function isKnownKind(string $kind): bool
+    public function isRestrictedKind(string $kind): bool
     {
-        return $kind !== '' && $this->getSchema()->hasSubSchema($kind);
+        return $kind !== GroupKind::Classic->value
+            && $this->kindRegistry->isKind($kind)
+            && $this->getSchema()->hasSubSchema($kind);
     }
 
     /**
-     * Fields a group of the given kind must not carry, mapped to the value that empties them.
-     * Returns an empty list for "classic" and for kinds without a form.
+     * Permission fields a group of the given kind must not carry, mapped to the value that empties them.
      *
      * @return array<string, string|int>
      */
     public function getForeignFieldsWithEmptyValue(string $kind): array
     {
-        if ($kind === GroupKind::Classic->value || !$this->isKnownKind($kind)) {
+        if (!$this->isRestrictedKind($kind)) {
             return [];
         }
         $schema = $this->getSchema();
         $allowedFields = $this->getAllowedFieldNames($schema->getSubSchema($kind));
 
         $foreignFields = [];
-        foreach ($this->getFields($schema) as $field) {
-            $fieldName = $field->getName();
-            if (in_array($fieldName, self::NEUTRAL_FIELDS, true) || isset($allowedFields[$fieldName])) {
+        foreach ($this->getManagedFields() as $field) {
+            if (isset($allowedFields[$field->getName()])) {
                 continue;
             }
             $emptyValue = $this->getEmptyValue($field);
             if ($emptyValue !== null) {
-                $foreignFields[$fieldName] = $emptyValue;
+                $foreignFields[$field->getName()] = $emptyValue;
             }
         }
         return $foreignFields;
     }
 
     /**
-     * Fields of be_groups that cannot be emptied automatically (e.g. file or inline
-     * relations added by other extensions). They are reported by the audit instead.
+     * Whether a stored or incoming value grants nothing.
      *
-     * @return list<string>
+     * "0" is a real value in static selects (allowed_languages "0" is the default language),
+     * but means "no relation" in relation fields and "nothing" in checkboxes and numbers.
      */
-    public function getUnmanageableFieldNames(): array
+    public function isEmptyValue(string $fieldName, mixed $value): bool
     {
-        $fieldNames = [];
-        foreach ($this->getFields($this->getSchema()) as $field) {
-            if (!in_array($field->getName(), self::NEUTRAL_FIELDS, true) && $this->getEmptyValue($field) === null) {
-                $fieldNames[] = $field->getName();
+        if ($value === null || $value === '' || $value === []) {
+            return true;
+        }
+        if ($value !== '0' && $value !== 0) {
+            return false;
+        }
+        $schema = $this->getSchema();
+        if (!$schema->hasField($fieldName)) {
+            return false;
+        }
+        $field = $schema->getField($fieldName);
+        return $field instanceof RelationalFieldTypeInterface
+            || in_array($field->getType(), self::CLEARABLE_INTEGER_TYPES, true);
+    }
+
+    /**
+     * @return list<FieldTypeInterface>
+     */
+    private function getManagedFields(): array
+    {
+        $schema = $this->getSchema();
+        $managedFieldNames = array_fill_keys(self::CORE_PERMISSION_FIELDS, true);
+        foreach ($this->kindRegistry->getDefinitions() as $definition) {
+            if ($this->isRestrictedKind($definition->value)) {
+                $managedFieldNames += $this->getAllowedFieldNames($schema->getSubSchema($definition->value));
             }
         }
-        return $fieldNames;
+
+        $fields = [];
+        foreach ($schema->getFields() as $field) {
+            if (isset($managedFieldNames[$field->getName()]) && !in_array($field->getName(), self::NEUTRAL_FIELDS, true)) {
+                $fields[] = $field;
+            }
+        }
+        return $fields;
     }
 
     /**
@@ -107,7 +151,7 @@ final readonly class KindFieldResolver
     private function getAllowedFieldNames(TcaSchema $subSchema): array
     {
         $allowedFields = [];
-        foreach ($this->getFields($subSchema) as $field) {
+        foreach ($subSchema->getFields() as $field) {
             $allowedFields[$field->getName()] = true;
             // A form element may persist a companion field, e.g. "tables_modify" also writes "tables_select".
             $companionField = $field->getConfiguration()['selectFieldName'] ?? null;
@@ -116,18 +160,6 @@ final readonly class KindFieldResolver
             }
         }
         return $allowedFields;
-    }
-
-    /**
-     * @return list<FieldTypeInterface>
-     */
-    private function getFields(TcaSchema $schema): array
-    {
-        $fields = [];
-        foreach ($schema->getFields() as $field) {
-            $fields[] = $field;
-        }
-        return $fields;
     }
 
     private function getEmptyValue(FieldTypeInterface $field): string|int|null

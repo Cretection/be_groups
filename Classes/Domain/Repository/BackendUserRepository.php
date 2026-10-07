@@ -34,14 +34,16 @@ final readonly class BackendUserRepository
     ) {}
 
     /**
-     * Returns the stored usergroup list of a user, or null if the user does not exist.
+     * Returns the stored usergroup list of a user, including soft-deleted users
+     * (the DataHandler writes to them as well), or null if the user does not exist.
      */
     public function findUsergroupListByUid(int $uid): ?string
     {
         if ($uid <= 0) {
             return null;
         }
-        $queryBuilder = $this->createQueryBuilder();
+        $queryBuilder = $this->connectionPool->getQueryBuilderForTable(self::TABLE);
+        $queryBuilder->getRestrictions()->removeAll();
         $row = $queryBuilder
             ->select('uid', 'usergroup')
             ->from(self::TABLE)
@@ -54,13 +56,14 @@ final readonly class BackendUserRepository
     }
 
     /**
-     * Returns the usergroup lists of all users that have groups, indexed by uid.
+     * Returns the usergroup lists of all users that have groups, including soft-deleted users, indexed by uid.
      *
      * @return array<int, string>
      */
-    public function findUsergroupLists(): array
+    public function findUsergroupListsIncludingDeleted(): array
     {
-        $queryBuilder = $this->createQueryBuilder();
+        $queryBuilder = $this->connectionPool->getQueryBuilderForTable(self::TABLE);
+        $queryBuilder->getRestrictions()->removeAll();
         $result = $queryBuilder
             ->select('uid', 'usergroup')
             ->from(self::TABLE)

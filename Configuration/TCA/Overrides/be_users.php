@@ -2,31 +2,29 @@
 
 declare(strict_types=1);
 
-use Cretection\BeGroups\Configuration\ExtensionSettings;
 use Cretection\BeGroups\Domain\Kind\GroupKind;
-use TYPO3\CMS\Core\Configuration\ExtensionConfiguration;
-use TYPO3\CMS\Core\Utility\GeneralUtility;
+use TYPO3\CMS\Core\Utility\ExtensionManagementUtility;
 
 defined('TYPO3') or die();
 
 (static function (): void {
     $labels = 'be_groups.db:';
-    $settings = new ExtensionSettings(GeneralUtility::makeInstance(ExtensionConfiguration::class));
 
-    // Users get roles. "classic" groups stay assignable while they are allowed (decision E4).
-    $assignableKinds = [GroupKind::Role->value => $labels . 'kind.group.roles'];
-    if ($settings->isClassicGroupsAllowed()) {
-        $assignableKinds[GroupKind::Classic->value] = $labels . 'kind.group.legacy';
+    // The groups are grouped by kind with roles first. The list is not filtered: a filtered select
+    // drops stored values that are not part of its items on every save. Which groups may be
+    // assigned is enforced by the DataHandler rules (R4).
+    $itemGroups = [
+        GroupKind::Role->value => $labels . 'kind.group.roles',
+        GroupKind::Classic->value => $labels . 'kind.group.legacy',
+    ];
+    foreach (GroupKind::cases() as $kind) {
+        if ($kind->isBuildingBlock() && ($kind !== GroupKind::Workspace || ExtensionManagementUtility::isLoaded('workspaces'))) {
+            $itemGroups[$kind->value] = $labels . 'kind.group.notAssignable.' . $kind->value;
+        }
     }
-    $quotedKinds = implode(', ', array_map(static fn(string $kind): string => '\'' . $kind . '\'', array_keys($assignableKinds)));
 
     $usergroupConfig = &$GLOBALS['TCA']['be_users']['columns']['usergroup'];
     $usergroupConfig['description'] = $labels . 'be_users.usergroup.description';
-    $usergroupConfig['config']['foreign_table_where'] = sprintf(
-        'AND {#be_groups}.{#%s} IN (%s) ORDER BY be_groups.title',
-        GroupKind::FIELD_NAME,
-        $quotedKinds,
-    );
     $usergroupConfig['config']['foreign_table_item_group'] = GroupKind::FIELD_NAME;
-    $usergroupConfig['config']['itemGroups'] = $assignableKinds;
+    $usergroupConfig['config']['itemGroups'] = $itemGroups;
 })();
