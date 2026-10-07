@@ -1,0 +1,2 @@
+..  Standard-Include-Datei für alle .rst-Dateien dieses Handbuchs.
+..  Hier können zentrale Hinweise für alle Seiten eingefügt werden.

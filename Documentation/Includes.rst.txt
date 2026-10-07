@@ -1,0 +1,2 @@
+..  This is the default include file for all .rst files of this manual.
+..  You can put central messages to display on all pages here.

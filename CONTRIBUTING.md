@@ -1,0 +1,125 @@
+# Contributing to be_groups
+
+🇬🇧 English · 🇩🇪 [Deutsche Fassung](CONTRIBUTING.de.md)
+
+Thank you for helping to make backend permissions in TYPO3 manageable! This
+guide explains how to set up the project, how we work and what a pull
+request needs before it can be merged.
+
+> Both language versions of this guide are equally valid and are updated in
+> the same pull request. If they contradict each other, the English version
+> applies.
+
+## Ground rules
+
+- All code follows the binding
+  [coding guidelines](CODING_GUIDELINES.md)
+  ([Deutsch](CODING_GUIDELINES.de.md)).
+- Everything people read – documentation, labels, README, these guides – is
+  maintained in **English and German**. Code, comments and commit messages
+  are in English.
+- Security issues are **never** reported in public issues. See
+  [SECURITY.md](SECURITY.md).
+- Be kind. This project follows the
+  [TYPO3 Code of Conduct](CODE_OF_CONDUCT.md).
+
+## Setting up
+
+Requirements: Git, PHP 8.2–8.5, Composer and Docker (or Podman) for the
+container-based test runner.
+
+```bash
+git clone git@github.com:Cretection/be_groups.git
+cd be_groups
+composer install
+```
+
+Dependencies are installed into `.Build/`.
+
+## Running checks and tests
+
+All checks run in containers via `Build/Scripts/runTests.sh`, exactly like in
+CI. Show all suites and options:
+
+```bash
+Build/Scripts/runTests.sh -h
+```
+
+Common commands:
+
+```bash
+# Unit tests
+Build/Scripts/runTests.sh -s unit
+
+# Functional tests (SQLite by default, other DBMS with -d)
+Build/Scripts/runTests.sh -s functional
+Build/Scripts/runTests.sh -s functional -d mariadb
+Build/Scripts/runTests.sh -s functional -d postgres
+
+# Code style (dry run) and static analysis
+Build/Scripts/runTests.sh -s cgl -n
+Build/Scripts/runTests.sh -s phpstan
+
+# Render the documentation (English and German)
+Build/Scripts/runTests.sh -s docs
+```
+
+On GitHub Actions we use `-b docker`; locally Podman is the default.
+
+The Composer scripts are available as well, e.g. `composer check:static`
+and `composer fix`.
+
+## Commit messages
+
+```
+[TYPE] Imperative summary of at most 72 characters
+
+Explain *why* the change is necessary, not only what changed.
+Wrap the body at 72 characters.
+
+Resolves: #123
+```
+
+- `TYPE` is one of `[FEATURE]`, `[BUGFIX]`, `[TASK]`, `[DOCS]` or
+  `[SECURITY]`.
+- Prefix breaking changes with `[!!!]`, e.g. `[!!!][FEATURE] …`.
+- `Resolves: #123` is optional and references a GitHub issue.
+- The Gerrit lines of the TYPO3 core (`Change-Id`, `Releases:`) are not used.
+
+## Pull requests
+
+1. Create a branch from `main` and open a pull request against `main`.
+2. Keep pull requests focused: one topic per pull request.
+3. Every bug fix starts with a test that reproduces the bug.
+4. The pipeline must be green and the pull request must be reviewed before it
+   can be merged.
+
+### Definition of Done
+
+A pull request is done when:
+
+- [ ] All quality checks of the coding guidelines (§8.1 of `RELAUNCH.md`) are
+      green – without new baseline entries.
+- [ ] Tests cover the behavior, including error cases and writes via the
+      DataHandler API.
+- [ ] The documentation is updated in English **and** German, with
+      screenshots for UI changes.
+- [ ] All labels are translatable and the German translation is maintained.
+- [ ] UI changes are checked for keyboard operation, all backend themes in
+      light and dark mode, and with axe.
+- [ ] Writes use the DataHandler; sudo mode and permissions are tested.
+- [ ] `CHANGELOG.md` has an entry, and the commit message follows the format
+      above.
+- [ ] A second person reviewed the pull request.
+
+## Translations
+
+Labels live in `Resources/Private/Language/` (XLIFF 1.2). English is the
+source language; the German files (`de.*.xlf`) are maintained in this
+repository. Please keep both in sync in the same pull request.
+
+## Documentation
+
+The manual is written in reStructuredText in `Documentation/` (English) and
+`Documentation/Localization.de_DE/` (German). Keep the structure of both
+manuals identical so readers can switch the language on every page.

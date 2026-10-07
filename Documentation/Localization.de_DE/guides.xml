@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<guides
+    xmlns="https://www.phpdoc.org/guides" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="https://www.phpdoc.org/guides ../../vendor/phpdocumentor/guides-cli/resources/schema/guides.xsd"
+    links-are-relative="true"
+>
+    <extension
+        class="\T3Docs\Typo3DocsTheme\DependencyInjection\Typo3DocsThemeExtension"
+        project-home="https://extensions.typo3.org/extension/be_groups"
+        project-contact="mailto:info@cretection.it"
+        project-repository="https://github.com/Cretection/be_groups"
+        project-issues="https://github.com/Cretection/be_groups/issues"
+        edit-on-github-branch="main"
+        edit-on-github="Cretection/be_groups"
+        typo3-core-preferred="stable"
+        interlink-shortcode="cretection/be-groups"
+    />
+    <project
+        title="Backend Group Kinds (Deutsch)"
+        release="1.0.0-dev"
+        version="1.0"
+        copyright="since 2012 by Michael Klapper and the be_groups contributors"
+    />
+</guides>
