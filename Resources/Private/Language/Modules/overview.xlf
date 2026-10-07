@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" version="1.2">
+  <file source-language="en" datatype="plaintext" original="EXT:be_groups/Resources/Private/Language/Modules/overview.xlf" date="2026-10-07T12:00:00Z">
+    <header/>
+    <body>
+      <trans-unit id="title">
+        <source>Roles &amp; Building Blocks</source>
+      </trans-unit>
+      <trans-unit id="short_description">
+        <source>Overview of roles, building blocks and their usage</source>
+      </trans-unit>
+      <trans-unit id="description">
+        <source>Shows which building blocks every role consists of, which users have which role, where a building block is used and where the permission structure is inconsistent.</source>
+      </trans-unit>
+      <trans-unit id="intro">
+        <source>Roles combine building blocks and are assigned to users. Changes are made in the regular record forms; click a title to edit it.</source>
+      </trans-unit>
+      <trans-unit id="button.newRole">
+        <source>New role</source>
+      </trans-unit>
+      <trans-unit id="button.newBuildingBlock">
+        <source>New building block</source>
+      </trans-unit>
+      <trans-unit id="toolbar.label">
+        <source>Sorting and filter</source>
+      </trans-unit>
+      <trans-unit id="sorting.label">
+        <source>Sort by</source>
+      </trans-unit>
+      <trans-unit id="sorting.title">
+        <source>Title</source>
+      </trans-unit>
+      <trans-unit id="sorting.usage">
+        <source>Usage</source>
+      </trans-unit>
+      <trans-unit id="filter.label">
+        <source>Building blocks of kind</source>
+      </trans-unit>
+      <trans-unit id="filter.all">
+        <source>All kinds</source>
+      </trans-unit>
+      <trans-unit id="issues.title">
+        <source>Inconsistencies found</source>
+      </trans-unit>
+      <trans-unit id="issues.message">
+        <source>%1$s entries do not follow the role model. They are marked below.</source>
+      </trans-unit>
+      <trans-unit id="classicDisabled.title">
+        <source>Classic groups are disabled</source>
+      </trans-unit>
+      <trans-unit id="classicDisabled.message">
+        <source>The following classic groups still exist. They keep working but can no longer be assigned. Please convert them to roles and building blocks.</source>
+      </trans-unit>
+      <trans-unit id="roles.heading">
+        <source>Roles</source>
+      </trans-unit>
+      <trans-unit id="roles.caption">
+        <source>Roles with their building blocks and users</source>
+      </trans-unit>
+      <trans-unit id="roles.empty">
+        <source>There are no roles yet.</source>
+      </trans-unit>
+      <trans-unit id="buildingBlocks.heading">
+        <source>Building blocks</source>
+      </trans-unit>
+      <trans-unit id="buildingBlocks.caption">
+        <source>Building blocks of kind "%1$s" and where they are used</source>
+      </trans-unit>
+      <trans-unit id="buildingBlocks.empty">
+        <source>There are no building blocks for this selection.</source>
+      </trans-unit>
+      <trans-unit id="classic.heading">
+        <source>Classic groups</source>
+      </trans-unit>
+      <trans-unit id="classic.description">
+        <source>Classic groups combine all kinds of settings. Split them into building blocks and a role to benefit from the role model.</source>
+      </trans-unit>
+      <trans-unit id="column.role">
+        <source>Role</source>
+      </trans-unit>
+      <trans-unit id="column.buildingBlocks">
+        <source>Building blocks</source>
+      </trans-unit>
+      <trans-unit id="column.users">
+        <source>Users</source>
+      </trans-unit>
+      <trans-unit id="column.buildingBlock">
+        <source>Building block</source>
+      </trans-unit>
+      <trans-unit id="column.usedIn">
+        <source>Used in</source>
+      </trans-unit>
+      <trans-unit id="column.directUsers">
+        <source>Assigned directly to users</source>
+      </trans-unit>
+      <trans-unit id="label.none">
+        <source>none</source>
+      </trans-unit>
+      <trans-unit id="label.hidden">
+        <source>disabled</source>
+      </trans-unit>
+      <trans-unit id="label.userDisabled">
+        <source>disabled</source>
+      </trans-unit>
+      <trans-unit id="label.unused">
+        <source>unused</source>
+      </trans-unit>
+      <trans-unit id="label.edit">
+        <source>Edit "%1$s"</source>
+      </trans-unit>
+      <trans-unit id="issue.invalidMember">
+        <source>not a building block</source>
+      </trans-unit>
+      <trans-unit id="issue.missingMember">
+        <source>Group %1$s does not exist</source>
+      </trans-unit>
+      <trans-unit id="issue.directUsers">
+        <source>Building blocks should be assigned through roles only.</source>
+      </trans-unit>
+    </body>
+  </file>
+</xliff>

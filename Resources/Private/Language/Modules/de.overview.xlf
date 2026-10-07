@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" version="1.2">
+  <file source-language="en" target-language="de" datatype="plaintext" original="EXT:be_groups/Resources/Private/Language/Modules/de.overview.xlf" date="2026-10-07T12:00:00Z">
+    <header/>
+    <body>
+      <trans-unit id="title" approved="yes">
+        <source>Roles &amp; Building Blocks</source>
+        <target>Rollen &amp; Bausteine</target>
+      </trans-unit>
+      <trans-unit id="short_description" approved="yes">
+        <source>Overview of roles, building blocks and their usage</source>
+        <target>Übersicht über Rollen, Bausteine und ihre Verwendung</target>
+      </trans-unit>
+      <trans-unit id="description" approved="yes">
+        <source>Shows which building blocks every role consists of, which users have which role, where a building block is used and where the permission structure is inconsistent.</source>
+        <target>Zeigt, aus welchen Bausteinen jede Rolle besteht, welche Benutzer welche Rolle haben, wo ein Baustein verwendet wird und wo die Rechtestruktur inkonsistent ist.</target>
+      </trans-unit>
+      <trans-unit id="intro" approved="yes">
+        <source>Roles combine building blocks and are assigned to users. Changes are made in the regular record forms; click a title to edit it.</source>
+        <target>Rollen kombinieren Bausteine und werden Benutzern zugewiesen. Änderungen erfolgen in den gewohnten Datensatz-Formularen; ein Klick auf einen Titel öffnet ihn zur Bearbeitung.</target>
+      </trans-unit>
+      <trans-unit id="button.newRole" approved="yes">
+        <source>New role</source>
+        <target>Neue Rolle</target>
+      </trans-unit>
+      <trans-unit id="button.newBuildingBlock" approved="yes">
+        <source>New building block</source>
+        <target>Neuer Baustein</target>
+      </trans-unit>
+      <trans-unit id="toolbar.label" approved="yes">
+        <source>Sorting and filter</source>
+        <target>Sortierung und Filter</target>
+      </trans-unit>
+      <trans-unit id="sorting.label" approved="yes">
+        <source>Sort by</source>
+        <target>Sortieren nach</target>
+      </trans-unit>
+      <trans-unit id="sorting.title" approved="yes">
+        <source>Title</source>
+        <target>Titel</target>
+      </trans-unit>
+      <trans-unit id="sorting.usage" approved="yes">
+        <source>Usage</source>
+        <target>Verwendung</target>
+      </trans-unit>
+      <trans-unit id="filter.label" approved="yes">
+        <source>Building blocks of kind</source>
+        <target>Bausteine vom Typ</target>
+      </trans-unit>
+      <trans-unit id="filter.all" approved="yes">
+        <source>All kinds</source>
+        <target>Alle Typen</target>
+      </trans-unit>
+      <trans-unit id="issues.title" approved="yes">
+        <source>Inconsistencies found</source>
+        <target>Inkonsistenzen gefunden</target>
+      </trans-unit>
+      <trans-unit id="issues.message" approved="yes">
+        <source>%1$s entries do not follow the role model. They are marked below.</source>
+        <target>%1$s Einträge folgen nicht dem Rollenmodell. Sie sind unten markiert.</target>
+      </trans-unit>
+      <trans-unit id="classicDisabled.title" approved="yes">
+        <source>Classic groups are disabled</source>
+        <target>Klassische Gruppen sind abgeschaltet</target>
+      </trans-unit>
+      <trans-unit id="classicDisabled.message" approved="yes">
+        <source>The following classic groups still exist. They keep working but can no longer be assigned. Please convert them to roles and building blocks.</source>
+        <target>Die folgenden klassischen Gruppen existieren noch. Sie wirken weiter, können aber nicht mehr zugewiesen werden. Bitte wandeln Sie sie in Rollen und Bausteine um.</target>
+      </trans-unit>
+      <trans-unit id="roles.heading" approved="yes">
+        <source>Roles</source>
+        <target>Rollen</target>
+      </trans-unit>
+      <trans-unit id="roles.caption" approved="yes">
+        <source>Roles with their building blocks and users</source>
+        <target>Rollen mit ihren Bausteinen und Benutzern</target>
+      </trans-unit>
+      <trans-unit id="roles.empty" approved="yes">
+        <source>There are no roles yet.</source>
+        <target>Es gibt noch keine Rollen.</target>
+      </trans-unit>
+      <trans-unit id="buildingBlocks.heading" approved="yes">
+        <source>Building blocks</source>
+        <target>Bausteine</target>
+      </trans-unit>
+      <trans-unit id="buildingBlocks.caption" approved="yes">
+        <source>Building blocks of kind "%1$s" and where they are used</source>
+        <target>Bausteine vom Typ „%1$s“ und wo sie verwendet werden</target>
+      </trans-unit>
+      <trans-unit id="buildingBlocks.empty" approved="yes">
+        <source>There are no building blocks for this selection.</source>
+        <target>Für diese Auswahl gibt es keine Bausteine.</target>
+      </trans-unit>
+      <trans-unit id="classic.heading" approved="yes">
+        <source>Classic groups</source>
+        <target>Klassische Gruppen</target>
+      </trans-unit>
+      <trans-unit id="classic.description" approved="yes">
+        <source>Classic groups combine all kinds of settings. Split them into building blocks and a role to benefit from the role model.</source>
+        <target>Klassische Gruppen vereinen alle Arten von Einstellungen. Teilen Sie sie in Bausteine und eine Rolle auf, um vom Rollenmodell zu profitieren.</target>
+      </trans-unit>
+      <trans-unit id="column.role" approved="yes">
+        <source>Role</source>
+        <target>Rolle</target>
+      </trans-unit>
+      <trans-unit id="column.buildingBlocks" approved="yes">
+        <source>Building blocks</source>
+        <target>Bausteine</target>
+      </trans-unit>
+      <trans-unit id="column.users" approved="yes">
+        <source>Users</source>
+        <target>Benutzer</target>
+      </trans-unit>
+      <trans-unit id="column.buildingBlock" approved="yes">
+        <source>Building block</source>
+        <target>Baustein</target>
+      </trans-unit>
+      <trans-unit id="column.usedIn" approved="yes">
+        <source>Used in</source>
+        <target>Verwendet in</target>
+      </trans-unit>
+      <trans-unit id="column.directUsers" approved="yes">
+        <source>Assigned directly to users</source>
+        <target>Benutzern direkt zugewiesen</target>
+      </trans-unit>
+      <trans-unit id="label.none" approved="yes">
+        <source>none</source>
+        <target>keine</target>
+      </trans-unit>
+      <trans-unit id="label.hidden" approved="yes">
+        <source>disabled</source>
+        <target>deaktiviert</target>
+      </trans-unit>
+      <trans-unit id="label.userDisabled" approved="yes">
+        <source>disabled</source>
+        <target>deaktiviert</target>
+      </trans-unit>
+      <trans-unit id="label.unused" approved="yes">
+        <source>unused</source>
+        <target>unbenutzt</target>
+      </trans-unit>
+      <trans-unit id="label.edit" approved="yes">
+        <source>Edit "%1$s"</source>
+        <target>„%1$s“ bearbeiten</target>
+      </trans-unit>
+      <trans-unit id="issue.invalidMember" approved="yes">
+        <source>not a building block</source>
+        <target>kein Baustein</target>
+      </trans-unit>
+      <trans-unit id="issue.missingMember" approved="yes">
+        <source>Group %1$s does not exist</source>
+        <target>Gruppe %1$s existiert nicht</target>
+      </trans-unit>
+      <trans-unit id="issue.directUsers" approved="yes">
+        <source>Building blocks should be assigned through roles only.</source>
+        <target>Bausteine sollten nur über Rollen zugewiesen werden.</target>
+      </trans-unit>
+    </body>
+  </file>
+</xliff>
