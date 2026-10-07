@@ -170,3 +170,21 @@ Afterwards:
     Changing the kind of a group manually clears all fields that do not
     belong to the new kind (rule R1). Prefer the assistants, or check the
     group before you change its kind.
+
+..  _migration-starter:
+
+Starting with the default groups of TYPO3
+=========================================
+
+TYPO3 creates the two recommended groups "Editor" and "Advanced Editor" on
+the command line. Split them afterwards to start with two roles:
+
+..  code-block:: bash
+
+    vendor/bin/typo3 setup:begroups:default --groups=Both
+    vendor/bin/typo3 begroups:split --all
+
+The result are the roles "Editor" and "Advanced Editor", each with its own
+access rights building block (``ACL_Editor``, ``ACL_Advanced Editor``), and
+the page tree entry point and file mount building blocks both roles share
+(``DBM_Editor``, ``FM_Editor``).

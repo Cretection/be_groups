@@ -177,8 +177,6 @@ nicht verfügbar:
 *   Bearbeiten im Modul „Rollen & Bausteine“ (eine Matrix aus Rollen und
     Bausteinen). Die Übersicht ohne Bearbeitung ist bereits verfügbar, siehe
     :ref:`usage-module`.
-*   Ein Starter-Set aus Rollen und Bausteinen nach den Standardgruppen des
-    TYPO3-Core.
 
 ..  _developer-contributing:
 

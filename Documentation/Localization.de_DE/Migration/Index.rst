@@ -182,3 +182,22 @@ Danach:
     Wenn Sie den Typ einer Gruppe von Hand ändern, werden alle Felder
     geleert, die nicht zum neuen Typ gehören (Regel R1). Nutzen Sie lieber
     die Assistenten, oder prüfen Sie die Gruppe, bevor Sie ihren Typ ändern.
+
+..  _migration-starter:
+
+Mit den Standardgruppen von TYPO3 beginnen
+==========================================
+
+TYPO3 legt die beiden empfohlenen Gruppen „Editor“ und „Advanced Editor“ auf
+der Kommandozeile an. Teilen Sie sie danach auf, um mit zwei Rollen zu
+beginnen:
+
+..  code-block:: bash
+
+    vendor/bin/typo3 setup:begroups:default --groups=Both
+    vendor/bin/typo3 begroups:split --all
+
+Das Ergebnis sind die Rollen „Editor“ und „Advanced Editor“ mit je einem
+eigenen Zugriffsrechte-Baustein (``ACL_Editor``, ``ACL_Advanced Editor``)
+sowie den Bausteinen für Seitenbaum-Einstiegspunkt und Dateifreigabe, die
+sich beide Rollen teilen (``DBM_Editor``, ``FM_Editor``).
