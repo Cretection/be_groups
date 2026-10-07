@@ -1,0 +1,18 @@
+{
+	"name": "cretection/be-groups-legacy-schema",
+	"description": "Test fixture - Adds the database columns of be_groups 0.0.x",
+	"license": "GPL-2.0-or-later",
+	"type": "typo3-cms-extension",
+	"require": {
+		"typo3/cms-core": "*"
+	},
+	"extra": {
+		"typo3/cms": {
+			"Package": {
+				"providesPackages": {}
+			},
+			"extension-key": "be_groups_legacy_schema",
+			"version": "1.0.0"
+		}
+	}
+}
