@@ -66,17 +66,22 @@ final class ExceptionCodeChecker extends AbstractPhpIntegrityChecker
             $this->messages['undefinedCodes'] = ['see $this->undefinedCodes'];
             return;
         }
-        try {
-            $exceptionCode = $exceptionCodeArgument->value->value;
-        } catch (\Exception) {
-            if ($exceptionCodeArgument->value instanceof Node\Expr\MethodCall && $exceptionCodeArgument->value->name->name === 'getCode') {
-                // some magic happens reusing a previously caught exception. Just leave it alone.
-                return;
-            }
+        $codeExpression = $exceptionCodeArgument->value;
+        if ($codeExpression instanceof Node\Expr\MethodCall
+            && $codeExpression->name instanceof Node\Identifier
+            && $codeExpression->name->toString() === 'getCode'
+        ) {
+            // A previously caught exception is re-thrown with its own code. Just leave it alone.
+            return;
+        }
+        // Only literal codes can be checked. Reading "->value" of other expressions (constants,
+        // method calls, ...) would only emit a warning instead of throwing, so check the node type.
+        if (!$codeExpression instanceof Node\Scalar\Int_ && !$codeExpression instanceof Node\Scalar\String_) {
             $this->malformedCodes['undefined'][] = $position;
             $this->messages['malformedCodes'] = ['see $this->malformedCodes'];
             return;
         }
+        $exceptionCode = $codeExpression->value;
         if (!MathUtility::canBeInterpretedAsInteger($exceptionCode) || strlen((string)$exceptionCode) !== 10) {
             $this->malformedCodes[$exceptionCode][] = $position;
             $this->messages['malformedCodes'] = ['see $this->malformedCodes'];

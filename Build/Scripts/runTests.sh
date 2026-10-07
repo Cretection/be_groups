@@ -217,12 +217,16 @@ Options:
             - composerNormalize: Normalizes the composer.json. Set -n for dry-run.
             - composerUpdateMax: "composer update" with the highest dependencies. Works on a
               throwaway copy of the manifest, so "composer.json" stays untouched.
+            - composerUpdateDev: install the development version of the next TYPO3 major version
+              (typo3/cms-*:dev-main, typo3/testing-framework:dev-main, PHPUnit 12) to check the
+              forward compatibility. Works on a throwaway copy of the manifest. Use with -p 8.5.
             - composerUpdateMin: "composer update --prefer-lowest", with platform.php set to the
               selected PHP version x.x.0. "composer.json" stays untouched, see composerUpdateMax.
             - coverageMerge: Merges the coverage collected with -m into one clover report
               (needs "phpunit/phpcov").
             - docs: Renders the documentation and fails on rendering warnings and errors.
             - fix: Runs all automatic fixes (composer normalize, Rector, PHP-CS-Fixer, XLIFF).
+              All steps run; the suite fails if any of them fails.
             - functional: PHP functional tests
             - integrity: PHP integrity checks (exception codes, final test classes,
               no PHPUnit annotations, no "test" method prefix)
@@ -689,6 +693,14 @@ case ${TEST_SUITE} in
         ${CONTAINER_BIN} run ${CONTAINER_COMMON_PARAMS} --name composer-update-max-${SUFFIX} -e COMPOSER=${COMPOSER_BUILD_FILE} ${COMPOSER_PARAMS} ${IMAGE_PHP} /bin/sh -c "${COMMAND}"
         SUITE_EXIT_CODE=$?
         ;;
+    composerUpdateDev)
+        # The TYPO3 extension for PHPStan and the TYPO3 Rector rules only support released core versions.
+        DEV_PACKAGES="typo3/cms-core:dev-main typo3/cms-backend:dev-main"
+        DEV_DEV_PACKAGES="typo3/cms-dashboard:dev-main typo3/cms-workspaces:dev-main typo3/testing-framework:dev-main phpunit/phpunit:^12.5"
+        COMMAND="cp composer.json ${COMPOSER_BUILD_FILE} && (composer config --unset platform.php && composer config minimum-stability dev && composer config prefer-stable true && composer remove --dev --no-update saschaegerer/phpstan-typo3 ssch/typo3-rector && composer require --no-update ${DEV_PACKAGES} && composer require --dev --no-update ${DEV_DEV_PACKAGES} && composer update --no-progress --no-interaction && composer show typo3/cms-core); COMPOSER_EXIT_CODE=\$?; rm -f ${COMPOSER_BUILD_FILE}; exit \$COMPOSER_EXIT_CODE"
+        ${CONTAINER_BIN} run ${CONTAINER_COMMON_PARAMS} --name composer-update-dev-${SUFFIX} -e COMPOSER=${COMPOSER_BUILD_FILE} ${COMPOSER_PARAMS} ${IMAGE_PHP} /bin/sh -c "${COMMAND}"
+        SUITE_EXIT_CODE=$?
+        ;;
     composerUpdateMin)
         COMMAND="cp composer.json ${COMPOSER_BUILD_FILE} && (composer config platform.php ${PHP_VERSION}.0 && composer require --no-ansi --no-interaction --no-progress --no-install typo3/minimal:^${CORE_VERSION} && composer update --prefer-lowest --no-progress --no-interaction && composer show); COMPOSER_EXIT_CODE=\$?; rm -f ${COMPOSER_BUILD_FILE}; exit \$COMPOSER_EXIT_CODE"
         ${CONTAINER_BIN} run ${CONTAINER_COMMON_PARAMS} --name composer-update-min-${SUFFIX} -e COMPOSER=${COMPOSER_BUILD_FILE} ${COMPOSER_PARAMS} ${IMAGE_PHP} /bin/sh -c "${COMMAND}"
@@ -732,10 +744,13 @@ case ${TEST_SUITE} in
         ;;
     fix)
         composerNormalize
-        rector
-        cgl
-        xliffNormalize
         SUITE_EXIT_CODE=$?
+        rector
+        SUITE_EXIT_CODE=$((SUITE_EXIT_CODE + $?))
+        cgl
+        SUITE_EXIT_CODE=$((SUITE_EXIT_CODE + $?))
+        xliffNormalize
+        SUITE_EXIT_CODE=$((SUITE_EXIT_CODE + $?))
         ;;
     functional)
         # The DBMS, its version and the driver are part of the name, so that the coverage of

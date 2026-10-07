@@ -27,11 +27,14 @@
 >
     <php>
         <ini name="display_errors" value="1"/>
+        <ini name="memory_limit" value="1G"/>
         <env name="TYPO3_CONTEXT" value="Testing"/>
     </php>
     <source restrictNotices="true" restrictWarnings="true" ignoreIndirectDeprecations="true">
         <include>
             <directory>../../Classes</directory>
+            <directory>../../Configuration</directory>
+            <file>../../ext_localconf.php</file>
         </include>
     </source>
     <testsuites>

@@ -166,17 +166,24 @@ jobs:
       - name: Render the documentation (warnings fail the build)
         run: Build/Scripts/runTests.sh -b docker -s docs
 
-  # TODO: Add an allowed-to-fail job against TYPO3 v15-dev (PHP 8.5) once the
-  #       15.0.x-dev branch of the TYPO3 Core is installable together with the
-  #       testing framework (CODING_GUIDELINES.md, §14). Sketch:
-  #
-  # typo3-dev:
-  #   name: Unit and functional tests against TYPO3 v15-dev (allowed to fail)
-  #   runs-on: ubuntu-26.04
-  #   continue-on-error: true
-  #   steps:
-  #     - checkout, then "composer require --no-update typo3/cms-core:15.0.x-dev ..."
-  #       on a throwaway copy of composer.json, then the unit and the sqlite functional suite
-  #
+  typo3-next:
+    name: Unit and functional tests against TYPO3 v15-dev
+    runs-on: ubuntu-26.04
+    timeout-minutes: 30
+    # The development version of the core changes daily. A failure does not block merging,
+    # but has to be fixed before the next release (RELAUNCH.md, compatibility policy).
+    continue-on-error: true
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Install the development version of TYPO3 v15
+        run: Build/Scripts/runTests.sh -b docker -p 8.5 -s composerUpdateDev
+      - name: Unit tests
+        run: Build/Scripts/runTests.sh -b docker -p 8.5 -s unit
+      - name: Functional tests (SQLite)
+        run: Build/Scripts/runTests.sh -b docker -p 8.5 -s functional -d sqlite
+
   # TODO: Collect the coverage with "-m" and merge it with "-s coverageMerge" once
   #       "phpunit/phpcov" is part of the development dependencies.

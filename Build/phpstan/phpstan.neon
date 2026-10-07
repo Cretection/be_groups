@@ -8,92 +8,94 @@
 #   its own root namespace, i.e. internal TYPO3 Core API (CODING_GUIDELINES.md, §1)
 
 includes:
-  - ../../.Build/vendor/spaze/phpstan-disallowed-calls/disallowed-dangerous-calls.neon
-  - ../../.Build/vendor/spaze/phpstan-disallowed-calls/disallowed-execution-calls.neon
-  - ../../.Build/vendor/spaze/phpstan-disallowed-calls/disallowed-insecure-calls.neon
-  - ../../.Build/vendor/spaze/phpstan-disallowed-calls/disallowed-loose-calls.neon
+	- ../../.Build/vendor/spaze/phpstan-disallowed-calls/disallowed-dangerous-calls.neon
+	- ../../.Build/vendor/spaze/phpstan-disallowed-calls/disallowed-execution-calls.neon
+	- ../../.Build/vendor/spaze/phpstan-disallowed-calls/disallowed-insecure-calls.neon
+	- ../../.Build/vendor/spaze/phpstan-disallowed-calls/disallowed-loose-calls.neon
 
 parameters:
-  level: max
-  phpVersion: 80200
+	level: max
+	phpVersion: 80200
 
-  tmpDir: ../../.Build/.cache/phpstan
+	tmpDir: ../../.Build/.cache/phpstan
 
-  paths:
-    - ../../Classes
-    - ../../Configuration
-    - ../../Tests
-    - ../../ext_localconf.php
+	paths:
+		- ../../Classes
+		- ../../Configuration
+		- ../../Tests
+		- ../../ext_localconf.php
 
-  featureToggles:
-    internalTag: true
+	featureToggles:
+		internalTag: true
 
-  # Scoped, documented exceptions - no baseline. They only apply to the configuration
-  # files, which work on the untyped $GLOBALS array and have no namespace by design.
-  ignoreErrors:
-    -
-      # $GLOBALS['TCA'] and $GLOBALS['TYPO3_CONF_VARS'] are "mixed" for PHPStan
-      identifier: offsetAccess.nonOffsetAccessible
-      paths:
-        - ../../Configuration/*
-        - ../../ext_localconf.php
-      reportUnmatched: false
-    -
-      # The configuration files have no namespace, so the own "@internal" classes of
-      # be_groups are used "from outside the root namespace Cretection" there.
-      message: '#internal class Cretection\\BeGroups\\#'
-      paths:
-        - ../../Configuration/*
-        - ../../ext_localconf.php
-      reportUnmatched: false
+	# Scoped, documented exceptions - no baseline. They only apply to the configuration
+	# files, which work on the untyped $GLOBALS array and have no namespace by design.
+	ignoreErrors:
+		-
+			# $GLOBALS['TCA'] and $GLOBALS['TYPO3_CONF_VARS'] are "mixed" for PHPStan
+			identifier: offsetAccess.nonOffsetAccessible
+			paths:
+				- ../../Configuration/*
+				- ../../ext_localconf.php
+				- ../../Tests/Functional/Fixtures/Extensions/*/Configuration/*
+			reportUnmatched: false
+		-
+			# The configuration files have no namespace, so the own "@internal" classes of
+			# be_groups are used "from outside the root namespace Cretection" there.
+			message: '#internal class Cretection\\BeGroups\\#'
+			paths:
+				- ../../Configuration/*
+				- ../../ext_localconf.php
+				- ../../Tests/Functional/Fixtures/Extensions/*/Configuration/*
+			reportUnmatched: false
 
-  disallowedFunctionCalls:
-    -
-      function:
-        - 'var_dump()'
-        - 'var_export()'
-        - 'print_r()'
-        - 'debug_zval_dump()'
-        - 'debug_print_backtrace()'
-        - 'xdebug_break()'
-        - 'debug()'
-        - 'dump()'
-        - 'dd()'
-      message: 'Remove debug code or use PSR-3 logging (CODING_GUIDELINES.md, §3.4).'
-    -
-      function: 'header()'
-      message: 'Use the PSR-7 response instead.'
+	disallowedFunctionCalls:
+		-
+			function:
+				- 'var_dump()'
+				- 'var_export()'
+				- 'print_r()'
+				- 'debug_zval_dump()'
+				- 'debug_print_backtrace()'
+				- 'xdebug_break()'
+				- 'debug()'
+				- 'dump()'
+				- 'dd()'
+			message: 'Remove debug code or use PSR-3 logging (CODING_GUIDELINES.md, §3.4).'
+		-
+			function: 'header()'
+			message: 'Use the PSR-7 response instead.'
 
-  disallowedStaticCalls:
-    -
-      method:
-        - 'TYPO3\CMS\Extbase\Utility\DebuggerUtility::var_dump()'
-        - 'TYPO3\CMS\Core\Utility\DebugUtility::debug()'
-      message: 'Remove debug code or use PSR-3 logging (CODING_GUIDELINES.md, §3.4).'
-    -
-      method:
-        - 'TYPO3\CMS\Core\Utility\GeneralUtility::_GP()'
-        - 'TYPO3\CMS\Core\Utility\GeneralUtility::_GET()'
-        - 'TYPO3\CMS\Core\Utility\GeneralUtility::_POST()'
-        - 'TYPO3\CMS\Core\Utility\GeneralUtility::_GPmerged()'
-      message: 'Read request data from the PSR-7 request (CODING_GUIDELINES.md, §19).'
+	disallowedStaticCalls:
+		-
+			method:
+				- 'TYPO3\CMS\Extbase\Utility\DebuggerUtility::var_dump()'
+				- 'TYPO3\CMS\Core\Utility\DebugUtility::debug()'
+			message: 'Remove debug code or use PSR-3 logging (CODING_GUIDELINES.md, §3.4).'
+		-
+			method:
+				- 'TYPO3\CMS\Core\Utility\GeneralUtility::_GP()'
+				- 'TYPO3\CMS\Core\Utility\GeneralUtility::_GET()'
+				- 'TYPO3\CMS\Core\Utility\GeneralUtility::_POST()'
+				- 'TYPO3\CMS\Core\Utility\GeneralUtility::_GPmerged()'
+			message: 'Read request data from the PSR-7 request (CODING_GUIDELINES.md, §19).'
 
-  disallowedSuperglobals:
-    -
-      superglobal:
-        - '$_GET'
-        - '$_POST'
-        - '$_FILES'
-        - '$_COOKIE'
-        - '$_REQUEST'
-        - '$_SERVER'
-        - '$_SESSION'
-        - '$_ENV'
-      message: 'Use the PSR-7 request instead.'
+	disallowedSuperglobals:
+		-
+			superglobal:
+				- '$_GET'
+				- '$_POST'
+				- '$_FILES'
+				- '$_COOKIE'
+				- '$_REQUEST'
+				- '$_SERVER'
+				- '$_SESSION'
+				- '$_ENV'
+			message: 'Use the PSR-7 request instead.'
 
-  disallowedConstants:
-    -
-      constant:
-        - 'TYPO3_MODE'
-        - 'TYPO3_REQUESTTYPE'
-      message: 'Removed in TYPO3 v12, use "defined(''TYPO3'') or die();" (CODING_GUIDELINES.md, §19).'
+	disallowedConstants:
+		-
+			constant:
+				- 'TYPO3_MODE'
+				- 'TYPO3_REQUESTTYPE'
+			message: 'Removed in TYPO3 v12, use "defined(''TYPO3'') or die();" (CODING_GUIDELINES.md, §19).'

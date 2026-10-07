@@ -87,7 +87,7 @@
 	},
 	"extra": {
 		"branch-alias": {
-			"dev-relaunch": "1.0.x-dev"
+			"dev-main": "1.0.x-dev"
 		},
 		"typo3/cms": {
 			"Package": {
