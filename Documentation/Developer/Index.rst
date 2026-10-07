@@ -161,6 +161,53 @@ Use an identifier with a prefix of your extension, so it cannot collide with
 future checks of this extension. :php:`AuditFinding`, :php:`AuditSeverity`
 and the event are public API and follow semantic versioning.
 
+..  _developer-kind-event:
+
+Choosing the kind of new groups
+===============================
+
+Import and synchronisation tools (e.g. for LDAP) often create groups through
+the DataHandler without a kind. Such groups get the default kind: the TCA
+default, overridden by ``TCAdefaults.be_groups.tx_begroups_kind`` in user and
+page TSconfig. The event
+:php:`\Cretection\BeGroups\Event\ModifyKindOfNewGroupEvent` lets you choose
+the kind from the values of the record instead, for example from a prefix of
+the title:
+
+..  code-block:: php
+    :caption: EXT:my_extension/Classes/EventListener/KindFromTitlePrefix.php
+
+    <?php
+
+    declare(strict_types=1);
+
+    namespace MyVendor\MyExtension\EventListener;
+
+    use Cretection\BeGroups\Event\ModifyKindOfNewGroupEvent;
+    use TYPO3\CMS\Core\Attribute\AsEventListener;
+
+    final readonly class KindFromTitlePrefix
+    {
+        private const PREFIXES = ['R_' => 'role', 'DBM_' => 'db_mount', 'FM_' => 'file_mount'];
+
+        #[AsEventListener('my-extension/kind-from-title-prefix')]
+        public function __invoke(ModifyKindOfNewGroupEvent $event): void
+        {
+            $title = $event->getRecord()['title'] ?? '';
+            foreach (self::PREFIXES as $prefix => $kind) {
+                if (is_string($title) && str_starts_with($title, $prefix)) {
+                    $event->setKind($kind);
+                }
+            }
+        }
+    }
+
+The event is only dispatched for new groups without a kind; an explicit
+kind is never replaced. A kind that is not configured is ignored. All rules
+apply to the chosen kind – a group that becomes a building block keeps only
+the permissions of its kind, and a classic group is rejected while classic
+groups are disabled.
+
 ..  _developer-planned:
 
 Planned
@@ -169,8 +216,6 @@ Planned
 The following parts of the relaunch are planned for version 1.0.0 and are
 not available yet:
 
-*   Further PSR-14 events at the extension points (kind assignment,
-    classification).
 *   Editing in the module "Roles & Building Blocks" (a matrix of roles and
     building blocks). The read-only overview is available already, see
     :ref:`usage-module`.

@@ -22,6 +22,8 @@ use Cretection\BeGroups\Domain\Kind\KindRegistry;
 use Cretection\BeGroups\Domain\Repository\BackendGroupRepository;
 use Cretection\BeGroups\Domain\Repository\BackendUserRepository;
 use Cretection\BeGroups\Domain\Repository\DatabaseRow;
+use Cretection\BeGroups\Event\ModifyKindOfNewGroupEvent;
+use Psr\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\DependencyInjection\Attribute\Autoconfigure;
 use TYPO3\CMS\Backend\Utility\BackendUtility;
 use TYPO3\CMS\Core\DataHandling\DataHandler;
@@ -56,6 +58,14 @@ final class GroupKindRules
      */
     private array $pendingCorrections = [];
 
+    /**
+     * The kinds of new groups without kind, by NEW placeholder: the rules of a role that refers to a
+     * new group and the new group itself must be evaluated with the same kind.
+     *
+     * @var array<string, string>
+     */
+    private array $kindsOfNewGroups = [];
+
     public function __construct(
         private readonly KindRegistry $kindRegistry,
         private readonly KindFieldResolver $kindFieldResolver,
@@ -63,6 +73,7 @@ final class GroupKindRules
         private readonly BackendUserRepository $backendUserRepository,
         private readonly ExtensionSettings $extensionSettings,
         private readonly RuleViolationReporter $reporter,
+        private readonly EventDispatcherInterface $eventDispatcher,
     ) {}
 
     /**
@@ -167,7 +178,7 @@ final class GroupKindRules
         }
 
         if ($currentKind === null) {
-            $kind = $incomingKind ?? $this->getDefaultKind($incomingFieldArray, $dataHandler);
+            $kind = $incomingKind ?? $this->getKindOfNewGroup((string)$id, $incomingFieldArray, $dataHandler);
             if ($kind === GroupKind::Classic->value && !$this->extensionSettings->isClassicGroupsAllowed()) {
                 $this->reporter->reportRejection(
                     $dataHandler->BE_USER,
@@ -201,8 +212,25 @@ final class GroupKindRules
     }
 
     /**
-     * The kind a new record gets when the datamap contains none, determined in the same order as
-     * the DataHandler does: TCA default, overridden by user TSconfig, overridden by page TSconfig.
+     * The kind a new record gets when the datamap contains none: the default kind, which listeners
+     * of ModifyKindOfNewGroupEvent may replace by another configured kind.
+     *
+     * @param array<array-key, mixed> $fieldArray
+     */
+    private function getKindOfNewGroup(string $placeholder, array $fieldArray, DataHandler $dataHandler): string
+    {
+        if (!isset($this->kindsOfNewGroups[$placeholder])) {
+            $defaultKind = $this->getDefaultKind($fieldArray, $dataHandler);
+            $event = new ModifyKindOfNewGroupEvent($fieldArray, $defaultKind);
+            $this->eventDispatcher->dispatch($event);
+            $this->kindsOfNewGroups[$placeholder] = $this->kindRegistry->isKind($event->getKind()) ? $event->getKind() : $defaultKind;
+        }
+        return $this->kindsOfNewGroups[$placeholder];
+    }
+
+    /**
+     * The default kind of a new record, determined in the same order as the DataHandler does:
+     * TCA default, overridden by user TSconfig, overridden by page TSconfig.
      *
      * @param array<array-key, mixed> $fieldArray
      */
@@ -366,7 +394,7 @@ final class GroupKindRules
                 $pendingKind = $pendingRecord[GroupKind::FIELD_NAME] ?? null;
                 $kinds[$entry] = is_string($pendingKind) && $this->kindRegistry->isKind($pendingKind)
                     ? $pendingKind
-                    : $this->getDefaultKind($pendingRecord, $dataHandler);
+                    : $this->getKindOfNewGroup($entry, $pendingRecord, $dataHandler);
             }
         }
 

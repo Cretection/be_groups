@@ -52,6 +52,9 @@ Relaunch for TYPO3 14.3 LTS (version 1.0.0).
   warnings too), JSON output with `--format=json`.
 - PSR-14 event `AfterAuditFindingsCollectedEvent`: other extensions add
   findings of their own checks.
+- PSR-14 event `ModifyKindOfNewGroupEvent`: import and synchronisation
+  tools that create groups without a kind can choose it from the values of
+  the record, e.g. from a prefix of the title.
 - Assistant `begroups:classify` (`--dry-run`): proposes a kind for every
   classic group and changes the kind of groups that serve one purpose,
   combine other groups (role) or only own pages (page group).

@@ -164,6 +164,53 @@ mit künftigen Prüfungen dieser Extension kollidiert. :php:`AuditFinding`,
 :php:`AuditSeverity` und das Event sind öffentliche API und folgen der
 semantischen Versionierung.
 
+..  _developer-kind-event:
+
+Den Typ neuer Gruppen bestimmen
+===============================
+
+Import- und Synchronisations-Werkzeuge (z. B. für LDAP) legen Gruppen oft
+über den DataHandler ohne Typ an. Solche Gruppen erhalten den Standard-Typ:
+den TCA-Default, überschrieben durch ``TCAdefaults.be_groups.tx_begroups_kind``
+im User- und Page-TSconfig. Mit dem Event
+:php:`\Cretection\BeGroups\Event\ModifyKindOfNewGroupEvent` bestimmen Sie
+den Typ stattdessen aus den Werten des Datensatzes, zum Beispiel aus einem
+Präfix des Titels:
+
+..  code-block:: php
+    :caption: EXT:my_extension/Classes/EventListener/KindFromTitlePrefix.php
+
+    <?php
+
+    declare(strict_types=1);
+
+    namespace MyVendor\MyExtension\EventListener;
+
+    use Cretection\BeGroups\Event\ModifyKindOfNewGroupEvent;
+    use TYPO3\CMS\Core\Attribute\AsEventListener;
+
+    final readonly class KindFromTitlePrefix
+    {
+        private const PREFIXES = ['R_' => 'role', 'DBM_' => 'db_mount', 'FM_' => 'file_mount'];
+
+        #[AsEventListener('my-extension/kind-from-title-prefix')]
+        public function __invoke(ModifyKindOfNewGroupEvent $event): void
+        {
+            $title = $event->getRecord()['title'] ?? '';
+            foreach (self::PREFIXES as $prefix => $kind) {
+                if (is_string($title) && str_starts_with($title, $prefix)) {
+                    $event->setKind($kind);
+                }
+            }
+        }
+    }
+
+Das Event wird nur für neue Gruppen ohne Typ ausgelöst; ein ausdrücklich
+angegebener Typ wird nie ersetzt. Ein nicht konfigurierter Typ wird
+ignoriert. Für den gewählten Typ gelten alle Regeln – eine Gruppe, die zum
+Baustein wird, behält nur die Rechte ihres Typs, und eine klassische Gruppe
+wird abgelehnt, solange klassische Gruppen abgeschaltet sind.
+
 ..  _developer-planned:
 
 Geplant
@@ -172,8 +219,6 @@ Geplant
 Die folgenden Teile des Relaunch sind für Version 1.0.0 geplant und noch
 nicht verfügbar:
 
-*   Weitere PSR-14-Events an den Erweiterungspunkten (Typ-Zuordnung,
-    Klassifizierung).
 *   Bearbeiten im Modul „Rollen & Bausteine“ (eine Matrix aus Rollen und
     Bausteinen). Die Übersicht ohne Bearbeitung ist bereits verfügbar, siehe
     :ref:`usage-module`.

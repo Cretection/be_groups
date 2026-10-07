@@ -30,6 +30,9 @@ Relaunch for TYPO3 14.3 LTS.
     not follow the role model, with exit codes for deployments and
     monitoring and the event ``AfterAuditFindingsCollectedEvent`` for checks
     of other extensions, see :ref:`usage-audit`.
+*   The event ``ModifyKindOfNewGroupEvent`` chooses the kind of new groups
+    that import or synchronisation tools create without a kind, see
+    :ref:`developer-kind-event`.
 *   The assistants ``begroups:classify`` and ``begroups:split`` convert
     classic groups into building blocks and roles without changing effective
     permissions, see :ref:`migration-vanilla`.
