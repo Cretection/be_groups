@@ -38,6 +38,7 @@ parameters:
 				- ../../Configuration/*
 				- ../../ext_localconf.php
 				- ../../Tests/Functional/Fixtures/Extensions/*/Configuration/*
+				- ../../Tests/Functional/Fixtures/Extensions/*/ext_localconf.php
 			reportUnmatched: false
 		-
 			# The configuration files have no namespace, so the own "@internal" classes of

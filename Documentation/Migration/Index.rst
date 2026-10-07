@@ -112,20 +112,61 @@ From a TYPO3 installation without this extension
 ================================================
 
 After the installation, all groups are of kind "Classic" and keep working
-unchanged. Convert them step by step:
+unchanged. Two assistants convert them without changing any effective
+permission. Both show their plan with ``--dry-run`` first:
 
-#.  Create building blocks for page tree entry points, file mounts,
-    languages and access rights – or change the kind of existing groups that
-    already serve a single purpose.
-#.  Create roles that combine these building blocks.
-#.  Assign the roles to your backend users instead of the classic groups.
+..  code-block:: bash
+
+    vendor/bin/typo3 begroups:classify --dry-run
+    vendor/bin/typo3 begroups:classify
+    vendor/bin/typo3 begroups:split --all --dry-run
+    vendor/bin/typo3 begroups:split --all
+    vendor/bin/typo3 begroups:audit
+
+``begroups:classify`` proposes a kind for every classic group and changes the
+kind where nothing else changes:
+
+*   A group whose permissions all belong to one kind of building block – for
+    example only page tree entry points – becomes that building block, unless
+    it is assigned to users directly.
+*   A group that grants nothing itself but combines other groups becomes a
+    role.
+*   A group that grants nothing but owns pages becomes a page group.
+*   All other groups are listed: groups to split, and groups that need your
+    decision, with the reason – for example an empty group, or a permission
+    field that belongs to no kind.
+
+``begroups:split`` splits the groups you name by uid, or with ``--all`` every
+group that ``begroups:classify`` proposes to split:
+
+*   The permissions move into one building block per kind, named with the
+    prefix of the kind and the title of the group, for example
+    ``ACL_Editors`` and ``DBM_Editors``. Hidden groups get hidden building
+    blocks.
+*   **The group keeps its uid and becomes a role.** Users and other groups
+    keep their assignments. The new building blocks follow the former
+    subgroups, so the precedence of TSconfig stays the same.
+*   An existing building block that grants exactly the same is reused instead
+    of creating another one – except for TSconfig, whose order matters, and
+    except for the first building block of a group without subgroups: TYPO3
+    makes the first group of a user the owner group of the pages the user
+    creates, so this block must belong to the role alone.
+
+Both assistants write through the DataHandler: every change is in the system
+log and the history of the record. Each group is converted in a transaction
+and compared with its former state afterwards. If any permission would
+differ – for example because another extension changes values while saving
+– the transaction is rolled back and the group stays unchanged.
+
+Afterwards:
+
+#.  Check the result with ``begroups:audit`` (see :ref:`usage-audit`) and
+    the module *Roles & Building Blocks*.
+#.  Decide on the groups the assistants could not convert.
 #.  Switch off classic groups, see :ref:`configuration`.
 
 ..  attention::
 
-    Changing the kind of an existing group clears all fields that do not
-    belong to the new kind (rule R1). Check the group before you change its
-    kind.
-
-Assistants that suggest kinds and split mixed groups automatically are
-planned, see :ref:`developer-planned`.
+    Changing the kind of a group manually clears all fields that do not
+    belong to the new kind (rule R1). Prefer the assistants, or check the
+    group before you change its kind.

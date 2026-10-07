@@ -65,7 +65,7 @@ final readonly class PermissionAudit
     public function run(): array
     {
         $groups = [];
-        foreach ($this->backendGroupRepository->findAllForAudit() as $group) {
+        foreach ($this->backendGroupRepository->findAll() as $group) {
             $groups[$group->getUid()] = $group;
         }
 

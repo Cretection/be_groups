@@ -177,9 +177,8 @@ nicht verfügbar:
 *   Bearbeiten im Modul „Rollen & Bausteine“ (eine Matrix aus Rollen und
     Bausteinen). Die Übersicht ohne Bearbeitung ist bereits verfügbar, siehe
     :ref:`usage-module`.
-*   Assistenten, die Typen vorschlagen (``begroups:classify``) und gemischte
-    klassische Gruppen in Bausteine und eine Rolle aufteilen
-    (``begroups:split``).
+*   Ein Starter-Set aus Rollen und Bausteinen nach den Standardgruppen des
+    TYPO3-Core.
 
 ..  _developer-contributing:
 

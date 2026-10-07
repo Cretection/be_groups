@@ -174,8 +174,8 @@ not available yet:
 *   Editing in the module "Roles & Building Blocks" (a matrix of roles and
     building blocks). The read-only overview is available already, see
     :ref:`usage-module`.
-*   Assistants that suggest kinds (``begroups:classify``) and split mixed
-    classic groups into building blocks and a role (``begroups:split``).
+*   A starter set of roles and building blocks based on the default groups
+    of the TYPO3 core.
 
 ..  _developer-contributing:
 

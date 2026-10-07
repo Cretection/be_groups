@@ -30,6 +30,9 @@ Relaunch for TYPO3 14.3 LTS.
     not follow the role model, with exit codes for deployments and
     monitoring and the event ``AfterAuditFindingsCollectedEvent`` for checks
     of other extensions, see :ref:`usage-audit`.
+*   The assistants ``begroups:classify`` and ``begroups:split`` convert
+    classic groups into building blocks and roles without changing effective
+    permissions, see :ref:`migration-vanilla`.
 *   TYPO3 14.3 LTS and PHP 8.2 – 8.5 only.
 *   The license changed to GPL-2.0-or-later, in line with the TYPO3 core.
 *   :file:`ext_emconf.php` was removed; all metadata lives in

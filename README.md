@@ -42,6 +42,12 @@ kinds with a guided user interface instead of naming conventions.
 - **Overview module** "Roles & Building Blocks" (Administration): which role
   consists of which building blocks, who has which role, where a building
   block is used – sortable, filterable and with markers for inconsistencies.
+- **Assistants** for existing installations: `begroups:classify` proposes a
+  kind for every classic group, `begroups:split` splits mixed groups into
+  building blocks and a role that keeps the uid – verified and rolled back
+  if any effective permission would change.
+- **Consistency check** `begroups:audit` with exit codes and JSON output for
+  deployments and monitoring, extensible through a PSR-14 event.
 - **Upgrade wizard** for data of be_groups 0.0.x and the AOE version 1.x –
   without changing any effective permission.
 
@@ -124,6 +130,12 @@ Gruppentypen mit geführter Oberfläche statt Namenskonventionen.
 - **Übersichtsmodul** „Rollen & Bausteine“ (Administration): welche Rolle aus
   welchen Bausteinen besteht, wer welche Rolle hat, wo ein Baustein verwendet
   wird – sortier- und filterbar, mit Markierung von Inkonsistenzen.
+- **Assistenten** für bestehende Installationen: `begroups:classify` schlägt
+  für jede klassische Gruppe einen Typ vor, `begroups:split` teilt gemischte
+  Gruppen in Bausteine und eine Rolle auf, die die uid behält – geprüft und
+  zurückgerollt, falls sich ein wirksames Recht ändern würde.
+- **Konsistenzprüfung** `begroups:audit` mit Exit-Codes und JSON-Ausgabe für
+  Deployments und Monitoring, erweiterbar über ein PSR-14-Event.
 - **Upgrade-Wizard** für Daten von be_groups 0.0.x und der AOE-Version 1.x –
   ohne wirksame Rechte zu verändern.
 

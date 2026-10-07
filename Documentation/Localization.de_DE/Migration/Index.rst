@@ -121,20 +121,64 @@ Von einer TYPO3-Installation ohne diese Extension
 =================================================
 
 Nach der Installation sind alle Gruppen vom Typ „Klassisch“ und
-funktionieren unverändert. Stellen Sie sie Schritt für Schritt um:
+funktionieren unverändert. Zwei Assistenten stellen sie um, ohne wirksame
+Rechte zu verändern. Beide zeigen ihren Plan zuerst mit ``--dry-run``:
 
-#.  Bausteine für Seitenbaum-Einstiegspunkte, Dateifreigaben, Sprachen und
-    Zugriffsrechte anlegen – oder den Typ bestehender Gruppen ändern, die
-    schon genau eine Aufgabe haben.
-#.  Rollen anlegen, die diese Bausteine zusammenfassen.
-#.  Die Rollen statt der klassischen Gruppen den Backend-Benutzern zuweisen.
+..  code-block:: bash
+
+    vendor/bin/typo3 begroups:classify --dry-run
+    vendor/bin/typo3 begroups:classify
+    vendor/bin/typo3 begroups:split --all --dry-run
+    vendor/bin/typo3 begroups:split --all
+    vendor/bin/typo3 begroups:audit
+
+``begroups:classify`` schlägt für jede klassische Gruppe einen Typ vor und
+ändert den Typ dort, wo sich sonst nichts ändert:
+
+*   Eine Gruppe, deren Rechte alle zu einem Baustein-Typ gehören – zum
+    Beispiel nur Seitenbaum-Einstiegspunkte –, wird zu diesem Baustein,
+    sofern sie keinem Benutzer direkt zugewiesen ist.
+*   Eine Gruppe, die selbst nichts gewährt, aber andere Gruppen
+    zusammenfasst, wird zur Rolle.
+*   Eine Gruppe, die nichts gewährt, aber Seiten besitzt, wird zur
+    Seitenrechte-Gruppe.
+*   Alle anderen Gruppen werden aufgelistet: Gruppen zum Aufteilen und
+    Gruppen, über die Sie entscheiden müssen, jeweils mit Begründung – zum
+    Beispiel eine leere Gruppe oder ein Rechtefeld, das zu keinem Typ gehört.
+
+``begroups:split`` teilt die per uid genannten Gruppen auf, oder mit
+``--all`` jede Gruppe, für die ``begroups:classify`` das Aufteilen vorschlägt:
+
+*   Die Rechte wandern in je einen Baustein pro Typ, benannt mit dem Präfix
+    des Typs und dem Titel der Gruppe, zum Beispiel ``ACL_Editors`` und
+    ``DBM_Editors``. Versteckte Gruppen erhalten versteckte Bausteine.
+*   **Die Gruppe behält ihre uid und wird zur Rolle.** Benutzer und andere
+    Gruppen behalten ihre Zuweisungen. Die neuen Bausteine folgen auf die
+    bisherigen Untergruppen, damit der Vorrang des TSconfig gleich bleibt.
+*   Ein bestehender Baustein, der genau dasselbe gewährt, wird
+    wiederverwendet, statt einen weiteren anzulegen – außer bei TSconfig,
+    dessen Reihenfolge zählt, und außer beim ersten Baustein einer Gruppe
+    ohne Untergruppen: TYPO3 macht die erste Gruppe eines Benutzers zur
+    Eigentümergruppe der Seiten, die er anlegt, daher darf dieser Baustein nur
+    zur Rolle gehören.
+
+Beide Assistenten schreiben über den DataHandler: Jede Änderung steht im
+Systemprotokoll und in der Historie des Datensatzes. Jede Gruppe wird in
+einer Transaktion umgestellt und danach mit ihrem früheren Zustand
+verglichen. Würde sich irgendein Recht unterscheiden – zum Beispiel, weil
+eine andere Extension beim Speichern Werte ändert –, wird die Transaktion
+zurückgerollt und die Gruppe bleibt unverändert.
+
+Danach:
+
+#.  Das Ergebnis mit ``begroups:audit`` (siehe :ref:`usage-audit`) und im
+    Modul *Rollen & Bausteine* prüfen.
+#.  Über die Gruppen entscheiden, die die Assistenten nicht umstellen
+    konnten.
 #.  Klassische Gruppen abschalten, siehe :ref:`configuration`.
 
 ..  attention::
 
-    Wenn Sie den Typ einer bestehenden Gruppe ändern, werden alle Felder
-    geleert, die nicht zum neuen Typ gehören (Regel R1). Prüfen Sie die
-    Gruppe, bevor Sie ihren Typ ändern.
-
-Assistenten, die Typen vorschlagen und gemischte Gruppen automatisch
-aufteilen, sind geplant, siehe :ref:`developer-planned`.
+    Wenn Sie den Typ einer Gruppe von Hand ändern, werden alle Felder
+    geleert, die nicht zum neuen Typ gehören (Regel R1). Nutzen Sie lieber
+    die Assistenten, oder prüfen Sie die Gruppe, bevor Sie ihren Typ ändern.

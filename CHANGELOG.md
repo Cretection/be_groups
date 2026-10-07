@@ -52,6 +52,16 @@ Relaunch for TYPO3 14.3 LTS (version 1.0.0).
   warnings too), JSON output with `--format=json`.
 - PSR-14 event `AfterAuditFindingsCollectedEvent`: other extensions add
   findings of their own checks.
+- Assistant `begroups:classify` (`--dry-run`): proposes a kind for every
+  classic group and changes the kind of groups that serve one purpose,
+  combine other groups (role) or only own pages (page group).
+- Assistant `begroups:split` (uids or `--all`, `--dry-run`): moves the
+  permissions of a classic group into one building block per kind and makes
+  the group a role with the same uid, so assignments stay unchanged. Identical
+  building blocks are reused (not for TSconfig and not as first member, which
+  TYPO3 uses as owner group of new pages).
+- Both assistants write through the DataHandler in one transaction per group
+  and roll it back if any permission would differ afterwards.
 - Extension setting `allowClassicGroups` (default: enabled). It takes effect
   immediately: when disabled, the form no longer offers "classic" (except for
   groups that already are classic) and new groups start as "role".

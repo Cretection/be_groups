@@ -30,6 +30,9 @@ Relaunch für TYPO3 14.3 LTS.
     Rollenmodell folgt, mit Exit-Codes für Deployments und Monitoring und
     dem Event ``AfterAuditFindingsCollectedEvent`` für Prüfungen anderer
     Extensions, siehe :ref:`usage-audit`.
+*   Die Assistenten ``begroups:classify`` und ``begroups:split`` stellen
+    klassische Gruppen auf Bausteine und Rollen um, ohne wirksame Rechte zu
+    verändern, siehe :ref:`migration-vanilla`.
 *   Nur noch TYPO3 14.3 LTS und PHP 8.2 – 8.5.
 *   Die Lizenz ist jetzt GPL-2.0-or-later, wie beim TYPO3 Core.
 *   :file:`ext_emconf.php` entfällt; alle Metadaten stehen in der

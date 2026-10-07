@@ -58,6 +58,16 @@ final readonly class KindFieldResolver
     private const CLEARABLE_STRING_TYPES = ['select', 'group', 'category', 'text', 'input', 'passthrough', 'link', 'email', 'color', 'slug'];
     private const CLEARABLE_INTEGER_TYPES = ['check', 'number', 'radio'];
 
+    /**
+     * Field types that store comma-separated lists.
+     */
+    private const LIST_TYPES = ['select', 'group', 'category'];
+
+    /**
+     * List fields whose order matters: it decides the precedence of TSconfig.
+     */
+    private const ORDERED_FIELDS = ['subgroup', 'tsconfig_includes'];
+
     public function __construct(
         private TcaSchemaFactory $tcaSchemaFactory,
         private KindRegistry $kindRegistry,
@@ -98,6 +108,60 @@ final readonly class KindFieldResolver
             }
         }
         return $foreignFields;
+    }
+
+    /**
+     * The permission fields a group of the given kind may carry, in the order of the schema.
+     *
+     * @return list<string>
+     */
+    public function getPermissionFieldNames(string $kind): array
+    {
+        if (!$this->isRestrictedKind($kind)) {
+            return [];
+        }
+        $allowedFields = $this->getAllowedFieldNames($this->getSchema()->getSubSchema($kind));
+        return array_values(array_filter(
+            $this->getManagedFieldNames(),
+            static fn(string $fieldName): bool => isset($allowedFields[$fieldName]),
+        ));
+    }
+
+    /**
+     * All permission fields the rules manage, in the order of the schema.
+     *
+     * @return list<string>
+     */
+    public function getManagedFieldNames(): array
+    {
+        return array_map(static fn(FieldTypeInterface $field): string => $field->getName(), $this->getManagedFields());
+    }
+
+    /**
+     * Whether two stored values of a permission field grant the same.
+     *
+     * Lists of relation and select fields are compared as sets, as TYPO3 merges them;
+     * all other values must be identical, including lists whose order decides the
+     * precedence of TSconfig.
+     */
+    public function isSameValue(string $fieldName, string $value, string $otherValue): bool
+    {
+        if ($this->isEmptyValue($fieldName, $value) || $this->isEmptyValue($fieldName, $otherValue)) {
+            return $this->isEmptyValue($fieldName, $value) && $this->isEmptyValue($fieldName, $otherValue);
+        }
+        $schema = $this->getSchema();
+        if (in_array($fieldName, self::ORDERED_FIELDS, true)
+            || !$schema->hasField($fieldName)
+            || !in_array($schema->getField($fieldName)->getType(), self::LIST_TYPES, true)
+        ) {
+            return $value === $otherValue;
+        }
+        $toSet = static function (string $list): array {
+            $entries = array_unique(array_map(trim(...), explode(',', $list)));
+            sort($entries);
+            return $entries;
+        };
+        return $toSet($value) === $toSet($otherValue);
     }
 
     /**

@@ -20,7 +20,6 @@ use Cretection\BeGroups\Domain\Audit\AuditSeverity;
 use Cretection\BeGroups\Domain\Audit\PermissionAudit;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
-use Symfony\Component\Console\Formatter\OutputFormatter;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -103,7 +102,7 @@ final class AuditCommand extends Command
         }
         $io->table(
             ['Severity', 'Record', 'Check', 'Finding'],
-            array_map(static fn(AuditFinding $finding): array => array_map(self::sanitize(...), [
+            array_map(static fn(AuditFinding $finding): array => array_map(ConsoleText::escape(...), [
                 $finding->severity->value,
                 sprintf('%s:%d %s', $finding->table, $finding->uid, $finding->title),
                 $finding->identifier,
@@ -112,17 +111,5 @@ final class AuditCommand extends Command
         );
         $summary = sprintf('%d error(s), %d warning(s).', $errors, $warnings);
         $errors > 0 ? $io->error($summary) : $io->warning($summary);
-    }
-
-    /**
-     * Titles are data of editors: they must neither be read as console formatting
-     * nor carry control characters (e.g. ANSI escape sequences) into the terminal.
-     */
-    private static function sanitize(string $value): string
-    {
-        // Invalid UTF-8 makes the first pattern fail; then every byte outside of printable ASCII is replaced.
-        $printable = preg_replace('/[\x00-\x1F\x7F\x{80}-\x{9F}]/u', ' ', $value)
-            ?? preg_replace('/[^\x20-\x7E]/', '?', $value);
-        return OutputFormatter::escape($printable ?? '');
     }
 }

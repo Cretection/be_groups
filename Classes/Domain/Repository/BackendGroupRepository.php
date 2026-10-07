@@ -157,11 +157,11 @@ final readonly class BackendGroupRepository
     }
 
     /**
-     * Returns all non-deleted groups with all fields, for the consistency check.
+     * Returns all non-deleted groups with all fields, ordered by uid.
      *
      * @return list<DatabaseRow>
      */
-    public function findAllForAudit(): array
+    public function findAll(): array
     {
         $result = $this->createQueryBuilder()
             ->select('*')
@@ -174,6 +174,21 @@ final readonly class BackendGroupRepository
             $groups[] = DatabaseRow::fromArray($row);
         }
         return $groups;
+    }
+
+    /**
+     * Returns a non-deleted group with all fields.
+     */
+    public function findByUid(int $uid): ?DatabaseRow
+    {
+        $queryBuilder = $this->createQueryBuilder();
+        $row = $queryBuilder
+            ->select('*')
+            ->from(self::TABLE)
+            ->where($queryBuilder->expr()->eq('uid', $queryBuilder->createNamedParameter($uid, Connection::PARAM_INT)))
+            ->executeQuery()
+            ->fetchAssociative();
+        return is_array($row) ? DatabaseRow::fromArray($row) : null;
     }
 
     private function createQueryBuilder(): QueryBuilder
