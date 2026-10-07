@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" version="1.2">
+  <file source-language="en" target-language="de" datatype="plaintext" original="EXT:be_groups/Resources/Private/Language/de.messages.xlf" date="2026-10-07T12:00:00Z">
+    <header/>
+    <body>
+      <trans-unit id="rules.unknownKind.title" approved="yes">
+        <source>Unknown group kind</source>
+        <target>Unbekannter Gruppentyp</target>
+      </trans-unit>
+      <trans-unit id="rules.unknownKind.message" approved="yes">
+        <source>The kind "%1$s" does not exist and has been ignored.</source>
+        <target>Der Typ „%1$s“ existiert nicht und wurde ignoriert.</target>
+      </trans-unit>
+      <trans-unit id="rules.classicNotAllowed.title" approved="yes">
+        <source>Classic groups are disabled</source>
+        <target>Klassische Gruppen sind abgeschaltet</target>
+      </trans-unit>
+      <trans-unit id="rules.classicNotAllowed.message" approved="yes">
+        <source>Groups of kind "classic" can no longer be created and groups can no longer be switched to it. Please choose a role or a building block.</source>
+        <target>Gruppen vom Typ „Klassisch“ können nicht mehr angelegt werden, und Gruppen können nicht mehr auf diesen Typ umgestellt werden. Bitte wählen Sie eine Rolle oder einen Baustein.</target>
+      </trans-unit>
+      <trans-unit id="rules.foreignFieldsRemoved.title" approved="yes">
+        <source>Settings removed</source>
+        <target>Einstellungen entfernt</target>
+      </trans-unit>
+      <trans-unit id="rules.foreignFieldsRemoved.message" approved="yes">
+        <source>These settings do not belong to the kind "%1$s" and have been removed: %2$s</source>
+        <target>Diese Einstellungen gehören nicht zum Typ „%1$s“ und wurden entfernt: %2$s</target>
+      </trans-unit>
+      <trans-unit id="rules.subgroupsRejected.title" approved="yes">
+        <source>Groups not added</source>
+        <target>Gruppen nicht hinzugefügt</target>
+      </trans-unit>
+      <trans-unit id="rules.subgroupsRejected.message" approved="yes">
+        <source>Only building blocks can be added to a role. These groups have not been added: %1$s</source>
+        <target>Einer Rolle können nur Bausteine hinzugefügt werden. Diese Gruppen wurden nicht hinzugefügt: %1$s</target>
+      </trans-unit>
+      <trans-unit id="rules.usergroupsRejected.title" approved="yes">
+        <source>Groups not assigned</source>
+        <target>Gruppen nicht zugewiesen</target>
+      </trans-unit>
+      <trans-unit id="rules.usergroupsRejected.message" approved="yes">
+        <source>Only roles can be assigned to users. These groups have not been assigned: %1$s</source>
+        <target>Benutzern können nur Rollen zugewiesen werden. Diese Gruppen wurden nicht zugewiesen: %1$s</target>
+      </trans-unit>
+    </body>
+  </file>
+</xliff>

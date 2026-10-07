@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" version="1.2">
+  <file source-language="en" target-language="de" datatype="plaintext" original="EXT:be_groups/Resources/Private/Language/de.db.xlf" date="2026-10-07T12:00:00Z">
+    <header/>
+    <body>
+      <trans-unit id="be_groups.tx_begroups_kind" approved="yes">
+        <source>Kind</source>
+        <target>Typ</target>
+      </trans-unit>
+      <trans-unit id="be_groups.tx_begroups_kind.description" approved="yes">
+        <source>What this group is responsible for. Building blocks bundle exactly one concern (for example file mounts), roles combine building blocks and are assigned to users. Changing the kind empties all settings that do not belong to the new kind.</source>
+        <target>Wofür diese Gruppe zuständig ist. Bausteine bündeln genau ein Thema (zum Beispiel Dateifreigaben), Rollen kombinieren Bausteine und werden Benutzern zugewiesen. Beim Wechsel des Typs werden alle Einstellungen geleert, die nicht zum neuen Typ gehören.</target>
+      </trans-unit>
+      <trans-unit id="kind.role" approved="yes">
+        <source>Role</source>
+        <target>Rolle</target>
+      </trans-unit>
+      <trans-unit id="kind.acl" approved="yes">
+        <source>Access rights</source>
+        <target>Zugriffsrechte</target>
+      </trans-unit>
+      <trans-unit id="kind.page_group" approved="yes">
+        <source>Page permission group</source>
+        <target>Seitenrechte-Gruppe</target>
+      </trans-unit>
+      <trans-unit id="kind.db_mount" approved="yes">
+        <source>Page tree mount</source>
+        <target>Seitenbaum-Freigabe</target>
+      </trans-unit>
+      <trans-unit id="kind.file_mount" approved="yes">
+        <source>File mount</source>
+        <target>Dateifreigabe</target>
+      </trans-unit>
+      <trans-unit id="kind.file_operations" approved="yes">
+        <source>File operations</source>
+        <target>Dateioperationen</target>
+      </trans-unit>
+      <trans-unit id="kind.category_mount" approved="yes">
+        <source>Category mount</source>
+        <target>Kategorie-Freigabe</target>
+      </trans-unit>
+      <trans-unit id="kind.language" approved="yes">
+        <source>Languages</source>
+        <target>Sprachen</target>
+      </trans-unit>
+      <trans-unit id="kind.tsconfig" approved="yes">
+        <source>TSconfig</source>
+        <target>TSconfig</target>
+      </trans-unit>
+      <trans-unit id="kind.workspace" approved="yes">
+        <source>Workspace</source>
+        <target>Workspace</target>
+      </trans-unit>
+      <trans-unit id="kind.classic" approved="yes">
+        <source>Classic (all settings)</source>
+        <target>Klassisch (alle Einstellungen)</target>
+      </trans-unit>
+      <trans-unit id="kind.group.roles" approved="yes">
+        <source>Roles</source>
+        <target>Rollen</target>
+      </trans-unit>
+      <trans-unit id="kind.group.buildingBlocks" approved="yes">
+        <source>Building blocks</source>
+        <target>Bausteine</target>
+      </trans-unit>
+      <trans-unit id="kind.group.legacy" approved="yes">
+        <source>Classic groups</source>
+        <target>Klassische Gruppen</target>
+      </trans-unit>
+      <trans-unit id="be_groups.subgroup.role" approved="yes">
+        <source>Building blocks</source>
+        <target>Bausteine</target>
+      </trans-unit>
+      <trans-unit id="be_groups.subgroup.role.description" approved="yes">
+        <source>Select the building blocks this role consists of. Users with this role receive all permissions of the selected building blocks.</source>
+        <target>Wählen Sie die Bausteine, aus denen diese Rolle besteht. Benutzer mit dieser Rolle erhalten alle Rechte der gewählten Bausteine.</target>
+      </trans-unit>
+      <trans-unit id="be_users.usergroup.description" approved="yes">
+        <source>Assign roles. Building blocks are not assigned to users directly but combined in roles.</source>
+        <target>Weisen Sie Rollen zu. Bausteine werden Benutzern nicht direkt zugewiesen, sondern in Rollen zusammengefasst.</target>
+      </trans-unit>
+      <trans-unit id="extConf.allowClassicGroups" approved="yes">
+        <source>Allow classic groups: groups of kind "classic" can be created and assigned to users. Switch this off after migrating to roles and building blocks to enforce the clean model. Existing assignments keep working.</source>
+        <target>Klassische Gruppen erlauben: Gruppen vom Typ „Klassisch“ können angelegt und Benutzern zugewiesen werden. Nach der Umstellung auf Rollen und Bausteine abschalten, um das saubere Modell zu erzwingen. Bestehende Zuweisungen wirken weiter.</target>
+      </trans-unit>
+    </body>
+  </file>
+</xliff>

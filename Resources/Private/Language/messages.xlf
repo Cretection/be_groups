@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" version="1.2">
+  <file source-language="en" datatype="plaintext" original="EXT:be_groups/Resources/Private/Language/messages.xlf" date="2026-10-07T12:00:00Z">
+    <header/>
+    <body>
+      <trans-unit id="rules.unknownKind.title">
+        <source>Unknown group kind</source>
+      </trans-unit>
+      <trans-unit id="rules.unknownKind.message">
+        <source>The kind "%1$s" does not exist and has been ignored.</source>
+      </trans-unit>
+      <trans-unit id="rules.classicNotAllowed.title">
+        <source>Classic groups are disabled</source>
+      </trans-unit>
+      <trans-unit id="rules.classicNotAllowed.message">
+        <source>Groups of kind "classic" can no longer be created and groups can no longer be switched to it. Please choose a role or a building block.</source>
+      </trans-unit>
+      <trans-unit id="rules.foreignFieldsRemoved.title">
+        <source>Settings removed</source>
+      </trans-unit>
+      <trans-unit id="rules.foreignFieldsRemoved.message">
+        <source>These settings do not belong to the kind "%1$s" and have been removed: %2$s</source>
+      </trans-unit>
+      <trans-unit id="rules.subgroupsRejected.title">
+        <source>Groups not added</source>
+      </trans-unit>
+      <trans-unit id="rules.subgroupsRejected.message">
+        <source>Only building blocks can be added to a role. These groups have not been added: %1$s</source>
+      </trans-unit>
+      <trans-unit id="rules.usergroupsRejected.title">
+        <source>Groups not assigned</source>
+      </trans-unit>
+      <trans-unit id="rules.usergroupsRejected.message">
+        <source>Only roles can be assigned to users. These groups have not been assigned: %1$s</source>
+      </trans-unit>
+    </body>
+  </file>
+</xliff>

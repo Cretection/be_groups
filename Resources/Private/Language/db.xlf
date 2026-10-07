@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" version="1.2">
+  <file source-language="en" datatype="plaintext" original="EXT:be_groups/Resources/Private/Language/db.xlf" date="2026-10-07T12:00:00Z">
+    <header/>
+    <body>
+      <trans-unit id="be_groups.tx_begroups_kind">
+        <source>Kind</source>
+      </trans-unit>
+      <trans-unit id="be_groups.tx_begroups_kind.description">
+        <source>What this group is responsible for. Building blocks bundle exactly one concern (for example file mounts), roles combine building blocks and are assigned to users. Changing the kind empties all settings that do not belong to the new kind.</source>
+      </trans-unit>
+      <trans-unit id="kind.role">
+        <source>Role</source>
+      </trans-unit>
+      <trans-unit id="kind.acl">
+        <source>Access rights</source>
+      </trans-unit>
+      <trans-unit id="kind.page_group">
+        <source>Page permission group</source>
+      </trans-unit>
+      <trans-unit id="kind.db_mount">
+        <source>Page tree mount</source>
+      </trans-unit>
+      <trans-unit id="kind.file_mount">
+        <source>File mount</source>
+      </trans-unit>
+      <trans-unit id="kind.file_operations">
+        <source>File operations</source>
+      </trans-unit>
+      <trans-unit id="kind.category_mount">
+        <source>Category mount</source>
+      </trans-unit>
+      <trans-unit id="kind.language">
+        <source>Languages</source>
+      </trans-unit>
+      <trans-unit id="kind.tsconfig">
+        <source>TSconfig</source>
+      </trans-unit>
+      <trans-unit id="kind.workspace">
+        <source>Workspace</source>
+      </trans-unit>
+      <trans-unit id="kind.classic">
+        <source>Classic (all settings)</source>
+      </trans-unit>
+      <trans-unit id="kind.group.roles">
+        <source>Roles</source>
+      </trans-unit>
+      <trans-unit id="kind.group.buildingBlocks">
+        <source>Building blocks</source>
+      </trans-unit>
+      <trans-unit id="kind.group.legacy">
+        <source>Classic groups</source>
+      </trans-unit>
+      <trans-unit id="be_groups.subgroup.role">
+        <source>Building blocks</source>
+      </trans-unit>
+      <trans-unit id="be_groups.subgroup.role.description">
+        <source>Select the building blocks this role consists of. Users with this role receive all permissions of the selected building blocks.</source>
+      </trans-unit>
+      <trans-unit id="be_users.usergroup.description">
+        <source>Assign roles. Building blocks are not assigned to users directly but combined in roles.</source>
+      </trans-unit>
+      <trans-unit id="extConf.allowClassicGroups">
+        <source>Allow classic groups: groups of kind "classic" can be created and assigned to users. Switch this off after migrating to roles and building blocks to enforce the clean model. Existing assignments keep working.</source>
+      </trans-unit>
+    </body>
+  </file>
+</xliff>
