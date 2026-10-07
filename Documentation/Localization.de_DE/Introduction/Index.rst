@@ -29,8 +29,8 @@ Backend Group Kinds bringt Ordnung hinein:
 *   **Backend-Benutzer bekommen nur Rollen.** Was jemand darf, ergibt sich
     aus den zugewiesenen Rollen – aus nichts anderem.
 *   **Was nicht sichtbar ist, wirkt nicht.** Ein Baustein kann nur vergeben,
-    was sein Typ anzeigt. Versteckte Reste früherer Konfigurationen werden
-    entfernt.
+    was sein Typ anzeigt. Versteckte Rechte-Reste früherer Konfigurationen
+    werden beim Speichern der Gruppe entfernt.
 
 Die Extension ergänzt die Core-Tabelle :sql:`be_groups` um genau ein Feld –
 den Typ. Alle Rechte bleiben in den Core-Feldern, und TYPO3 wertet sie wie

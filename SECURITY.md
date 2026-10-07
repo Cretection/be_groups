@@ -7,10 +7,18 @@ directly lead to privilege escalation, so we take them very seriously.
 
 ## Supported versions
 
-| Version | TYPO3    | PHP     | Supported          |
-|---------|----------|---------|--------------------|
-| 1.x     | 14.3 LTS | 8.2–8.5 | :white_check_mark: |
-| 0.0.x   | 11.5     | 7.4–8.2 | :x:                |
+| Version | TYPO3                                   | PHP     | Supported until                     |
+|---------|-----------------------------------------|---------|-------------------------------------|
+| 1.x     | 14 LTS, and 15 as soon as it is released | 8.2–8.5 | 2029-06-30 (end of support TYPO3 14) |
+| 0.0.x   | 11.5                                    | 7.4–8.2 | :x: not supported                   |
+
+be_groups supports every TYPO3 version until the official end of its free
+community support as published on https://get.typo3.org. Extended Long Term
+Support (ELTS) does not extend this period. Each major version of be_groups
+supports two consecutive major versions of TYPO3; when a TYPO3 version is
+dropped in a new major version, the previous major version of be_groups keeps
+receiving bug and security fixes until that TYPO3 version reaches its end of
+support.
 
 ## Reporting a vulnerability
 
@@ -43,10 +51,18 @@ ernst.
 
 ### Unterstützte Versionen
 
-| Version | TYPO3    | PHP     | Unterstützt        |
-|---------|----------|---------|--------------------|
-| 1.x     | 14.3 LTS | 8.2–8.5 | :white_check_mark: |
-| 0.0.x   | 11.5     | 7.4–8.2 | :x:                |
+| Version | TYPO3                                    | PHP     | Unterstützt bis                          |
+|---------|------------------------------------------|---------|------------------------------------------|
+| 1.x     | 14 LTS, und 15, sobald es erschienen ist | 8.2–8.5 | 30.06.2029 (Support-Ende TYPO3 14)       |
+| 0.0.x   | 11.5                                     | 7.4–8.2 | :x: nicht unterstützt                    |
+
+be_groups unterstützt jede TYPO3-Version bis zum offiziellen Ende ihres
+kostenlosen Community-Supports laut https://get.typo3.org. Der
+kostenpflichtige Extended Long Term Support (ELTS) verlängert diesen Zeitraum
+nicht. Jede Hauptversion von be_groups unterstützt zwei aufeinanderfolgende
+TYPO3-Hauptversionen; fällt eine TYPO3-Version mit einer neuen Hauptversion
+weg, erhält die vorherige Hauptversion von be_groups bis zum Support-Ende
+dieser TYPO3-Version weiter Fehler- und Sicherheitskorrekturen.
 
 ### Eine Sicherheitslücke melden
 

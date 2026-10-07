@@ -35,6 +35,8 @@ Where the official documentation is outdated (e.g. "PER-CS 1.0/2.0" instead of `
 2. **MUST:**
    - **Public Core API only.** Anything the Core marks `@internal` is off-limits (e.g. `GroupResolver`, `TcaSchemaFactory::rebuild()`). PHPStan checks this via `featureToggles.internalTag: true`. [Project]
    - **Zero deprecations:** tests fail on any deprecation, including deprecated labels marked `x-unused-since`. [Core]
+   - **No API that is going away.** Only use what is neither `@deprecated` nor `@internal` in TYPO3 14.3 **and** in the current development version of the next major version (core `main`). Check both and the changelog of `main` before using a core API for the first time. [Project]
+   - **PHP 8.2 to 8.5:** the code runs on the minimum PHP version of TYPO3 14 and of TYPO3 15 and uses nothing PHP 8.5 deprecates. [Project]
    - **Permissions are written through the DataHandler only.** Never write to `be_groups` or `be_users` via SQL; only then do permissions, sudo mode, history and log apply. [Project]
 3. **Small and explicit:** prefer one more small service over a class that does everything. No magic, no global state. [CGL]
 
@@ -167,7 +169,7 @@ We use `typo3/coding-standards` **v0.9.0**. Its rule set is byte-identical to Co
   - Codes are unique and never changed. An integrity checker copied from the Core enforces this.
 - `\RuntimeException` / `\InvalidArgumentException` for programming errors.
 - Own, empty exception classes in `Classes/Exception/` for cases that callers should handle specifically. The base exception extends `\TYPO3\CMS\Core\Exception`.
-- **DataHandler hooks do not throw:** they log via `$dataHandler->log()` and discard the field or record instead (see 6).
+- **DataHandler hooks do not throw:** they write to the system log via `$dataHandler->BE_USER->writelog()` (public API; `DataHandler::log()` is `@internal`) and discard the field or record instead (see 6).
 
 ### 3.8 Own deprecations [CGL]
 
@@ -247,10 +249,11 @@ final readonly class DeriveRoleCompositionTca
       = \Cretection\BeGroups\DataHandling\GroupKindRules::class;
   ```
   v14 still offers no PSR-14 alternative for saving records. [Core]
-- **Class shape:** `final readonly class` with `#[Autoconfigure(public: true)]`. Methods are fully typed, as in `DataHandlerAuthenticationContext`. [Core]
+- **Class shape:** `final readonly class` with `#[Autoconfigure(public: true)]`, as in `DataHandlerAuthenticationContext`. A hook that collects state during a DataHandler run (e.g. reports emitted in `processDatamap_afterAllOperations`) is a `final class` with `#[Autoconfigure(public: true, shared: false)]`, so every run gets its own instance. Methods are fully typed. [Core][Project]
 - Get the current user via `$dataHandler->BE_USER`. `DataHandler::$admin` and `$userid` no longer exist in v14. [Core]
 - **Tolerant:**
-  - Rules correct and log (`$dataHandler->log()`) instead of throwing exceptions, so import and sync tools don't break.
+  - Rules correct and log (`$dataHandler->BE_USER->writelog()`) instead of throwing exceptions, so import and sync tools don't break.
+  - Corrections are reported in `processDatamap_afterAllOperations`, so an aborted save (e.g. cancelled sudo mode) leaves no log entry.
   - Whether a rule applies when `$dataHandler->isImporting` is set is decided per rule, documented and tested. [Project]
 - **Sudo mode:** the Core checks protected fields in the final field array (`processDatamap_postProcessFieldArray`). Our hooks run earlier, so anything they set or clear is automatically protected. This is intended. [Core]
 
@@ -400,7 +403,7 @@ final readonly class DeriveRoleCompositionTca
 - **Unit:** PHP 8.2–8.5 with lowest and highest dependencies.
 - **Functional:** SQLite, MariaDB 10.11 and 11.8, MySQL 8.0 and 8.4, PostgreSQL 14 and 18.
 - **Further jobs:** E2E on SQLite, docs, merged coverage.
-- **Allowed to fail:** one job against TYPO3 v15-dev (PHP 8.5). [tea][Core]
+- **Next TYPO3 version:** the job `typo3-next` installs TYPO3 v15-dev (`runTests.sh -p 8.5 -s composerUpdateDev`) and runs the unit and functional tests. It does not block merging, because the core development version changes daily, but it **must be green before every release** (`RELAUNCH.md` §8.6). [Project]
 
 ---
 

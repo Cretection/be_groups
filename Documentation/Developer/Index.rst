@@ -16,14 +16,23 @@ The kind is the type field of :sql:`be_groups`
 ``$GLOBALS['TCA']['be_groups']['types']``. There is no proprietary
 registry – you use the TCA API you already know.
 
+A kind is valid if it is an item of the field :sql:`tx_begroups_kind` and has
+a type of its own. Everything except ``role`` and ``classic`` is a building
+block. Values that are no item – numeric kinds of the former extension, kinds
+of an uninstalled extension – are neither roles nor building blocks.
+
 ..  _developer-fields:
 
 Assign your own fields to a kind
 ================================
 
 If your extension adds a permission field to :sql:`be_groups`, add it to the
-kind it belongs to. Otherwise the field is only visible in the kind
-"Classic", and rule R1 clears it for all other kinds.
+kind it belongs to. As soon as a field is shown in the form of a role or a
+building block, rule R1 manages it: it is kept for that kind and cleared for
+all others. A field that is not assigned to any kind (and is no permission
+field of the core) is only shown for classic groups and is not enforced –
+see :ref:`concept-limitations`. Fields that grant no permissions, such as
+identifiers of a synchronisation tool, are never touched.
 
 ..  code-block:: php
     :caption: EXT:my_extension/Configuration/TCA/Overrides/be_groups.php
@@ -87,8 +96,24 @@ Add your own kind
         ',
     ];
 
-Use a prefixed identifier for your kind (``my_news``, not ``news``) to avoid
-collisions with future kinds of this extension.
+Use a prefixed, non-numeric identifier for your kind (``my_news``, not
+``news``) to avoid collisions with future kinds of this extension and with
+the numeric kinds of the former extension.
+
+Optionally give your kind a label in the lists of the role and user forms,
+which are grouped by kind (otherwise the identifier is shown):
+
+..  code-block:: php
+    :caption: EXT:my_extension/Configuration/TCA/Overrides/be_groups.php
+
+    $GLOBALS['TCA']['be_groups']['types']['role']['columnsOverrides']['subgroup']['config']['itemGroups']['my_news']
+        = 'my_extension.db:be_groups.kind.news';
+
+..  code-block:: php
+    :caption: EXT:my_extension/Configuration/TCA/Overrides/be_users.php
+
+    $GLOBALS['TCA']['be_users']['columns']['usergroup']['config']['itemGroups']['my_news']
+        = 'my_extension.db:be_users.usergroup.group.news';
 
 ..  _developer-planned:
 

@@ -33,15 +33,17 @@ kinds with a guided user interface instead of naming conventions.
 - **Roles** are composed in the core field `subgroup`, with the building
   blocks grouped by kind.
 - **Backend users only get roles** (configurable during migration).
-- **What is not visible does not apply:** fields that do not belong to a
-  kind are cleared on every save – in the backend, via the DataHandler API
-  and by import or sync tools.
+- **What is not visible does not apply:** permission fields that do not
+  belong to a kind are cleared on every save – in the backend, via the
+  DataHandler API and by import or sync tools. Stored assignments are never
+  dropped, other data on the group is never touched.
 - **Core native:** only one additional field (`tx_begroups_kind`). TYPO3
   resolves permissions as usual.
 - **Overview module** "Roles & Building Blocks" (Administration): which role
   consists of which building blocks, who has which role, where a building
   block is used – sortable, filterable and with markers for inconsistencies.
-- **Upgrade wizard** for data of be_groups 0.0.x and the AOE version 1.x.
+- **Upgrade wizard** for data of be_groups 0.0.x and the AOE version 1.x –
+  without changing any effective permission.
 
 ### Requirements
 
@@ -113,15 +115,17 @@ Gruppentypen mit geführter Oberfläche statt Namenskonventionen.
   nach Typ gruppiert.
 - **Backend-Benutzer bekommen nur Rollen** (während der Umstellung
   einstellbar).
-- **Was nicht sichtbar ist, wirkt nicht:** Felder, die nicht zu einem Typ
-  gehören, werden bei jedem Speichern geleert – im Backend, über die
-  DataHandler-API und durch Import- oder Sync-Werkzeuge.
+- **Was nicht sichtbar ist, wirkt nicht:** Rechtefelder, die nicht zu einem
+  Typ gehören, werden bei jedem Speichern geleert – im Backend, über die
+  DataHandler-API und durch Import- oder Sync-Werkzeuge. Gespeicherte
+  Zuweisungen gehen nie verloren, andere Daten der Gruppe bleiben unberührt.
 - **Core-nativ:** nur ein zusätzliches Feld (`tx_begroups_kind`). TYPO3
   wertet die Rechte wie gewohnt aus.
 - **Übersichtsmodul** „Rollen & Bausteine“ (Administration): welche Rolle aus
   welchen Bausteinen besteht, wer welche Rolle hat, wo ein Baustein verwendet
   wird – sortier- und filterbar, mit Markierung von Inkonsistenzen.
-- **Upgrade-Wizard** für Daten von be_groups 0.0.x und der AOE-Version 1.x.
+- **Upgrade-Wizard** für Daten von be_groups 0.0.x und der AOE-Version 1.x –
+  ohne wirksame Rechte zu verändern.
 
 ### Voraussetzungen
 

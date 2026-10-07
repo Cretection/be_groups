@@ -16,27 +16,60 @@ Relaunch for TYPO3 14.3 LTS (version 1.0.0).
 - Kind model aligned with the official TYPO3 guideline "Setting up backend
   user groups": `role`, `acl`, `page_group`, `db_mount`, `file_mount`,
   `file_operations`, `category_mount`, `language`, `tsconfig`, `workspace`
-  and `classic`.
-- Role composition in the core field `subgroup`, grouped by kind.
+  and `classic`. Only configured kinds (items of `tx_begroups_kind` with a
+  form of their own) are valid; numeric legacy kinds and kinds of uninstalled
+  extensions are neither roles nor building blocks.
+- Role composition in the core field `subgroup`. The role form uses the
+  side-by-side list of the core, grouped by kind; the user form lists all
+  groups grouped by kind. Neither list is filtered, so saving a form never
+  drops stored assignments, and the order of members is kept.
 - Rules R1–R4, enforced on every save operation (backend form, DataHandler
-  API, import and sync tools).
-- Every correction made by the rules is written to the system log and shown
-  to the editor as flash message.
+  API, import and sync tools), including soft-deleted records:
+  - R1 clears permission fields that do not belong to the kind, including
+    default values of new records. Only permission fields are managed; other
+    data on `be_groups` is never touched.
+  - R2 and R4 only reject newly added relations; stored relations are kept.
+    `NEW…` placeholders, `uid|label`, URL-encoded and table-prefixed values
+    are understood.
+  - New records without kind get the kind the DataHandler stores (TCA
+    default, `TCAdefaults` in user and page TSconfig).
+- Every intervention of the rules is written to the system log and shown to
+  the editor as flash message. Corrections are reported after the save
+  operation has completed, so an aborted save (e.g. a cancelled sudo mode
+  confirmation) leaves no log entry.
 - Read-only backend module "Roles & Building Blocks" (Administration): roles
-  with their building blocks and users, building blocks with their usage,
-  sorting, filtering by kind and markers for inconsistencies.
-- Extension setting `allowClassicGroups` (default: enabled).
+  with their building blocks and users, building blocks with every group and
+  user using them, classic groups and groups with an unknown kind; sorting by
+  title or usage, filtering by kind; markers for roles with invalid members,
+  building blocks with subgroups or direct users, and unused building blocks.
+  The issue count does not depend on the filter; kinds of other extensions
+  use their own label and icon.
+- Extension setting `allowClassicGroups` (default: enabled). It takes effect
+  immediately: when disabled, the form no longer offers "classic" (except for
+  groups that already are classic) and new groups start as "role".
 - Upgrade wizard `beGroups_kindMigration` for data of be_groups 0.0.x and
-  the AOE version 1.x. It restores META groups emptied by the former
-  synchronisation bug and moves file permissions of building blocks into new
-  "file operations" building blocks, so no permission is lost.
+  the AOE version 1.x. It never changes effective permissions:
+  - It refuses to run until the database structure has been updated.
+  - Members of META groups that were only listed in the former `subgroup_*`
+    fields are reported, not added.
+  - File permissions of building blocks move into "file operations" building
+    blocks per permission set and hidden state; groups with other foreign
+    settings, and groups whose referencing lists have no room left, become
+    "classic".
+  - Soft-deleted groups and users are migrated as well; the wizard is
+    repeatable.
+  - It prints a hint if the former setting `onlyShowMetaGroup` is still
+    enabled; its successor is `allowClassicGroups`.
 - Documentation in English and German, including a credits and history
   page for the original author Michael Klapper.
 
 ### Changed
 
-- Supports TYPO3 14.3 LTS and PHP 8.2–8.5 only.
+- Supports TYPO3 14.3 LTS and PHP 8.2–8.5 only (TYPO3 15 will be supported
+  by version 1.x as soon as it is released).
 - The kind is stored as a string identifier instead of a number.
+- The column `be_groups.subgroup` is enlarged to 2048 characters, so roles
+  can combine many building blocks.
 - The license changed from GPL-3.0-or-later to GPL-2.0-or-later, in line with
   the TYPO3 core.
 - All metadata lives in `composer.json`.
@@ -44,12 +77,13 @@ Relaunch for TYPO3 14.3 LTS (version 1.0.0).
 ### Removed
 
 - The columns `subgroup_r`, `subgroup_l`, `subgroup_pa`, `subgroup_fm`,
-  `subgroup_pm`, `subgroup_ts`, `subgroup_ws` and `subgroup_cat` (migrated by
-  the upgrade wizard).
+  `subgroup_pm`, `subgroup_ts`, `subgroup_ws` and `subgroup_cat` (read by the
+  upgrade wizard, removed by the database analyzer afterwards).
 - The synchronisation hook between `subgroup_*` and `subgroup`, which could
   empty `subgroup` on programmatic saves.
 - `ext_emconf.php`, `ext_icon.png` and the legacy update wizard.
 - The extension setting `explicitAllow` (without effect since TYPO3 12).
+- The extension setting `onlyShowMetaGroup` (successor: `allowClassicGroups`).
 
 ## [0.0.9] - 2022-06-03
 

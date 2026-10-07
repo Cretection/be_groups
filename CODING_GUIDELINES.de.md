@@ -35,6 +35,8 @@ Wo die offizielle Doku veraltet ist (z. B. „PER-CS 1.0/2.0“ statt `@PER-CS3x
 2. **MUSS:**
    - **Nur öffentliche Core-API.** Alles, was im Core mit `@internal` markiert ist, ist tabu (z. B. `GroupResolver`, `TcaSchemaFactory::rebuild()`). PHPStan prüft das mit `featureToggles.internalTag: true`. [Projekt]
    - **0 Deprecations:** Tests schlagen bei jeder Deprecation fehl, auch bei veralteten Labels mit `x-unused-since`. [Core]
+   - **Keine API, die absehbar wegfällt.** Erlaubt ist nur, was in TYPO3 14.3 **und** im aktuellen Entwicklungsstand der nächsten Hauptversion (Core `main`) weder `@deprecated` noch `@internal` ist. Vor der ersten Nutzung einer Core-API werden beide Stände und der Changelog von `main` geprüft. [Projekt]
+   - **PHP 8.2 bis 8.5:** Der Code läuft auf der Mindestversion von TYPO3 14 und von TYPO3 15 und nutzt nichts, was PHP 8.5 als deprecated markiert. [Projekt]
    - **Rechte werden nur über den DataHandler geschrieben.** Niemals per SQL in `be_groups` oder `be_users` schreiben, nur so greifen Rechte, Sudo-Mode, Historie und Log. [Projekt]
 3. **Klein und explizit:** lieber ein weiterer kleiner Service als eine Klasse, die alles kann. Keine Magie, keine globalen Zustände. [CGL]
 
@@ -167,7 +169,7 @@ Wir verwenden `typo3/coding-standards` **v0.9.0**. Das Regelwerk ist byte-identi
   - Codes sind eindeutig und werden nie geändert. Ein aus dem Core übernommener Integritäts-Checker prüft das.
 - `\RuntimeException` / `\InvalidArgumentException` für Programmierfehler.
 - Eigene, leere Exception-Klassen in `Classes/Exception/` für Fälle, die Aufrufer gezielt behandeln sollen. Die Basis-Exception erweitert `\TYPO3\CMS\Core\Exception`.
-- **In DataHandler-Hooks wird nicht geworfen:** Dort wird mit `$dataHandler->log()` protokolliert und das Feld bzw. der Datensatz verworfen (siehe 6).
+- **In DataHandler-Hooks wird nicht geworfen:** Dort wird über `$dataHandler->BE_USER->writelog()` ins Systemprotokoll geschrieben (öffentliche API; `DataHandler::log()` ist `@internal`) und das Feld bzw. der Datensatz verworfen (siehe 6).
 
 ### 3.8 Eigene Deprecations [CGL]
 
@@ -247,10 +249,11 @@ final readonly class DeriveRoleCompositionTca
       = \Cretection\BeGroups\DataHandling\GroupKindRules::class;
   ```
   Für das Speichern gibt es in v14 weiterhin keine PSR-14-Alternative. [Core]
-- **Klassenform:** `final readonly class` mit `#[Autoconfigure(public: true)]`. Methoden sind voll typisiert, wie in `DataHandlerAuthenticationContext`. [Core]
+- **Klassenform:** `final readonly class` mit `#[Autoconfigure(public: true)]`, wie in `DataHandlerAuthenticationContext`. Ein Hook, der während eines DataHandler-Laufs Zustand sammelt (z. B. Meldungen, die in `processDatamap_afterAllOperations` ausgegeben werden), ist eine `final class` mit `#[Autoconfigure(public: true, shared: false)]`, damit jeder Lauf eine eigene Instanz bekommt. Methoden sind voll typisiert. [Core][Projekt]
 - Den aktuellen Benutzer über `$dataHandler->BE_USER` holen. `DataHandler::$admin` und `$userid` gibt es in v14 nicht mehr. [Core]
 - **Tolerant:**
-  - Regeln korrigieren und protokollieren (`$dataHandler->log()`), statt Exceptions zu werfen. So brechen Import- und Sync-Werkzeuge nicht.
+  - Regeln korrigieren und protokollieren (`$dataHandler->BE_USER->writelog()`), statt Exceptions zu werfen. So brechen Import- und Sync-Werkzeuge nicht.
+  - Korrekturen werden in `processDatamap_afterAllOperations` gemeldet, damit ein abgebrochenes Speichern (z. B. abgebrochener Sudo-Mode) keinen Protokolleintrag hinterlässt.
   - Ob eine Regel bei `$dataHandler->isImporting` greift, wird je Regel entschieden, dokumentiert und getestet. [Projekt]
 - **Sudo-Mode:** Der Core prüft geschützte Felder im finalen Feld-Array (`processDatamap_postProcessFieldArray`). Unsere Hooks laufen davor, und was sie setzen oder leeren, ist damit automatisch geschützt. Das ist gewollt. [Core]
 
@@ -400,7 +403,7 @@ final readonly class DeriveRoleCompositionTca
 - **Unit:** PHP 8.2–8.5 mit den niedrigsten und höchsten Abhängigkeiten.
 - **Functional:** SQLite, MariaDB 10.11 und 11.8, MySQL 8.0 und 8.4, PostgreSQL 14 und 18.
 - **Weitere Jobs:** E2E auf SQLite, Doku, zusammengeführte Abdeckung.
-- **Allowed-to-fail:** ein Job gegen TYPO3 v15-dev (PHP 8.5). [tea][Core]
+- **Nächste TYPO3-Version:** Der Job `typo3-next` installiert TYPO3 v15-dev (`runTests.sh -p 8.5 -s composerUpdateDev`) und führt die Unit- und Functional-Tests aus. Er blockiert keinen Merge, weil sich die Entwicklungsversion des Core täglich ändert, **muss aber vor jedem Release grün sein** (`RELAUNCH.md` §8.6). [Projekt]
 
 ---
 

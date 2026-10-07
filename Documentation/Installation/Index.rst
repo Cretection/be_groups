@@ -6,6 +6,23 @@
 Installation
 ============
 
+..  _installation-requirements:
+
+Requirements and compatibility
+==============================
+
+*   TYPO3 14.3 LTS and PHP 8.2 to 8.5.
+*   TYPO3 15 will be supported by the same major version 1.x as soon as it is
+    released. The extension is tested continuously against the development
+    version of TYPO3 15 and only uses APIs that are neither deprecated nor
+    internal in TYPO3 14.3 and TYPO3 15.
+*   Support for a TYPO3 version ends together with the official end of its free
+    community support (see https://get.typo3.org); for TYPO3 14 this is
+    2029-06-30. Extended Long Term Support (ELTS) does not extend this period.
+*   Each major version of the extension supports two consecutive major
+    versions of TYPO3, so TYPO3 can be upgraded without switching to a new
+    major version of the extension at the same time.
+
 ..  _installation-composer:
 
 Composer mode

@@ -27,8 +27,8 @@ Backend Group Kinds brings order into this:
 *   **Backend users only get roles.** What a user may do follows from the
     roles assigned to them – nothing else.
 *   **What is not visible does not apply.** A building block can only grant
-    what its kind shows. Hidden leftovers of former configurations are
-    cleared.
+    what its kind shows. Hidden permission leftovers of former configurations
+    are cleared when the group is saved.
 
 The extension only adds one field to the core table :sql:`be_groups` – the
 kind. All permissions stay in the core fields, and TYPO3 itself resolves

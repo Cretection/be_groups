@@ -68,11 +68,13 @@ Alle Typen haben außerdem Titel, Beschreibung und „Deaktiviert“.
 
 ## 3. Datenmodell
 
-- **Ein Feld:** `be_groups.tx_begroups_kind`, `varchar(32)`, Default `classic`, mit Index.
+- **Ein Feld:** `be_groups.tx_begroups_kind` (Textspalte aus TCA erzeugt), Default `classic`, mit Index.
+  - **Gültig sind nur konfigurierte Typen:** die Items von `tx_begroups_kind` mit eigenem TCA-Typ (`KindRegistry`). Numerische Alt-Typen und Typen deinstallierter Extensions sind weder Rolle noch Baustein.
   - **Warum ein String?** Die gruppierte Bausteinauswahl nutzt `foreign_table_item_group` (v13, #95808). Der Core verlangt dafür einen String. Mit dem alten Integer-Feld wirft v14 einen `TypeError` in `SelectItem` (im Spike nachgewiesen).
 - **Keine Zusatzspalten.** Die alten `subgroup_*`-Spalten entfallen.
   - `subgroup` ist die einzige Datenquelle.
   - Der Sync-Hook entfällt und damit auch der Datenverlust-Fehler der alten Version.
+  - `be_groups.subgroup` wird auf 2048 Zeichen vergrößert (`dbFieldLength`), weil Rollen viele Bausteine kombinieren.
 - **Typen sind normale TCA-Typen:**
   - `ctrl.type = tx_begroups_kind` mit `types[<kind>]` pro Typ und `typeicon_classes`.
   - Typ-spezifischer Datensatztitel, z. B. „Neue Rolle“ (v14, #108027).
@@ -88,23 +90,26 @@ Alle Typen haben außerdem Titel, Beschreibung und „Deaktiviert“.
 
 ### 4.2 Rollen zusammenstellen (Kernfunktion)
 Die Rolle nutzt das Core-Feld `subgroup` mit `columnsOverrides`:
-- `renderType` ist `selectCheckBox`.
-- Die Bausteine sind **nach Typ gruppiert** (`foreign_table_item_group` und `itemGroups`). Jede Gruppe bringt „Alle“, „Keine“ und „Umkehren“ mit.
-- Rollen und klassische Gruppen sind nicht auswählbar (`foreign_table_where`).
+- `renderType` bleibt die zweispaltige Auswahl des Core (`selectMultipleSideBySide`). Sie behält die Reihenfolge der Mitglieder, die für die TSconfig-Vererbung zählt.
+- Die verfügbaren Gruppen sind **nach Typ gruppiert** (`foreign_table_item_group` und `itemGroups`). Rollen und klassische Gruppen stehen in eigenen, als „nicht zulässig“ markierten Gruppen.
+- **Die Liste wird nicht gefiltert.** Ein Auswahlfeld behält beim Speichern nur Werte, die in seinen Items vorkommen. Eine nach Typ gefilterte Liste würde deshalb jede gespeicherte Zuordnung, die nicht mehr passt, beim nächsten Speichern stillschweigend löschen (Review-Befund, per Test nachgewiesen). Welche Gruppen hinzugefügt werden dürfen, setzt der DataHandler-Hook durch (R2).
 
-Das Ergebnis ist im Spike gerendert, gegen v14.3.7.
-
-Für sehr viele Bausteine lässt sich das Feld auf `selectMultipleSideBySide` umstellen (Optgroups mit Filter, ebenfalls Core).
+Eine Variante mit `selectCheckBox` wurde im Spike gerendert, aber verworfen: Sie sortiert die Mitglieder beim Speichern nach Titel um.
 
 ### 4.3 Benutzer
-- `be_users.usergroup` zeigt nur Rollen. Klassische Gruppen erscheinen nur, solange sie erlaubt sind.
-- Beides ist in der Auswahl gruppiert.
+- `be_users.usergroup` listet alle Gruppen, gruppiert in Rollen, klassische Gruppen und Bausteine je Typ („über eine Rolle zuweisen“).
+- Auch hier gibt es keinen Filter, aus demselben Grund wie in 4.2. Eine direkte Zuweisung von Bausteinen lehnt der Hook beim Speichern ab (R4).
+- Ob „Klassisch“ im Gruppenformular angeboten wird, entscheidet zur Laufzeit ein FormEngine-Data-Provider (`KindSelection`), nicht das TCA. Die Option `allowClassicGroups` wirkt deshalb sofort, ohne Cache-Leerung. Bei abgeschalteten klassischen Gruppen beginnen neue Gruppen als Rolle.
 
 ### 4.4 Listen und Bezeichnungen
 - Ein Icon pro Typ, sortiert nach Typ und Titel.
 - Präfixe (`R_`, `ACL_` …) werden optional automatisch angezeigt. Sie müssen nicht mehr im Gruppennamen gepflegt werden.
 
-### 4.5 Übersichtsmodul „Rollen & Bausteine“ (M2)
+### 4.5 Übersichtsmodul „Rollen & Bausteine“ (M2, Übersicht ohne Bearbeitung umgesetzt)
+- **Umgesetzt (nur lesend):**
+  - Rollen mit Bausteinen und Benutzern, Bausteine mit allen verwendenden Gruppen und Benutzern, klassische Gruppen sowie Gruppen mit unbekanntem Typ.
+  - Sortierung, Typ-Filter, Markierung von Inkonsistenzen (die Anzahl hängt nicht vom Filter ab).
+  - Typen anderer Extensions mit eigener Bezeichnung und eigenem Icon.
 - **Matrix:** Rollen als Zeilen, Bausteine nach Typ gruppiert als Spalten, Haken per Klick.
 - **Verwendungsnachweis:** In welchen Rollen steckt ein Baustein? Welche Benutzer haben eine Rolle?
 - **Effektive Rechte:** Verlinkung auf die Core-Detailansicht für Gruppen (v14, #99065).
@@ -119,43 +124,49 @@ Ein Typ-Filter für die Gruppenliste über `AfterBackendGroupListConstraintsAsse
 
 | Regel | Inhalt |
 |---|---|
-| R1 | Ein Baustein vergibt nur, was sein Typ anzeigt. Beim Typwechsel werden fremde Felder geleert, und eine Meldung nennt sie. Optional (strikt): die Prüfung läuft bei jedem Speichern. |
-| R2 | Eine Rolle enthält nur Bausteine und hat selbst keine Rechtefelder (folgt aus R1). |
-| R3 | Bausteine haben keine Untergruppen. |
-| R4 | Benutzer bekommen nur Rollen (abschaltbar, z. B. während der Migration). |
+| R1 | Ein Baustein vergibt nur, was sein Typ anzeigt. Bei jedem Speichern werden Rechtefelder geleert, die nicht zum Typ gehören, auch Standardwerte neuer Datensätze. Verwaltet werden nur Rechtefelder (die des Core und alle Felder, die im Formular einer Rolle oder eines Bausteins stehen); andere Daten, z. B. Sync-Kennungen, bleiben unberührt. |
+| R2 | Einer Rolle werden nur Bausteine hinzugefügt. Abgelehnt werden Rollen, klassische Gruppen, Gruppen mit unbekanntem Typ, gelöschte oder fehlende Gruppen und die Rolle selbst. |
+| R3 | Bausteine haben keine Untergruppen (folgt aus R1). |
+| R4 | Benutzern werden nur Rollen zugewiesen (und klassische Gruppen, solange sie erlaubt sind). |
 
 **Umsetzung:**
 - Ein DataHandler-Hook für `be_groups` und `be_users` setzt die Regeln durch. In v14 gibt es für das Speichern weiterhin keine PSR-14-Events, Hooks sind dort die API.
-- **Tolerant:** Der Hook korrigiert und protokolliert, statt Exceptions zu werfen. So brechen Sync-Tools nicht.
+- **Gespeicherte Verknüpfungen bleiben:** R2 und R4 prüfen nur hinzukommende Verknüpfungen. Die Reihenfolge bleibt erhalten.
+- **Jede Schreibweise:** `NEW…`-Platzhalter (aufgelöst über den Datamap bzw. `substNEWwithIDs`), `uid|label`, URL-kodierte und tabellenpräfixierte Werte werden verstanden. So lässt sich R4 nicht umgehen.
+- **Gelöschte Datensätze** folgen den Regeln ebenfalls, damit ein Wiederherstellen keinen verbotenen Stand zurückbringt.
+- **Typ neuer Datensätze:** Ohne Typ im Datamap gilt, was der DataHandler setzen würde (TCA-Default, `TCAdefaults` aus User- und Page-TSconfig). Genau dieser Typ wird geprüft und ausdrücklich gespeichert.
+- **Tolerant:** Der Hook korrigiert, statt Exceptions zu werfen. Nur eine Gruppe, die bei abgeschalteten klassischen Gruppen als „Klassisch“ entstünde, wird gar nicht angelegt.
+- **Protokoll:** Korrekturen werden in `processDatamap_afterAllOperations` gemeldet (Systemprotokoll und Hinweis). Bricht der Sudo-Mode das Speichern ab, entsteht kein falscher Eintrag. Ablehnungen werden sofort gemeldet. Der Hook ist `shared: false`, also pro DataHandler-Lauf eine eigene Instanz.
 - **Sudo-Mode:** Die Core-Prüfung läuft in `processDatamap_postProcessFieldArray` auf dem finalen Feldarray. Geleerte, geschützte Felder lösen sie also aus, und das ist gewollt.
 
-**Konsistenzprüfung:**
+**Konsistenzprüfung (geplant, M2):**
 - CLI-Befehl `begroups:audit` mit Exit-Code für CI und Monitoring, optional als Status im Reports-Modul.
-- Sie findet Verstöße, die per SQL oder durch Sync-Tools entstanden sind, und Felder anderer Extensions, die keinem Typ zugeordnet sind.
+- Sie findet Verstöße, die per SQL oder durch Sync-Tools entstanden sind, und Rechtefelder anderer Extensions, die keinem Typ zugeordnet sind.
 
 ---
 
 ## 6. Erweiterbarkeit
 
-- **Typen sind TCA.** Eigene Typen legt man mit der normalen TCA-API an (Item in `tx_begroups_kind` und `types[...]`). Eine eigene Registry-API gibt es nicht.
-- **Felder anderer Extensions** werden mit `addToAllTCAtypes('be_groups', 'feld', 'acl')` einem Typ zugeordnet.
-- **Ein Listener auf `AfterTcaCompilationEvent`** (in v14 vorhanden) leitet daraus ab. Er feuert nach der TCA-Migration, liefert deshalb nur das finale v14-Format und nutzt keine `TcaSchemaFactory` (`CODING_GUIDELINES.md` §5.2):
-  - die `itemGroups` der Rollen-Auswahl aus den registrierten Typen,
-  - den Filter für `be_users`,
-  - die Liste nicht zugeordneter Felder. Diese erscheinen in „Klassisch“, die Konsistenzprüfung warnt.
-- **Mitgelieferte Zuordnungen** für bekannte Extensions: dashboard, workspaces, permission-sets (Feldname noch zu prüfen).
-- **Für die Konsistenzprüfung** werden die Felder pro Typ über die Schema-API ermittelt (`TcaSchema::getSubSchema()`).
+- **Typen sind TCA.** Eigene Typen legt man mit der normalen TCA-API an (Item in `tx_begroups_kind` und `types[...]`). Die `KindRegistry` liest die gültigen Typen aus diesen Items; eine eigene Registrierungs-API gibt es nicht.
+- **Felder anderer Extensions** werden mit `addToAllTCAtypes('be_groups', 'feld', 'acl')` einem Typ zugeordnet. Ab dann verwaltet R1 sie.
+- **Bezeichnungen in den gruppierten Listen** ergänzt eine Extension über `itemGroups` der Rollen- und Benutzerfelder.
+- **Felder pro Typ** werden über die Schema-API ermittelt (`TcaSchema::getSubSchema()`), einschließlich Begleitfeldern wie `tables_select`.
+- **Bekannte Einschränkung:** Rechtefelder einer Extension, die vor be_groups geladen wird und das Feld keinem Typ zuordnet, erscheinen nur bei klassischen Gruppen und werden nicht durchgesetzt (Doku: „Known limitations“).
 
 ---
 
 ## 7. Migration
 
 ### 7.1 Von be_groups 0.0.x bzw. AOE 1.x
-Ein Upgrade-Wizard nutzt das neue Core-Attribut `TYPO3\CMS\Core\Attribute\UpgradeWizard` (v14) und
-- bildet die alten Typen 0–9 auf die Kennungen aus Abschnitt 2 ab,
-- **repariert die Rollen:** `subgroup` wird zur Vereinigung aus `subgroup` und allen `subgroup_*`. Das heilt Gruppen, die der alte Fehler geleert hat, und Abweichungen werden berichtet,
-- **zieht `file_permissions` heraus:** Alte Rights- und Dateifreigabe-Gruppen mit `file_permissions` bekommen einen neuen `FO_`-Baustein, der automatisch in die betroffenen Rollen eingehängt wird,
-- überlässt das Entfernen der `subgroup_*`-Spalten danach dem DB-Compare.
+Ein Upgrade-Wizard (`beGroups_kindMigration`, Core-Attribut `TYPO3\CMS\Core\Attribute\UpgradeWizard`) ändert **nie wirksame Rechte**:
+- **Datenbankstruktur zuerst:** Ist `tx_begroups_kind` noch die alte Integer-Spalte, verweigert der Wizard die Ausführung mit Erklärung. Sonst würden alle neuen Typen als `0` gespeichert (Review-Befund, per Test nachgewiesen).
+- **Typen:** Die alten Typen 0–9 werden auf die Kennungen aus Abschnitt 2 abgebildet.
+- **Rollen werden nicht „repariert“:** Mitglieder, die nur in den alten `subgroup_*`-Feldern standen, werden gemeldet, aber nicht hinzugefügt, weil das heute nicht vorhandene Rechte vergeben würde.
+- **`file_permissions` herausziehen:** Gruppen mit Dateirechten, die ihr neuer Typ nicht anzeigt, bekommen einen `file_operations`-Baustein pro Rechte-Kombination **und** Zustand „deaktiviert“. Er wird überall direkt hinter der ursprünglichen Gruppe eingefügt (Rollen, andere Gruppen, Benutzer). Deaktivierte Gruppen bekommen einen deaktivierten Baustein.
+- **Kein Platz in einer Liste:** Die Gruppe behält ihre Dateirechte und wird `classic`.
+- **Andere fremde Einstellungen:** Die Gruppe wird `classic` und gemeldet. `0` in Relationsfeldern (z. B. `category_perms`) gilt als leer.
+- **Umfang:** Auch gelöschte Gruppen und Benutzer werden migriert. Alle Schreibvorgänge laufen in einer Transaktion. Der Wizard ist wiederholbar (`RepeatableInterface`).
+- **Danach:** Referenzindex aktualisieren, dann entfernt der DB-Compare die `subgroup_*`-Spalten. Ein Hinweis erscheint, wenn die frühere Option `onlyShowMetaGroup` noch aktiv ist (Nachfolger: `allowClassicGroups`).
 
 ### 7.2 Von einem normalen TYPO3 (Hauptzielgruppe)
 - **Nach der Installation:** Alle Gruppen sind `classic`, nichts ändert sich.
@@ -239,7 +250,8 @@ Classes/
   DataHandling/             # Regel-Engine (R1–R4) als DataHandler-Hook
   Domain/                   # Typen, Klassifizierung, Aufteilung (frameworkfrei, gut testbar)
   Event/                    # eigene PSR-14-Events (öffentliche API)
-  EventListener/            # u. a. AfterTcaCompilationEvent
+  EventListener/            # eigene PSR-14-Listener (derzeit keine)
+  Form/FormDataProvider/    # KindSelection: Typauswahl zur Laufzeit
   Exception/                # eigene Exceptions (Basis: \TYPO3\CMS\Core\Exception)
   Upgrades/                 # Migration von 0.0.x und AOE 1.x
 Configuration/
@@ -267,6 +279,41 @@ be_groups geht auf **Michael Klapper** zurück. Er hat die Idee 2012 bei morphod
 
 **Vorab mit ihm klären:** gewünschte Namensnennung (mit oder ohne Firma), Link, E-Mail-Adresse und ob er die Credits-Seite vor dem Release gegenlesen möchte.
 
+### 8.6 Kompatibilität, Zukunftssicherheit und Support (verbindlich)
+
+**Ziel:** Mit 1.0.0 auf TYPO3 14.3 LTS in den Markt starten, ohne dass ein TYPO3-Update in den nächsten Jahren die Extension bricht. Die Sicherheit bleibt dabei auf höchstem Niveau.
+
+**Regeln für den Code:**
+- **Keine API, die absehbar wegfällt.** Erlaubt ist nur, was in TYPO3 14.3 **und** im aktuellen Entwicklungsstand der nächsten Hauptversion (Core `main`, derzeit 15.0-dev) weder `@deprecated` noch `@internal` ist.
+- **Vor der Nutzung einer neuen Core-API prüfen:** die Markierungen in 14.3 und `main` und den Changelog von `main`.
+- **PHP:** Der Code läuft auf PHP 8.2 (Minimum von TYPO3 14) bis 8.5 (Minimum von TYPO3 15) und nutzt nichts, was PHP 8.5 als deprecated markiert.
+
+**Automatische Absicherung:**
+- **TYPO3 14.3 (blockierend):** PHPStan mit Deprecation- und Internal-Prüfung. Die Tests schlagen bei jeder Deprecation fehl.
+- **TYPO3 15-dev (Release-blockierend):** Die Unit- und Functional-Tests laufen bei jeder Änderung und wöchentlich (`runTests.sh -s composerUpdateDev`, Job `typo3-next`).
+  - Ein roter Lauf blockiert keinen Merge, weil sich `main` täglich ändert.
+  - Vor jedem Release muss der Lauf aber grün sein.
+- **Fund im Changelog von `main`:** Wird dort eine von uns genutzte API als deprecated markiert, migrieren wir sie im nächsten Minor-Release. Der Ersatz muss auch auf 14.3 laufen.
+
+**Support-Regel: gebunden an das offizielle Support-Ende von TYPO3:**
+- **Pro TYPO3-Version:** be_groups unterstützt jede TYPO3-Version genau bis zum offiziellen Ende ihres kostenlosen Community-Supports (EOL laut https://get.typo3.org). Bis zu diesem Tag gibt es Fehler- und Sicherheitskorrekturen, danach nicht mehr.
+- **ELTS zählt nicht:** Der kostenpflichtige Extended Long Term Support verlängert diese Zusage nicht.
+- **Zwei TYPO3-Hauptversionen pro be_groups-Hauptversion:** Jede be_groups-Hauptversion unterstützt zwei aufeinanderfolgende TYPO3-Hauptversionen. Wer TYPO3 aktualisiert, muss be_groups nicht im selben Schritt auf eine neue Hauptversion heben.
+- **Neue TYPO3-Hauptversion:** Sie wird in der aktuellen be_groups-Hauptversion unterstützt, sobald sie erschienen ist und `typo3-next` grün ist, spätestens mit ihrer LTS-Version.
+- **Wegfall einer TYPO3-Version:** Eine TYPO3-Version fällt nur mit einer neuen be_groups-Hauptversion weg, denn das ist ein Breaking Change. Die vorherige be_groups-Hauptversion erhält bis zum EOL der wegfallenden TYPO3-Version weiter Fehler- und Sicherheitskorrekturen.
+
+| TYPO3 | Offizielles Support-Ende (Community) | be_groups |
+|---|---|---|
+| 14 LTS | 30.06.2029 | 1.x ab 1.0.0, Support bis 30.06.2029 |
+| 15 | noch nicht veröffentlicht | 1.x, sobald TYPO3 15 erschienen ist; außerdem 2.x |
+| 16 | noch nicht veröffentlicht | 2.x, sobald TYPO3 16 erschienen ist |
+
+- **Daraus folgt für TYPO3 14:** 1.x wird bis zum 30.06.2029 gepflegt. Bis dahin unterstützt 2.x bereits TYPO3 15 und 16, der Wechsel ist also vorbereitet, wenn TYPO3 14 endet.
+- **Wenn TYPO3 16 erscheint:** be_groups 2.0 übernimmt TYPO3 15 und 16. 1.x läuft parallel für TYPO3 14 (und 15) weiter bis zum EOL von TYPO3 14.
+- **Öffentliche API:** Innerhalb einer Hauptversion gibt es keine Breaking Changes an der öffentlichen API (`CODING_GUIDELINES.md` §3.6). Eigene Deprecations haben mindestens ein Minor-Release Vorlauf.
+
+**Nachweis vom 2026-10-07:** Der Stand von `relaunch` läuft unverändert auf TYPO3 15.0-dev (Core `main`, PHP 8.5, PHPUnit 12). Alle 24 Unit- und 21 Functional-Tests sind grün. PHPStan findet in `Classes/` und `Configuration/` keine einzige deprecated oder interne API von v15.
+
 ---
 
 ## 9. Roadmap und Aufwand
@@ -289,7 +336,7 @@ Gesamt etwa 19–28 Personentage.
 
 ## 10. Risiken und offene Prüfpunkte
 
-- **Viele Bausteine:** Die Bedienbarkeit von `selectCheckBox` bei hunderten Bausteinen muss geprüft werden. Fallback ist `selectMultipleSideBySide`.
+- **Viele Bausteine:** Die Bedienbarkeit der zweispaltigen Auswahl (mit Filter und Optgroups) bei hunderten Bausteinen im echten Backend prüfen. `selectCheckBox` scheidet aus, weil es die Reihenfolge der Mitglieder verändert.
 - **Sync-Tools:** Das Zusammenspiel mit Tools, die `be_groups` per SQL schreiben, abfangen über tolerante Hooks und die Konsistenzprüfung.
 - **Core-Entwicklung:** Rechte-Vorlagen im Core (Gerrit 85577) sind noch nicht gelandet. Sie wären ergänzend, Typisierung decken sie nicht ab. Beobachten.
 - **Sudo-Mode:** Den AJAX-Ablauf im Übersichtsmodul im Detail prüfen.
@@ -312,6 +359,7 @@ Gesamt etwa 19–28 Personentage.
 | E8 | Würdigung des Erfinders | ✅ Michael Klapper wird in Doku, README, composer.json und TER genannt, mit eigener Credits-Seite (Abschnitt 8.5, 2026-10-06). Er hat dem Relaunch zugestimmt (bestätigt 2026-10-07). |
 | E9 | Coding-Leitlinien | ✅ verbindlich laut `CODING_GUIDELINES.md` (Englisch) und `CODING_GUIDELINES.de.md` (Deutsch) (2026-10-06) |
 | E10 | Sprachen | ✅ Deutsch und Englisch für alles, was Menschen lesen: README, Leitlinien, `CONTRIBUTING`, Doku und Labels. Bei Widersprüchen gilt die englische Fassung, Code und Commits sind Englisch (2026-10-07). |
+| E11 | Kompatibilität und Support | ✅ Support pro TYPO3-Version bis zu deren offiziellem EOL der Community-Version (ELTS zählt nicht); zwei TYPO3-Hauptversionen pro be_groups-Hauptversion; TYPO3 14: 1.x bis 30.06.2029; keine absehbar wegfallenden APIs (Abschnitt 8.6, 2026-10-07) |
 
 ---
 
@@ -319,7 +367,7 @@ Gesamt etwa 19–28 Personentage.
 
 **Für den Start von M0 nötig:**
 - **(a) Titel der Extension.** Vorschlag: „Backend Group Kinds - Roles and building blocks for TYPO3 backend permissions“.
-- **(b) Review-Ablauf.** Vorschlag: Claude setzt um und prüft per `/code-review`, Jonathan gibt jeden Pull Request frei, und bei Meilensteinen kommt ein Review aus der Community.
+- **(b) Review-Ablauf.** Vorschlag: Jeder Pull Request durchläuft die komplette Pipeline und ein Code-Review. Jonathan gibt jeden Pull Request frei, und bei Meilensteinen kommt ein Review aus der Community.
 
 **Später zu entscheiden:**
 - (c) Übersetzungen über die offizielle TYPO3-Lokalisierung statt des eigenen Crowdin-Projekts (bis M1).

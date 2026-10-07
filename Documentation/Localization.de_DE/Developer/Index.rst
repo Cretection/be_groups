@@ -16,14 +16,25 @@ Der Typ ist das Typ-Feld von :sql:`be_groups`
 ``$GLOBALS['TCA']['be_groups']['types']``. Es gibt keine eigene Registry –
 Sie verwenden die TCA-API, die Sie schon kennen.
 
+Ein Typ ist gültig, wenn er ein Eintrag des Felds :sql:`tx_begroups_kind`
+ist und einen eigenen Typ hat. Alles außer ``role`` und ``classic`` ist ein
+Baustein. Werte, die kein Eintrag sind – numerische Typen der früheren
+Extension, Typen einer deinstallierten Extension –, sind weder Rolle noch
+Baustein.
+
 ..  _developer-fields:
 
 Eigene Felder einem Typ zuordnen
 ================================
 
 Wenn Ihre Extension :sql:`be_groups` um ein Rechtefeld ergänzt, ordnen Sie es
-dem Typ zu, zu dem es gehört. Sonst ist das Feld nur im Typ „Klassisch“
-sichtbar, und Regel R1 leert es bei allen anderen Typen.
+dem Typ zu, zu dem es gehört. Sobald ein Feld im Formular einer Rolle oder
+eines Bausteins angezeigt wird, verwaltet Regel R1 es: Es bleibt bei diesem
+Typ erhalten und wird bei allen anderen geleert. Ein Feld, das keinem Typ
+zugeordnet ist (und kein Rechtefeld des Core ist), wird nur bei klassischen
+Gruppen angezeigt und nicht durchgesetzt – siehe
+:ref:`concept-limitations`. Felder, die keine Rechte vergeben, etwa Kennungen
+eines Synchronisierungs-Werkzeugs, werden nie angefasst.
 
 ..  code-block:: php
     :caption: EXT:my_extension/Configuration/TCA/Overrides/be_groups.php
@@ -87,8 +98,24 @@ Einen eigenen Typ ergänzen
         ',
     ];
 
-Verwenden Sie eine Kennung mit Präfix (``my_news``, nicht ``news``), damit
-sie nicht mit künftigen Typen dieser Extension kollidiert.
+Verwenden Sie eine nicht numerische Kennung mit Präfix (``my_news``, nicht
+``news``), damit sie weder mit künftigen Typen dieser Extension noch mit den
+numerischen Typen der früheren Extension kollidiert.
+
+Optional geben Sie Ihrem Typ eine Bezeichnung in den nach Typ gruppierten
+Listen der Rollen- und Benutzerformulare (sonst wird die Kennung angezeigt):
+
+..  code-block:: php
+    :caption: EXT:my_extension/Configuration/TCA/Overrides/be_groups.php
+
+    $GLOBALS['TCA']['be_groups']['types']['role']['columnsOverrides']['subgroup']['config']['itemGroups']['my_news']
+        = 'my_extension.db:be_groups.kind.news';
+
+..  code-block:: php
+    :caption: EXT:my_extension/Configuration/TCA/Overrides/be_users.php
+
+    $GLOBALS['TCA']['be_users']['columns']['usergroup']['config']['itemGroups']['my_news']
+        = 'my_extension.db:be_users.usergroup.group.news';
 
 ..  _developer-planned:
 

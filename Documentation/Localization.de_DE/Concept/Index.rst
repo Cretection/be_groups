@@ -20,9 +20,11 @@ Core-nativ
 
 Was nicht sichtbar ist, wirkt nicht
     TYPO3 wertet *alle* Rechtefelder einer Gruppe aus, unabhängig davon, was
-    ein Formular anzeigt. Deshalb darf ein Baustein nur die Felder befüllt
-    haben, die sein Typ anzeigt. Felder, die nicht zum Typ gehören, werden
-    beim Speichern geleert.
+    ein Formular anzeigt. Deshalb darf ein Baustein nur in den Rechtefeldern
+    Werte haben, die sein Typ anzeigt. Rechtefelder, die nicht zum Typ
+    gehören, werden beim Speichern geleert. Andere Daten in
+    :sql:`be_groups`, zum Beispiel Kennungen von Synchronisierungs-Werkzeugen,
+    werden nie angefasst.
 
 Führen statt brechen
     Nach der Installation funktionieren alle bestehenden Gruppen unverändert
@@ -101,6 +103,14 @@ ergänzt um „TSconfig“ und „Workspace“.
 
 Alle Typen haben außerdem Titel, Beschreibung und das Feld „Deaktiviert“.
 
+Gültig sind nur die konfigurierten Typen: die Einträge des Felds
+:sql:`tx_begroups_kind`, die ein eigenes Formular haben. Ein gespeicherter
+Wert, der kein solcher Eintrag ist – zum Beispiel ein numerischer Typ der
+früheren Extension, bevor der Upgrade-Wizard gelaufen ist, oder der Typ einer
+deinstallierten Extension –, ist weder Rolle noch Baustein. Solche Gruppen
+werden nicht verändert, können keiner Rolle hinzugefügt werden und werden im
+Modul gesondert aufgeführt.
+
 ..  _concept-rules:
 
 Regeln
@@ -108,27 +118,64 @@ Regeln
 
 Die Extension setzt vier Regeln durch, sobald eine Gruppe oder ein
 Backend-Benutzer gespeichert wird – im Backend-Formular, über die
-DataHandler-API, durch Import- oder Sync-Werkzeuge.
+DataHandler-API, durch Import- oder Sync-Werkzeuge. Auch gelöschte
+Datensätze folgen den Regeln, damit ein wiederhergestellter Datensatz nie
+eine verbotene Konfiguration zurückbringt.
 
 R1: Ein Baustein vergibt nur, was sein Typ anzeigt
-    Felder, die nicht zum Typ gehören, werden geleert. Das gilt auch für
-    Standardwerte: Eine neue Gruppe vom Typ „Seitenbaum-Einstiegspunkte“
+    Rechtefelder, die nicht zum Typ gehören, werden geleert. Verwaltet werden
+    die Rechtefelder von :sql:`be_groups` im Core und jedes Feld, das im
+    Formular einer Rolle oder eines Bausteins angezeigt wird. Das gilt auch
+    für Standardwerte: Eine neue Gruppe vom Typ „Seitenbaum-Einstiegspunkte“
     bekommt nicht die Standard-Dateirechte.
 
-R2: Eine Rolle enthält nur Bausteine
-    Rollen und klassische Gruppen können nicht Teil einer Rolle sein. Eine
-    Rolle hat keine eigenen Rechtefelder (folgt aus R1).
+R2: Einer Rolle werden nur Bausteine hinzugefügt
+    Rollen, klassische Gruppen, Gruppen mit unbekanntem Typ, gelöschte oder
+    nicht existierende Gruppen und die Rolle selbst können keiner Rolle
+    hinzugefügt werden. Eine Rolle hat keine eigenen Rechtefelder (folgt aus
+    R1).
 
 R3: Bausteine haben keine Untergruppen
     Nur Rollen und klassische Gruppen dürfen Untergruppen haben.
 
-R4: Backend-Benutzer bekommen nur Rollen
+R4: Backend-Benutzern werden nur Rollen zugewiesen
     Solange klassische Gruppen erlaubt sind (siehe :ref:`configuration`),
     dürfen Backend-Benutzer auch klassische Gruppen bekommen.
 
-Die Regeln korrigieren die Daten und schreiben einen Eintrag ins
-Systemprotokoll, statt das Speichern abzubrechen. Import- und
-Synchronisierungs-Werkzeuge funktionieren deshalb weiter.
+Einzelheiten der Regeln:
+
+*   **Gespeicherte Verknüpfungen bleiben erhalten.** R2 und R4 lehnen nur
+    Verknüpfungen ab, die *hinzukommen*. Eine Rolle, die bereits eine
+    klassische Gruppe enthält, oder ein Benutzer, der bereits einen Baustein
+    hat, behält ihn – das Abschalten klassischer Gruppen oder die Migration
+    nimmt nie Zugriff weg. Das Modul markiert solche Einträge.
+*   **Die Reihenfolge bleibt erhalten.** Die Reihenfolge der Mitglieder einer
+    Rolle und der Gruppen eines Benutzers ist für die TSconfig-Vererbung
+    wichtig; abgelehnte Einträge werden entfernt, die übrigen behalten ihre
+    Position.
+*   **Jede Schreibweise wird verstanden.** Verknüpfungen werden geprüft, ob
+    sie als uid, als ``uid|Bezeichnung``, URL-kodiert, mit Tabellenpräfix
+    (``be_groups_12``) oder als ``NEW…``-Platzhalter einer Gruppe angegeben
+    sind, die im selben DataHandler-Aufruf angelegt wird.
+*   **Neue Datensätze ohne Typ** bekommen den Typ, den der DataHandler setzen
+    würde: den Standardwert aus TCA, überschrieben durch ``TCAdefaults`` im
+    User-TSconfig, überschrieben durch ``TCAdefaults`` im Page-TSconfig. Die
+    Regeln werden für genau diesen Typ geprüft, und genau dieser Typ wird
+    gespeichert.
+*   **Unbekannte Typen werden ignoriert.** Ein Wert, der kein konfigurierter
+    Typ ist, wird nicht gespeichert; die Gruppe behält ihren Typ (oder eine
+    neue Gruppe bekommt den Standardtyp).
+
+Die Regeln korrigieren die Daten, statt das Speichern abzubrechen; nur eine
+Gruppe, die bei abgeschalteten klassischen Gruppen als „Klassisch“ angelegt
+würde, wird gar nicht angelegt. Import- und Synchronisierungs-Werkzeuge
+funktionieren deshalb weiter. Jeder Eingriff wird ins Systemprotokoll
+(:guilabel:`Administration > Protokoll`) geschrieben und im Backend als
+Meldung angezeigt. Korrekturen werden gemeldet, nachdem das Speichern
+abgeschlossen ist: Wird das Speichern abgebrochen, zum Beispiel weil die
+Passwortabfrage des Sudo-Modus abgebrochen wird, wird keine Korrektur
+protokolliert. Ein abgelehnter Datensatz oder eine abgelehnte Umstellung auf
+„Klassisch“ wird sofort gemeldet.
 
 ..  _concept-classic:
 
@@ -144,3 +191,28 @@ nichts.
 Klassische Gruppen sind die Brücke zum sauberen Modell: Stellen Sie sie
 Schritt für Schritt um und schalten Sie klassische Gruppen am Ende in der
 Extension-Konfiguration ab.
+
+..  _concept-limitations:
+
+Bekannte Einschränkungen
+========================
+
+Rechte an Backend-Benutzer-Datensätzen
+    Backend-Benutzer-Datensätze haben eigene Rechtefelder, zum Beispiel
+    Dateirechte, Module, TSconfig und Freigaben. TYPO3 führt sie mit den
+    Rechten der Gruppen zusammen. Das Rollenmodell kann sie nicht steuern.
+    Halten Sie Benutzer-Datensätze frei von Rechten und vergeben Sie alles
+    über Rollen.
+
+Rechtefelder anderer Extensions
+    Ein Rechtefeld, das eine andere Extension nur über das Core-Formular zu
+    :sql:`be_groups` hinzufügt – weil die Extension vor dieser geladen wird
+    und das Feld keinem Typ zuordnet –, wird nur bei klassischen Gruppen
+    angezeigt und von Regel R1 nicht durchgesetzt. Ordnen Sie solche Felder
+    einem Typ zu, siehe :ref:`developer-fields`.
+
+Abgelehnte Datensätze bei Importen
+    Lehnt eine Regel einen Datensatz ab, zum Beispiel eine klassische Gruppe
+    bei abgeschalteten klassischen Gruppen, ist das im Systemprotokoll
+    sichtbar, aber nicht in der Fehlerliste des DataHandlers, die
+    Import-Werkzeuge üblicherweise auswerten.

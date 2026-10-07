@@ -27,13 +27,21 @@ Klassische Gruppen erlauben
         bestehenden Installation nötig.
 
     Deaktiviert
+        *   Das Formular bietet den Typ „Klassisch“ nicht mehr an, außer für
+            Gruppen, die bereits klassisch sind. Neue Gruppen beginnen als
+            „Rolle“.
         *   Es können keine neuen klassischen Gruppen angelegt werden, und
-            keine Gruppe kann auf den Typ „Klassisch“ umgestellt werden.
-        *   Backend-Benutzer können nur Rollen bekommen.
+            keine Gruppe kann auf den Typ „Klassisch“ umgestellt werden –
+            weder im Formular noch über die DataHandler-API. Eine über die API
+            ohne Typ angelegte Gruppe wird abgelehnt, weil ihr Standardtyp
+            „Klassisch“ wäre.
+        *   Backend-Benutzern können nur Rollen zugewiesen werden.
         *   Die Konsistenzprüfung (geplant, siehe :ref:`developer-planned`)
             meldet verbliebene klassische Gruppen als Fehler.
         *   Bestehende klassische Gruppen und ihre Zuweisungen wirken weiter.
             Es werden keine Rechte gelöscht.
+
+    Die Option wirkt sofort; Caches müssen nicht geleert werden.
 
     ..  tip::
 
