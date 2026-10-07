@@ -141,8 +141,9 @@ group that ``begroups:classify`` proposes to split:
 
 *   The permissions move into one building block per kind, named with the
     prefix of the kind and the title of the group, for example
-    ``ACL_Editors`` and ``DBM_Editors``. Hidden groups get hidden building
-    blocks.
+    ``ACL_Editors`` and ``DBM_Editors``. A hidden group stays hidden; its
+    building blocks are only reachable through it, so showing the group
+    again restores its permissions as before.
 *   **The group keeps its uid and becomes a role.** Users and other groups
     keep their assignments. The new building blocks follow the former
     subgroups, so the precedence of TSconfig stays the same.
@@ -156,7 +157,9 @@ Both assistants write through the DataHandler: every change is in the system
 log and the history of the record. Each group is converted in a transaction
 and compared with its former state afterwards. If any permission would
 differ – for example because another extension changes values while saving
-– the transaction is rolled back and the group stays unchanged.
+– the transaction is rolled back and the group stays unchanged. This also
+applies to database errors; the result names the error, as the entries of
+the system log are rolled back as well.
 
 Afterwards:
 

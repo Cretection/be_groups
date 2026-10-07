@@ -97,15 +97,16 @@ final class GroupConverterTest extends FunctionalTestCase
     }
 
     #[Test]
-    public function appendsTheBuildingBlocksAfterTheSubgroupsAndKeepsTheHiddenState(): void
+    public function appendsTheBuildingBlocksAfterTheSubgroupsAndKeepsTheGroupHidden(): void
     {
         $result = $this->get(GroupConverter::class)->split(9);
 
         self::assertSame(ConversionStatus::Converted, $result->status, $result->message);
         [$aclUid, $fileOperationsUid] = $result->createdBlockUids;
-        self::assertSame(implode(',', [4, $aclUid, $fileOperationsUid]), $this->getGroup(9, ['subgroup'])['subgroup']);
-        self::assertSame('1', $this->getGroup($aclUid, ['hidden'])['hidden']);
-        self::assertSame('1', $this->getGroup($fileOperationsUid, ['hidden'])['hidden']);
+        self::assertSame(['subgroup' => implode(',', [4, $aclUid, $fileOperationsUid]), 'hidden' => '1'], $this->getGroup(9, ['subgroup', 'hidden']));
+        // Only reachable through the hidden role; showing the role again restores its permissions.
+        self::assertSame('0', $this->getGroup($aclUid, ['hidden'])['hidden']);
+        self::assertSame('0', $this->getGroup($fileOperationsUid, ['hidden'])['hidden']);
     }
 
     #[Test]

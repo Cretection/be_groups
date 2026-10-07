@@ -58,6 +58,21 @@ final class GroupConverterRollbackTest extends FunctionalTestCase
     }
 
     #[Test]
+    public function reportsDatabaseErrorsAndRollsBack(): void
+    {
+        $connection = $this->getConnectionPool()->getConnectionForTable('be_groups');
+        $connection->update('be_groups', ['title' => 'Database error'], ['uid' => 2]);
+        $groupCount = $connection->count('uid', 'be_groups', []);
+
+        $result = $this->get(GroupConverter::class)->split(2);
+
+        self::assertSame(ConversionStatus::Failed, $result->status);
+        self::assertStringStartsWith('Database error, nothing was changed: ', $result->message);
+        self::assertSame($groupCount, $connection->count('uid', 'be_groups', []));
+        self::assertSame('classic', $connection->select(['tx_begroups_kind'], 'be_groups', ['uid' => 2])->fetchOne());
+    }
+
+    #[Test]
     public function rollsBackAKindChangeIfAPermissionWouldChange(): void
     {
         $result = $this->get(GroupConverter::class)->changeKind(1);

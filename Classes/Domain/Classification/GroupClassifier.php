@@ -101,7 +101,7 @@ final readonly class GroupClassifier
             $concern->values,
             // TYPO3 makes the first group a user resolves the owner group of the pages the user creates.
             // Without subgroups, the first building block takes this place: it must belong to this role only.
-            $index === 0 && !$hasSubgroups ? null : $this->findReusableBlock($concern, $isHidden, $group->getUid(), $groups, $firstMembers),
+            $index === 0 && !$hasSubgroups ? null : $this->findReusableBlock($concern, $group->getUid(), $groups, $firstMembers),
         ), array_keys($concerns), $concerns);
         $proposal = fn(ClassificationAction $action, ?string $targetKind, string $reason): Classification
             => new Classification($group->getUid(), $group->get('title'), $isHidden, $action, $targetKind, $concerns, $reason);
@@ -174,13 +174,14 @@ final readonly class GroupClassifier
 
     /**
      * Finds an existing building block that grants exactly the same, so splitting many groups
-     * does not create many identical blocks. A block that is the first member of a group may be
-     * the owner group of new pages of some users; sharing it would widen that group.
+     * does not create many identical blocks. Hidden blocks grant nothing and are never reused. A block
+     * that is the first member of a group may be the owner group of new pages of some users; sharing
+     * it would widen that group.
      *
      * @param list<DatabaseRow> $groups
      * @param array<int, true> $firstMembers
      */
-    private function findReusableBlock(Concern $concern, bool $hidden, int $sourceUid, array $groups, array $firstMembers): ?int
+    private function findReusableBlock(Concern $concern, int $sourceUid, array $groups, array $firstMembers): ?int
     {
         if (array_intersect(array_keys($concern->values), self::ORDER_SENSITIVE_FIELDS) !== []) {
             return null;
@@ -189,7 +190,7 @@ final readonly class GroupClassifier
             if ($candidate->getUid() !== $sourceUid
                 && !isset($firstMembers[$candidate->getUid()])
                 && $candidate->get(GroupKind::FIELD_NAME) === $concern->kind
-                && ($candidate->get('hidden') === '1') === $hidden
+                && $candidate->get('hidden') !== '1'
                 && $this->grantsExactly($candidate, $concern->values)
             ) {
                 return $candidate->getUid();

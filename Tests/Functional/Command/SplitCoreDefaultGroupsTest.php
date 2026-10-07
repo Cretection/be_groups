@@ -16,6 +16,7 @@ declare(strict_types=1);
 namespace Cretection\BeGroups\Tests\Functional\Command;
 
 use Cretection\BeGroups\Command\SplitCommand;
+use Cretection\BeGroups\DataHandling\RelationList;
 use Cretection\BeGroups\Domain\Classification\GroupClassifier;
 use Cretection\BeGroups\Domain\Classification\GroupConverter;
 use Cretection\BeGroups\Domain\Repository\DatabaseRow;
@@ -37,6 +38,9 @@ final class SplitCoreDefaultGroupsTest extends FunctionalTestCase
 {
     protected array $testExtensionsToLoad = ['cretection/be-groups'];
 
+    private int $editorUid = 0;
+    private int $advancedEditorUid = 0;
+
     protected function setUp(): void
     {
         parent::setUp();
@@ -46,22 +50,24 @@ final class SplitCoreDefaultGroupsTest extends FunctionalTestCase
 
         // Like SetupService::createBackendUserGroups() and applyPermissionPreset() of EXT:install
         $connection = $this->getConnectionPool()->getConnectionForTable('be_groups');
-        $connection->insert('be_groups', ['uid' => 1, 'title' => 'Editor', 'description' => 'Editors have access to basic content element and modules in the backend.']);
+        $connection->insert('be_groups', ['title' => 'Editor', 'description' => 'Editors have access to basic content element and modules in the backend.']);
+        $this->editorUid = (int)$connection->lastInsertId();
         $connection->update('be_groups', [
             'db_mountpoints' => '1',
             'file_mountpoints' => '1',
             'groupMods' => 'web_layout,records,media_management',
             'tables_select' => 'pages,tt_content,sys_file',
             'tables_modify' => 'pages,tt_content,sys_file',
-        ], ['uid' => 1]);
-        $connection->insert('be_groups', ['uid' => 2, 'title' => 'Advanced Editor', 'description' => 'Advanced Editors have access to all content elements and non administrative modules in the backend.']);
+        ], ['uid' => $this->editorUid]);
+        $connection->insert('be_groups', ['title' => 'Advanced Editor', 'description' => 'Advanced Editors have access to all content elements and non administrative modules in the backend.']);
+        $this->advancedEditorUid = (int)$connection->lastInsertId();
         $connection->update('be_groups', [
             'db_mountpoints' => '1',
             'file_mountpoints' => '1',
             'groupMods' => 'web_layout,records,media_management,web_list,site_redirects',
             'tables_select' => 'pages,tt_content,sys_file,sys_redirect',
             'tables_modify' => 'pages,tt_content,sys_file,sys_redirect',
-        ], ['uid' => 2]);
+        ], ['uid' => $this->advancedEditorUid]);
     }
 
     #[Test]
@@ -71,18 +77,27 @@ final class SplitCoreDefaultGroupsTest extends FunctionalTestCase
 
         self::assertSame(Command::SUCCESS, $commandTester->execute(['--all' => true]), $commandTester->getDisplay());
 
+        $titles = [];
         $groups = [];
         foreach ($this->getConnectionPool()->getConnectionForTable('be_groups')->select(['uid', 'title', 'tx_begroups_kind', 'subgroup'], 'be_groups', [], [], ['uid' => 'ASC'])->fetchAllAssociative() as $row) {
             $group = DatabaseRow::fromArray($row);
-            $groups[] = sprintf('%d %s %s [%s]', $group->getUid(), $group->get('title'), $group->get('tx_begroups_kind'), $group->get('subgroup'));
+            $titles[$group->getUid()] = $group->get('title');
+            $groups[$group->get('title')] = $group;
         }
+        $describe = static fn(DatabaseRow $group): string => sprintf(
+            '%s [%s]',
+            $group->get('tx_begroups_kind'),
+            implode(', ', array_map(static fn(int $uid): string => $titles[$uid] ?? (string)$uid, RelationList::fromValue($group->get('subgroup'))->getUids())),
+        );
         self::assertSame([
-            '1 Editor role [3,4,5]',
-            '2 Advanced Editor role [6,4,5]',
-            '3 ACL_Editor acl []',
-            '4 DBM_Editor db_mount []',
-            '5 FM_Editor file_mount []',
-            '6 ACL_Advanced Editor acl []',
-        ], $groups);
+            'Editor' => 'role [ACL_Editor, DBM_Editor, FM_Editor]',
+            'Advanced Editor' => 'role [ACL_Advanced Editor, DBM_Editor, FM_Editor]',
+            'ACL_Editor' => 'acl []',
+            'DBM_Editor' => 'db_mount []',
+            'FM_Editor' => 'file_mount []',
+            'ACL_Advanced Editor' => 'acl []',
+        ], array_map($describe, $groups));
+        self::assertSame($this->editorUid, $groups['Editor']->getUid());
+        self::assertSame($this->advancedEditorUid, $groups['Advanced Editor']->getUid());
     }
 }

@@ -151,7 +151,9 @@ Rechte zu verändern. Beide zeigen ihren Plan zuerst mit ``--dry-run``:
 
 *   Die Rechte wandern in je einen Baustein pro Typ, benannt mit dem Präfix
     des Typs und dem Titel der Gruppe, zum Beispiel ``ACL_Editors`` und
-    ``DBM_Editors``. Versteckte Gruppen erhalten versteckte Bausteine.
+    ``DBM_Editors``. Eine versteckte Gruppe bleibt versteckt; ihre Bausteine
+    sind nur über sie erreichbar, sodass sie beim Wiedereinblenden die
+    Rechte wie vorher gewährt.
 *   **Die Gruppe behält ihre uid und wird zur Rolle.** Benutzer und andere
     Gruppen behalten ihre Zuweisungen. Die neuen Bausteine folgen auf die
     bisherigen Untergruppen, damit der Vorrang des TSconfig gleich bleibt.
@@ -167,7 +169,9 @@ Systemprotokoll und in der Historie des Datensatzes. Jede Gruppe wird in
 einer Transaktion umgestellt und danach mit ihrem früheren Zustand
 verglichen. Würde sich irgendein Recht unterscheiden – zum Beispiel, weil
 eine andere Extension beim Speichern Werte ändert –, wird die Transaktion
-zurückgerollt und die Gruppe bleibt unverändert.
+zurückgerollt und die Gruppe bleibt unverändert. Das gilt auch für
+Datenbankfehler; das Ergebnis nennt den Fehler, da auch die Einträge im
+Systemprotokoll zurückgerollt werden.
 
 Danach:
 

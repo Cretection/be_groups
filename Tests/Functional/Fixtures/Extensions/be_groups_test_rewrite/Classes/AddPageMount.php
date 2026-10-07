@@ -15,14 +15,20 @@ declare(strict_types=1);
 
 namespace Cretection\BeGroups\Tests\Functional\Fixtures\Extensions\be_groups_test_rewrite\Classes;
 
+use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\CMS\Core\DataHandling\DataHandler;
 
 /**
  * Simulates another extension that changes permissions while a group is saved: new groups
- * with page mounts and groups whose kind changes get page 2 as additional page mount.
+ * with page mounts and groups whose kind changes get page 2 as additional page mount. A new
+ * group titled "ACL_Database error" causes a database error.
  */
-final class AddPageMount
+final readonly class AddPageMount
 {
+    public function __construct(
+        private ConnectionPool $connectionPool,
+    ) {}
+
     /**
      * @param array<string, mixed> $fieldArray
      */
@@ -36,6 +42,10 @@ final class AddPageMount
         }
         if ($status === 'update' && isset($fieldArray['tx_begroups_kind'])) {
             $fieldArray['db_mountpoints'] = '1,2';
+        }
+        if ($status === 'new' && ($fieldArray['title'] ?? '') === 'ACL_Database error') {
+            $this->connectionPool->getConnectionForTable('be_groups')
+                ->executeQuery('SELECT * FROM be_groups_table_that_does_not_exist');
         }
     }
 }

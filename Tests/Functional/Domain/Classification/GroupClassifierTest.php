@@ -96,7 +96,7 @@ final class GroupClassifierTest extends FunctionalTestCase
             static fn(Concern $concern): ?int => $concern->reusableBlockUid,
             $classifier->classify(2)->concerns ?? [],
         ));
-        // Group 9 is hidden and grants other file operations.
+        // Group 9 grants other file operations.
         self::assertSame([null, null], array_map(
             static fn(Concern $concern): ?int => $concern->reusableBlockUid,
             $classifier->classify(9)->concerns ?? [],
@@ -130,6 +130,17 @@ final class GroupClassifierTest extends FunctionalTestCase
 
         self::assertNotNull($classification);
         self::assertSame('file_operations', $classification->concerns[2]->kind);
+        self::assertNull($classification->concerns[2]->reusableBlockUid);
+    }
+
+    #[Test]
+    public function neverReusesHiddenBuildingBlocks(): void
+    {
+        $this->getConnectionPool()->getConnectionForTable('be_groups')->update('be_groups', ['hidden' => 1], ['uid' => 7]);
+
+        $classification = $this->get(GroupClassifier::class)->classify(2);
+
+        self::assertNotNull($classification);
         self::assertNull($classification->concerns[2]->reusableBlockUid);
     }
 

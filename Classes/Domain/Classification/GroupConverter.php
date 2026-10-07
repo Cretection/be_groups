@@ -20,6 +20,7 @@ use Cretection\BeGroups\Domain\Kind\GroupKind;
 use Cretection\BeGroups\Domain\Kind\KindFieldResolver;
 use Cretection\BeGroups\Domain\Repository\BackendGroupRepository;
 use Cretection\BeGroups\Domain\Repository\DatabaseRow;
+use Doctrine\DBAL\Exception as DatabaseException;
 use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\CMS\Core\DataHandling\DataHandler;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
@@ -52,7 +53,7 @@ final readonly class GroupConverter
      */
     public function changeKind(int $uid): ConversionResult
     {
-        return $this->transactional(function () use ($uid): ConversionResult {
+        return $this->transactional($uid, function () use ($uid): ConversionResult {
             $classification = $this->groupClassifier->classify($uid);
             $before = $this->backendGroupRepository->findByUid($uid);
             if ($classification === null || $before === null
@@ -65,7 +66,7 @@ final readonly class GroupConverter
 
             $after = $this->backendGroupRepository->findByUid($uid);
             if ($after === null || $after->get(GroupKind::FIELD_NAME) !== $classification->targetKind) {
-                return new ConversionResult($uid, ConversionStatus::Failed, 'The kind could not be changed; see the system log.');
+                return new ConversionResult($uid, ConversionStatus::Failed, 'The kind could not be changed, e.g. because a rule or another extension rejected it. Nothing was changed.');
             }
             foreach ($this->kindFieldResolver->getManagedFieldNames() as $fieldName) {
                 if (!$this->kindFieldResolver->isSameValue($fieldName, $before->get($fieldName), $after->get($fieldName))) {
@@ -82,7 +83,7 @@ final readonly class GroupConverter
      */
     public function split(int $uid): ConversionResult
     {
-        return $this->transactional(function () use ($uid): ConversionResult {
+        return $this->transactional($uid, function () use ($uid): ConversionResult {
             $classification = $this->groupClassifier->classify($uid);
             $group = $this->backendGroupRepository->findByUid($uid);
             if ($classification === null || $group === null || $classification->action !== ClassificationAction::Split) {
@@ -158,7 +159,9 @@ final readonly class GroupConverter
                 'pid' => (int)$group->get('pid'),
                 'title' => (GroupKind::tryFrom($concern->kind)?->prefix() ?? strtoupper($concern->kind) . '_') . $group->get('title'),
                 'description' => sprintf('Created by begroups:split from group %d "%s".', $group->getUid(), $group->get('title')),
-                'hidden' => $classification->hidden ? 1 : 0,
+                // Visible: the blocks are only reachable through the group, which keeps its hidden state,
+                // so showing the group again restores its permissions as before.
+                'hidden' => 0,
                 GroupKind::FIELD_NAME => $concern->kind,
             ] + $concern->values;
         }
@@ -171,7 +174,7 @@ final readonly class GroupConverter
         foreach ($placeholders as $placeholder => $concern) {
             $blockUid = $dataHandler->substNEWwithIDs[$placeholder] ?? null;
             $block = is_int($blockUid) ? $this->backendGroupRepository->findByUid($blockUid) : null;
-            if ($block === null || !$this->grantsExactly($block, $concern, $classification->hidden)) {
+            if ($block === null || !$this->grantsExactly($block, $concern)) {
                 return null;
             }
             $createdUids[$placeholder] = $block->getUid();
@@ -183,9 +186,9 @@ final readonly class GroupConverter
         ];
     }
 
-    private function grantsExactly(DatabaseRow $block, Concern $concern, bool $hidden): bool
+    private function grantsExactly(DatabaseRow $block, Concern $concern): bool
     {
-        if ($block->get(GroupKind::FIELD_NAME) !== $concern->kind || ($block->get('hidden') === '1') !== $hidden) {
+        if ($block->get(GroupKind::FIELD_NAME) !== $concern->kind || $block->get('hidden') === '1') {
             return false;
         }
         foreach ($this->kindFieldResolver->getManagedFieldNames() as $fieldName) {
@@ -221,14 +224,22 @@ final readonly class GroupConverter
     }
 
     /**
+     * Runs a conversion in a transaction that is only committed if the conversion succeeded.
+     * Entries of the system log written during a rolled back conversion are gone as well, so the
+     * result explains what happened.
+     *
      * @param \Closure(): ConversionResult $conversion
      */
-    private function transactional(\Closure $conversion): ConversionResult
+    private function transactional(int $uid, \Closure $conversion): ConversionResult
     {
         $connection = $this->connectionPool->getConnectionForTable(self::TABLE);
         $connection->beginTransaction();
         try {
             $result = $conversion();
+        } catch (DatabaseException $exception) {
+            // e.g. PostgreSQL aborts the whole transaction after a failed statement of the DataHandler
+            $connection->rollBack();
+            return new ConversionResult($uid, ConversionStatus::Failed, sprintf('Database error, nothing was changed: %s', $exception->getMessage()));
         } catch (\Throwable $exception) {
             $connection->rollBack();
             throw $exception;
