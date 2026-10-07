@@ -27,6 +27,7 @@ final readonly class KindGroups
      */
     public function __construct(
         public string $kind,
+        public string $label,
         public string $iconIdentifier,
         public array $groups,
     ) {}

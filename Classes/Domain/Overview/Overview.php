@@ -15,6 +15,8 @@ declare(strict_types=1);
 
 namespace Cretection\BeGroups\Domain\Overview;
 
+use Cretection\BeGroups\Domain\Kind\KindDefinition;
+
 /**
  * The complete permission structure shown by the overview module.
  *
@@ -24,28 +26,18 @@ final readonly class Overview
 {
     /**
      * @param list<RoleItem> $roles
-     * @param list<BuildingBlockSection> $buildingBlockSections
+     * @param list<BuildingBlockSection> $buildingBlockSections building blocks, filtered by kind if requested
      * @param list<GroupItem> $classicGroups
-     * @param list<string> $availableKinds kinds of all existing building blocks, for filtering
+     * @param list<GroupItem> $unknownKindGroups groups whose kind is not configured (e.g. legacy kinds before the upgrade wizard)
+     * @param list<KindDefinition> $buildingBlockKinds kinds of all existing building blocks, for filtering
+     * @param int $issueCount entries not following the role model, independent of any filter
      */
     public function __construct(
         public array $roles,
         public array $buildingBlockSections,
         public array $classicGroups,
-        public array $availableKinds,
+        public array $unknownKindGroups,
+        public array $buildingBlockKinds,
+        public int $issueCount,
     ) {}
-
-    public function getIssueCount(): int
-    {
-        $issues = 0;
-        foreach ($this->roles as $role) {
-            $issues += $role->hasIssues() ? 1 : 0;
-        }
-        foreach ($this->buildingBlockSections as $section) {
-            foreach ($section->buildingBlocks as $buildingBlock) {
-                $issues += $buildingBlock->directUsers !== [] ? 1 : 0;
-            }
-        }
-        return $issues;
-    }
 }

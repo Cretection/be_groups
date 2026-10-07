@@ -17,6 +17,8 @@ namespace Cretection\BeGroups\Controller;
 
 use Cretection\BeGroups\Configuration\ExtensionSettings;
 use Cretection\BeGroups\Domain\Kind\GroupKind;
+use Cretection\BeGroups\Domain\Kind\KindDefinition;
+use Cretection\BeGroups\Domain\Kind\KindRegistry;
 use Cretection\BeGroups\Domain\Overview\OverviewBuilder;
 use Cretection\BeGroups\Domain\Repository\BackendGroupRepository;
 use Cretection\BeGroups\Domain\Repository\BackendUserRepository;
@@ -49,7 +51,6 @@ final readonly class OverviewController
 {
     public const MODULE_IDENTIFIER = 'begroups_overview';
     private const LABEL_DOMAIN = 'be_groups.modules.overview';
-    private const KIND_FILTER_PATTERN = '/^[a-z0-9_]{1,64}$/';
 
     public function __construct(
         private ModuleTemplateFactory $moduleTemplateFactory,
@@ -59,6 +60,7 @@ final readonly class OverviewController
         private BackendGroupRepository $backendGroupRepository,
         private BackendUserRepository $backendUserRepository,
         private OverviewBuilder $overviewBuilder,
+        private KindRegistry $kindRegistry,
         private ExtensionSettings $extensionSettings,
         private ResponseFactoryInterface $responseFactory,
     ) {}
@@ -79,12 +81,13 @@ final readonly class OverviewController
             $requestedSorting = $moduleData->get('sorting');
             $sorting = is_string($requestedSorting) ? $requestedSorting : OverviewBuilder::SORT_TITLE;
             $requestedKind = $moduleData->get('kind');
-            $kindFilter = is_string($requestedKind) && preg_match(self::KIND_FILTER_PATTERN, $requestedKind) === 1 ? $requestedKind : '';
+            $kindFilter = is_string($requestedKind) && $this->kindRegistry->isBuildingBlock($requestedKind) ? $requestedKind : '';
         }
 
         $overview = $this->overviewBuilder->build(
             $this->backendGroupRepository->findAllForOverview(),
             $this->backendUserRepository->findAllForOverview(),
+            $this->getTranslatedKindDefinitions(),
             $sorting,
             $kindFilter,
         );
@@ -138,6 +141,20 @@ final readonly class OverviewController
             'defVals' => ['be_groups' => [GroupKind::FIELD_NAME => $kind->value]],
             'returnUrl' => $returnUrl,
         ]);
+    }
+
+    /**
+     * @return list<KindDefinition>
+     */
+    private function getTranslatedKindDefinitions(): array
+    {
+        $languageService = $GLOBALS['LANG'] ?? null;
+        $definitions = [];
+        foreach ($this->kindRegistry->getDefinitions() as $definition) {
+            $label = $languageService instanceof LanguageService ? $languageService->sL($definition->label) : '';
+            $definitions[] = new KindDefinition($definition->value, $label !== '' ? $label : $definition->value, $definition->iconIdentifier);
+        }
+        return $definitions;
     }
 
     private function translate(string $key): string

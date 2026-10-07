@@ -23,6 +23,7 @@
     <f:render section="Roles" arguments="{_all}" />
     <f:render section="BuildingBlocks" arguments="{_all}" />
     <f:render section="ClassicGroups" arguments="{_all}" />
+    <f:render section="UnknownKindGroups" arguments="{_all}" />
 </f:section>
 
 <f:section name="Toolbar">
@@ -46,12 +47,12 @@
                     class="btn btn-default {f:if(condition: '!{kindFilter}', then: 'active')}"
                     aria-current="{f:if(condition: '!{kindFilter}', then: 'true', else: 'false')}"
                 ><f:translate key="filter.all" domain="be_groups.modules.overview" /></a>
-                <f:for each="{overview.availableKinds}" as="kind">
+                <f:for each="{overview.buildingBlockKinds}" as="kindDefinition">
                     <a
-                        href="{f:be.uri(route: moduleIdentifier, parameters: {sorting: sorting, kind: kind})}"
-                        class="btn btn-default {f:if(condition: '{kindFilter} == {kind}', then: 'active')}"
-                        aria-current="{f:if(condition: '{kindFilter} == {kind}', then: 'true', else: 'false')}"
-                    ><f:translate key="kind.{kind}" domain="be_groups.db" default="{kind}" /></a>
+                        href="{f:be.uri(route: moduleIdentifier, parameters: {sorting: sorting, kind: kindDefinition.value})}"
+                        class="btn btn-default {f:if(condition: '{kindFilter} == {kindDefinition.value}', then: 'active')}"
+                        aria-current="{f:if(condition: '{kindFilter} == {kindDefinition.value}', then: 'true', else: 'false')}"
+                    >{kindDefinition.label}</a>
                 </f:for>
             </div>
         </div>
@@ -80,7 +81,7 @@
                                     <f:for each="{role.buildingBlocks}" as="kindGroups">
                                         <div class="mb-1">
                                             <core:icon identifier="{kindGroups.iconIdentifier}" size="small" />
-                                            <strong><f:translate key="kind.{kindGroups.kind}" domain="be_groups.db" default="{kindGroups.kind}" />:</strong>
+                                            <strong>{kindGroups.label}:</strong>
                                             <f:for each="{kindGroups.groups}" as="buildingBlock" iteration="iterator">
                                                 <f:render section="GroupLink" arguments="{group: buildingBlock, returnUrl: returnUrl}" /><f:if condition="!{iterator.isLast}">, </f:if>
                                             </f:for>
@@ -117,14 +118,13 @@
     <f:for each="{overview.buildingBlockSections}" as="section">
         <h3>
             <core:icon identifier="{section.iconIdentifier}" size="small" />
-            <f:translate key="kind.{section.kind}" domain="be_groups.db" default="{section.kind}" />
+            {section.label}
             <span class="badge badge-info">{section.buildingBlocks -> f:count()}</span>
         </h3>
-        <f:variable name="kindLabel" value="{f:translate(key: 'kind.{section.kind}', domain: 'be_groups.db', default: section.kind)}" />
         <div class="table-fit">
             <table class="table table-striped table-hover">
                 <caption class="visually-hidden">
-                    <f:translate key="buildingBlocks.caption" domain="be_groups.modules.overview" arguments="{0: kindLabel}" />
+                    <f:translate key="buildingBlocks.caption" domain="be_groups.modules.overview" arguments="{0: section.label}" />
                 </caption>
                 <thead>
                     <tr>
@@ -141,16 +141,19 @@
                                 <f:if condition="{buildingBlock.unused}">
                                     <span class="badge badge-default"><f:translate key="label.unused" domain="be_groups.modules.overview" /></span>
                                 </f:if>
+                                <f:if condition="{buildingBlock.hasSubgroups}">
+                                    <span class="badge badge-danger"><f:translate key="issue.buildingBlockWithSubgroups" domain="be_groups.modules.overview" /></span>
+                                </f:if>
                             </th>
                             <td>
                                 <f:for each="{buildingBlock.roles}" as="usingGroup" iteration="iterator">
                                     <f:render section="GroupLink" arguments="{group: usingGroup, returnUrl: returnUrl, withIcon: 1}" /><f:if condition="!{iterator.isLast}">, </f:if>
                                 </f:for>
-                                <f:if condition="{buildingBlock.roles} && {buildingBlock.classicGroups}">, </f:if>
-                                <f:for each="{buildingBlock.classicGroups}" as="usingGroup" iteration="iterator">
+                                <f:if condition="{buildingBlock.roles} && {buildingBlock.otherGroups}">, </f:if>
+                                <f:for each="{buildingBlock.otherGroups}" as="usingGroup" iteration="iterator">
                                     <f:render section="GroupLink" arguments="{group: usingGroup, returnUrl: returnUrl, withIcon: 1}" /><f:if condition="!{iterator.isLast}">, </f:if>
                                 </f:for>
-                                <f:if condition="!{buildingBlock.roles} && !{buildingBlock.classicGroups}">
+                                <f:if condition="!{buildingBlock.roles} && !{buildingBlock.otherGroups}">
                                     <span class="text-body-secondary"><f:translate key="label.none" domain="be_groups.modules.overview" /></span>
                                 </f:if>
                             </td>
@@ -195,6 +198,26 @@
         <ul class="list-unstyled">
             <f:for each="{overview.classicGroups}" as="classicGroup">
                 <li class="mb-1"><f:render section="Group" arguments="{group: classicGroup, returnUrl: returnUrl}" /></li>
+            </f:for>
+        </ul>
+    </f:if>
+</f:section>
+
+<f:section name="UnknownKindGroups">
+    <f:if condition="{overview.unknownKindGroups}">
+        <h2><f:translate key="unknownKind.heading" domain="be_groups.modules.overview" /> <span class="badge badge-warning">{overview.unknownKindGroups -> f:count()}</span></h2>
+        <f:be.infobox
+            state="{f:constant(name: 'TYPO3\CMS\Core\Type\ContextualFeedbackSeverity::WARNING')}"
+            title="{f:translate(key: 'unknownKind.title', domain: 'be_groups.modules.overview')}"
+        >
+            <p><f:translate key="unknownKind.message" domain="be_groups.modules.overview" /></p>
+        </f:be.infobox>
+        <ul class="list-unstyled">
+            <f:for each="{overview.unknownKindGroups}" as="unknownKindGroup">
+                <li class="mb-1">
+                    <f:render section="Group" arguments="{group: unknownKindGroup, returnUrl: returnUrl}" />
+                    <span class="badge badge-warning"><f:translate key="unknownKind.badge" domain="be_groups.modules.overview" arguments="{0: unknownKindGroup.kind}" /></span>
+                </li>
             </f:for>
         </ul>
     </f:if>

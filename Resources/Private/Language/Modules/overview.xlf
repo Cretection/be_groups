@@ -117,6 +117,21 @@
       <trans-unit id="issue.directUsers">
         <source>Building blocks should be assigned through roles only.</source>
       </trans-unit>
+      <trans-unit id="issue.buildingBlockWithSubgroups">
+        <source>has subgroups (not allowed)</source>
+      </trans-unit>
+      <trans-unit id="unknownKind.heading">
+        <source>Groups with an unknown kind</source>
+      </trans-unit>
+      <trans-unit id="unknownKind.title">
+        <source>Unknown kinds</source>
+      </trans-unit>
+      <trans-unit id="unknownKind.message">
+        <source>These groups have a kind that is not configured, for example a numeric kind of the former extension before the upgrade wizard has run, or the kind of an uninstalled extension. They are neither roles nor building blocks. Run the upgrade wizard or assign a kind.</source>
+      </trans-unit>
+      <trans-unit id="unknownKind.badge">
+        <source>kind "%1$s"</source>
+      </trans-unit>
     </body>
   </file>
 </xliff>

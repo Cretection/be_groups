@@ -15,12 +15,15 @@ declare(strict_types=1);
 
 namespace Cretection\BeGroups\Domain\Overview;
 
-use Cretection\BeGroups\DataHandling\UidList;
+use Cretection\BeGroups\DataHandling\RelationList;
 use Cretection\BeGroups\Domain\Kind\GroupKind;
+use Cretection\BeGroups\Domain\Kind\KindDefinition;
 use Cretection\BeGroups\Domain\Repository\DatabaseRow;
 
 /**
  * Builds the permission structure (roles, building blocks, classic groups) from plain records.
+ *
+ * Kinds are never used as array keys, as PHP would turn numeric kinds into integers.
  *
  * @internal
  */
@@ -35,10 +38,19 @@ final readonly class OverviewBuilder
     /**
      * @param list<DatabaseRow> $groupRows fields: uid, title, tx_begroups_kind, subgroup, hidden
      * @param list<DatabaseRow> $userRows fields: uid, username, realName, usergroup, disable
+     * @param list<KindDefinition> $kindDefinitions the configured kinds with translated labels, in their order
      * @param string $kindFilter only building blocks of this kind are listed ('' = all)
      */
-    public function build(array $groupRows, array $userRows, string $sorting, string $kindFilter): Overview
+    public function build(array $groupRows, array $userRows, array $kindDefinitions, string $sorting, string $kindFilter): Overview
     {
+        $definitions = [];
+        foreach ($kindDefinitions as $definition) {
+            $definitions['kind:' . $definition->value] = $definition;
+        }
+        $isBuildingBlock = static fn(string $kind): bool => isset($definitions['kind:' . $kind])
+            && $kind !== GroupKind::Role->value
+            && $kind !== GroupKind::Classic->value;
+
         $groups = [];
         $members = [];
         foreach ($groupRows as $row) {
@@ -48,55 +60,79 @@ final readonly class OverviewBuilder
                 $row->get('title'),
                 $kind,
                 $row->get('hidden') === '1',
-                GroupKind::tryFrom($kind)?->iconIdentifier() ?? self::FALLBACK_ICON,
+                isset($definitions['kind:' . $kind]) ? $definitions['kind:' . $kind]->iconIdentifier : self::FALLBACK_ICON,
             );
-            $members[$row->getUid()] = UidList::fromValue($row->get('subgroup'))->uids;
+            $members[$row->getUid()] = RelationList::fromValue($row->get('subgroup'))->getUids();
         }
 
         $usersByGroup = [];
         foreach ($userRows as $row) {
             $user = new UserItem($row->getUid(), $row->get('username'), $row->get('realName'), $row->get('disable') === '1');
-            foreach (UidList::fromValue($row->get('usergroup'))->uids as $groupUid) {
+            foreach (RelationList::fromValue($row->get('usergroup'))->getUids() as $groupUid) {
                 $usersByGroup[$groupUid][] = $user;
+            }
+        }
+
+        $parentRoles = [];
+        $parentOthers = [];
+        foreach ($groups as $uid => $group) {
+            foreach ($members[$uid] as $memberUid) {
+                if ($group->kind === GroupKind::Role->value) {
+                    $parentRoles[$memberUid][] = $group;
+                } else {
+                    $parentOthers[$memberUid][] = $group;
+                }
             }
         }
 
         $roles = [];
         $classicGroups = [];
-        /** @var array<int, list<GroupItem>> $rolesByBuildingBlock */
-        $rolesByBuildingBlock = [];
-        /** @var array<int, list<GroupItem>> $classicGroupsByBuildingBlock */
-        $classicGroupsByBuildingBlock = [];
+        $unknownKindGroups = [];
+        $buildingBlocks = [];
         foreach ($groups as $uid => $group) {
             if ($group->kind === GroupKind::Role->value) {
-                $roles[] = $this->buildRole($group, $members[$uid], $groups, $usersByGroup[$uid] ?? []);
-                foreach ($members[$uid] as $memberUid) {
-                    $rolesByBuildingBlock[$memberUid][] = $group;
-                }
-            } elseif (!GroupKind::isBuildingBlock($group->kind)) {
+                $roles[] = $this->buildRole($group, $members[$uid], $groups, $definitions, $isBuildingBlock, $usersByGroup[$uid] ?? []);
+            } elseif ($group->kind === GroupKind::Classic->value) {
                 $classicGroups[] = $group;
-                foreach ($members[$uid] as $memberUid) {
-                    $classicGroupsByBuildingBlock[$memberUid][] = $group;
-                }
+            } elseif ($isBuildingBlock($group->kind)) {
+                $buildingBlocks[] = new BuildingBlockItem(
+                    $group,
+                    $this->sortGroups($parentRoles[$uid] ?? []),
+                    $this->sortGroups($parentOthers[$uid] ?? []),
+                    $this->sortUsers($usersByGroup[$uid] ?? []),
+                    $members[$uid] !== [],
+                );
+            } else {
+                $unknownKindGroups[] = $group;
             }
         }
 
-        $buildingBlocksByKind = [];
-        foreach ($groups as $uid => $group) {
-            if (GroupKind::isBuildingBlock($group->kind)) {
-                $buildingBlocksByKind[$group->kind][] = new BuildingBlockItem(
-                    $group,
-                    $this->sortGroups($rolesByBuildingBlock[$uid] ?? []),
-                    $this->sortGroups($classicGroupsByBuildingBlock[$uid] ?? []),
-                    $this->sortUsers($usersByGroup[$uid] ?? []),
-                );
-            }
+        $issueCount = count($unknownKindGroups);
+        foreach ($roles as $role) {
+            $issueCount += $role->hasIssues() ? 1 : 0;
+        }
+        foreach ($buildingBlocks as $buildingBlock) {
+            $issueCount += $buildingBlock->hasIssues() ? 1 : 0;
         }
 
         $sections = [];
-        foreach ($this->sortKinds(array_keys($buildingBlocksByKind)) as $kind) {
-            if ($kindFilter === '' || $kindFilter === $kind) {
-                $sections[] = new BuildingBlockSection($kind, $this->getIcon($kind), $this->sortBuildingBlocks($buildingBlocksByKind[$kind], $sorting));
+        $buildingBlockKinds = [];
+        foreach ($kindDefinitions as $definition) {
+            $blocksOfKind = array_values(array_filter(
+                $buildingBlocks,
+                static fn(BuildingBlockItem $buildingBlock): bool => $buildingBlock->group->kind === $definition->value,
+            ));
+            if ($blocksOfKind === []) {
+                continue;
+            }
+            $buildingBlockKinds[] = $definition;
+            if ($kindFilter === '' || $kindFilter === $definition->value) {
+                $sections[] = new BuildingBlockSection(
+                    $definition->value,
+                    $definition->label,
+                    $definition->iconIdentifier,
+                    $this->sortBuildingBlocks($blocksOfKind, $sorting),
+                );
             }
         }
 
@@ -104,49 +140,46 @@ final readonly class OverviewBuilder
             $this->sortRoles($roles, $sorting),
             $sections,
             $this->sortGroups($classicGroups),
-            $this->sortKinds(array_keys($buildingBlocksByKind)),
+            $this->sortGroups($unknownKindGroups),
+            $buildingBlockKinds,
+            $issueCount,
         );
     }
 
     /**
      * @param list<int> $memberUids
      * @param array<int, GroupItem> $groups
+     * @param array<string, KindDefinition> $definitions
+     * @param \Closure(string): bool $isBuildingBlock
      * @param list<UserItem> $users
      */
-    private function buildRole(GroupItem $role, array $memberUids, array $groups, array $users): RoleItem
+    private function buildRole(GroupItem $role, array $memberUids, array $groups, array $definitions, \Closure $isBuildingBlock, array $users): RoleItem
     {
-        $buildingBlocksByKind = [];
+        $buildingBlocks = [];
         $invalidMembers = [];
         $missingMemberUids = [];
         foreach ($memberUids as $memberUid) {
             $member = $groups[$memberUid] ?? null;
             if ($member === null) {
                 $missingMemberUids[] = $memberUid;
-            } elseif (GroupKind::isBuildingBlock($member->kind)) {
-                $buildingBlocksByKind[$member->kind][] = $member;
+            } elseif ($isBuildingBlock($member->kind)) {
+                $buildingBlocks[] = $member;
             } else {
                 $invalidMembers[] = $member;
             }
         }
 
-        $buildingBlocks = [];
-        foreach ($this->sortKinds(array_keys($buildingBlocksByKind)) as $kind) {
-            $buildingBlocks[] = new KindGroups($kind, $this->getIcon($kind), $this->sortGroups($buildingBlocksByKind[$kind]));
+        $kindGroups = [];
+        foreach ($definitions as $definition) {
+            $membersOfKind = array_values(array_filter(
+                $buildingBlocks,
+                static fn(GroupItem $member): bool => $member->kind === $definition->value,
+            ));
+            if ($membersOfKind !== []) {
+                $kindGroups[] = new KindGroups($definition->value, $definition->label, $definition->iconIdentifier, $this->sortGroups($membersOfKind));
+            }
         }
-        return new RoleItem($role, $buildingBlocks, $invalidMembers, $missingMemberUids, $this->sortUsers($users));
-    }
-
-    /**
-     * Built-in kinds in their defined order, followed by kinds of other extensions alphabetically.
-     *
-     * @param list<string> $kinds
-     * @return list<string>
-     */
-    private function sortKinds(array $kinds): array
-    {
-        $order = array_flip(array_map(static fn(GroupKind $kind): string => $kind->value, GroupKind::cases()));
-        usort($kinds, static fn(string $a, string $b): int => [$order[$a] ?? PHP_INT_MAX, $a] <=> [$order[$b] ?? PHP_INT_MAX, $b]);
-        return $kinds;
+        return new RoleItem($role, $kindGroups, $invalidMembers, $missingMemberUids, $this->sortUsers($users));
     }
 
     /**
@@ -197,10 +230,5 @@ final readonly class OverviewBuilder
     {
         usort($users, static fn(UserItem $a, UserItem $b): int => strnatcasecmp($a->username, $b->username));
         return $users;
-    }
-
-    private function getIcon(string $kind): string
-    {
-        return GroupKind::tryFrom($kind)?->iconIdentifier() ?? self::FALLBACK_ICON;
     }
 }

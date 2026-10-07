@@ -27,6 +27,7 @@ final readonly class BuildingBlockSection
      */
     public function __construct(
         public string $kind,
+        public string $label,
         public string $iconIdentifier,
         public array $buildingBlocks,
     ) {}

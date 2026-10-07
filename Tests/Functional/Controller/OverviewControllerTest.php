@@ -17,8 +17,9 @@ namespace Cretection\BeGroups\Tests\Functional\Controller;
 
 use Cretection\BeGroups\Configuration\ExtensionSettings;
 use Cretection\BeGroups\Controller\OverviewController;
-use Cretection\BeGroups\DataHandling\UidList;
-use Cretection\BeGroups\Domain\Kind\GroupKind;
+use Cretection\BeGroups\DataHandling\RelationList;
+use Cretection\BeGroups\Domain\Kind\KindDefinition;
+use Cretection\BeGroups\Domain\Kind\KindRegistry;
 use Cretection\BeGroups\Domain\Overview\BuildingBlockItem;
 use Cretection\BeGroups\Domain\Overview\BuildingBlockSection;
 use Cretection\BeGroups\Domain\Overview\GroupItem;
@@ -56,8 +57,9 @@ use TYPO3\TestingFramework\Core\Functional\FunctionalTestCase;
 #[CoversClass(BackendUserRepository::class)]
 #[CoversClass(DatabaseRow::class)]
 #[CoversClass(ExtensionSettings::class)]
-#[CoversClass(UidList::class)]
-#[CoversClass(GroupKind::class)]
+#[CoversClass(RelationList::class)]
+#[CoversClass(KindRegistry::class)]
+#[CoversClass(KindDefinition::class)]
 final class OverviewControllerTest extends FunctionalTestCase
 {
     /**

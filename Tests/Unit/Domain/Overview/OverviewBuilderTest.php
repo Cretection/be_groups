@@ -15,8 +15,8 @@ declare(strict_types=1);
 
 namespace Cretection\BeGroups\Tests\Unit\Domain\Overview;
 
-use Cretection\BeGroups\DataHandling\UidList;
-use Cretection\BeGroups\Domain\Kind\GroupKind;
+use Cretection\BeGroups\DataHandling\RelationList;
+use Cretection\BeGroups\Domain\Kind\KindDefinition;
 use Cretection\BeGroups\Domain\Overview\BuildingBlockItem;
 use Cretection\BeGroups\Domain\Overview\BuildingBlockSection;
 use Cretection\BeGroups\Domain\Overview\GroupItem;
@@ -38,9 +38,9 @@ use TYPO3\TestingFramework\Core\Unit\UnitTestCase;
 #[CoversClass(KindGroups::class)]
 #[CoversClass(GroupItem::class)]
 #[CoversClass(UserItem::class)]
+#[CoversClass(KindDefinition::class)]
 #[CoversClass(DatabaseRow::class)]
-#[CoversClass(UidList::class)]
-#[CoversClass(GroupKind::class)]
+#[CoversClass(RelationList::class)]
 final class OverviewBuilderTest extends UnitTestCase
 {
     private OverviewBuilder $subject;
@@ -52,22 +52,21 @@ final class OverviewBuilderTest extends UnitTestCase
     }
 
     #[Test]
-    public function roleListsItsBuildingBlocksGroupedByKindInDefinedOrder(): void
+    public function roleListsItsBuildingBlocksGroupedByKindInConfiguredOrder(): void
     {
-        $overview = $this->build();
+        $editor = $this->findRole($this->build(), 'R editor');
 
-        $editor = $this->findRole($overview, 'R editor');
         self::assertSame(['acl', 'db_mount', 'language'], array_map(static fn(KindGroups $group): string => $group->kind, $editor->buildingBlocks));
+        self::assertSame('Access rights', $editor->buildingBlocks[0]->label);
         self::assertSame(['ACL a', 'ACL b'], array_map(static fn(GroupItem $group): string => $group->title, $editor->buildingBlocks[0]->groups));
     }
 
     #[Test]
     public function roleReportsMembersThatAreNoBuildingBlocksAndMissingMembers(): void
     {
-        $overview = $this->build();
+        $broken = $this->findRole($this->build(), 'R broken');
 
-        $broken = $this->findRole($overview, 'R broken');
-        self::assertSame(['Classic'], array_map(static fn(GroupItem $group): string => $group->title, $broken->invalidMembers));
+        self::assertSame(['Classic', 'Legacy META'], array_map(static fn(GroupItem $group): string => $group->title, $broken->invalidMembers));
         self::assertSame([99], $broken->missingMemberUids);
         self::assertTrue($broken->hasIssues());
     }
@@ -75,28 +74,46 @@ final class OverviewBuilderTest extends UnitTestCase
     #[Test]
     public function roleListsItsUsers(): void
     {
-        $overview = $this->build();
-
-        self::assertSame(['alice', 'bob'], array_map(static fn(UserItem $user): string => $user->username, $this->findRole($overview, 'R editor')->users));
+        self::assertSame(['alice', 'bob'], array_map(static fn(UserItem $user): string => $user->username, $this->findRole($this->build(), 'R editor')->users));
     }
 
     #[Test]
-    public function buildingBlockShowsRolesClassicGroupsAndDirectUsers(): void
+    public function buildingBlockShowsAllParentGroupsAndDirectUsers(): void
     {
         $overview = $this->build();
 
         $aclA = $this->findBuildingBlock($overview, 'ACL a');
         self::assertSame(['R broken', 'R editor'], array_map(static fn(GroupItem $group): string => $group->title, $aclA->roles));
-        self::assertSame(['Classic'], array_map(static fn(GroupItem $group): string => $group->title, $aclA->classicGroups));
+        self::assertSame(['Classic', 'Legacy META'], array_map(static fn(GroupItem $group): string => $group->title, $aclA->otherGroups));
         self::assertSame(['carol'], array_map(static fn(UserItem $user): string => $user->username, $aclA->directUsers));
         self::assertFalse($aclA->isUnused());
         self::assertTrue($this->findBuildingBlock($overview, 'TS unused')->isUnused());
     }
 
     #[Test]
-    public function issueCountContainsBrokenRolesAndDirectlyAssignedBuildingBlocks(): void
+    public function buildingBlockUsedOnlyByAnotherBuildingBlockIsNotUnusedButFlagged(): void
     {
-        self::assertSame(2, $this->build()->getIssueCount());
+        $overview = $this->build();
+
+        self::assertFalse($this->findBuildingBlock($overview, 'L de')->isUnused());
+        self::assertTrue($this->findBuildingBlock($overview, 'DBM with subgroups')->hasSubgroups);
+    }
+
+    #[Test]
+    public function groupsWithUnknownOrNumericKindsAreListedSeparately(): void
+    {
+        $overview = $this->build();
+
+        self::assertSame(['Legacy META', 'Orphaned workspace'], array_map(static fn(GroupItem $group): string => $group->title, $overview->unknownKindGroups));
+        self::assertSame('3', $overview->unknownKindGroups[0]->kind);
+    }
+
+    #[Test]
+    public function issueCountIsIndependentOfTheKindFilter(): void
+    {
+        // broken role, direct user of ACL a, building block with subgroups, two unknown kinds
+        self::assertSame(5, $this->build()->issueCount);
+        self::assertSame(5, $this->build(OverviewBuilder::SORT_TITLE, 'tsconfig')->issueCount);
     }
 
     #[Test]
@@ -114,8 +131,23 @@ final class OverviewBuilderTest extends UnitTestCase
         $overview = $this->build(OverviewBuilder::SORT_TITLE, 'tsconfig');
 
         self::assertSame(['tsconfig'], array_map(static fn(BuildingBlockSection $section): string => $section->kind, $overview->buildingBlockSections));
-        self::assertSame(['acl', 'db_mount', 'language', 'tsconfig'], $overview->availableKinds);
+        self::assertSame(['acl', 'db_mount', 'language', 'tsconfig', 'my_kind'], array_map(static fn(KindDefinition $kind): string => $kind->value, $overview->buildingBlockKinds));
         self::assertCount(2, $overview->roles);
+    }
+
+    #[Test]
+    public function kindsOfOtherExtensionsUseTheirConfiguredLabelAndIcon(): void
+    {
+        $sections = array_values(array_filter(
+            $this->build()->buildingBlockSections,
+            static fn(BuildingBlockSection $section): bool => $section->kind === 'my_kind',
+        ));
+        self::assertCount(1, $sections);
+        $myKind = $sections[0];
+
+        self::assertSame('my_kind', $myKind->kind);
+        self::assertSame('My kind', $myKind->label);
+        self::assertSame('content-news', $myKind->iconIdentifier);
     }
 
     #[Test]
@@ -134,14 +166,27 @@ final class OverviewBuilderTest extends UnitTestCase
             $this->group(5, 'TS unused', 'tsconfig'),
             $this->group(6, 'Classic', 'classic', '2'),
             $this->group(7, 'R editor', 'role', '4,3,2,1'),
-            $this->group(8, 'R broken', 'role', '2,6,99'),
+            $this->group(8, 'R broken', 'role', '2,6,10,99'),
+            $this->group(9, 'DBM with subgroups', 'db_mount', '4'),
+            $this->group(10, 'Legacy META', '3', '2'),
+            $this->group(11, 'Orphaned workspace', 'workspace'),
+            $this->group(12, 'News categories', 'my_kind'),
         ];
         $users = [
             DatabaseRow::fromArray(['uid' => 1, 'username' => 'bob', 'realName' => '', 'usergroup' => '7', 'disable' => 0]),
             DatabaseRow::fromArray(['uid' => 2, 'username' => 'alice', 'realName' => 'Alice', 'usergroup' => '7', 'disable' => 1]),
             DatabaseRow::fromArray(['uid' => 3, 'username' => 'carol', 'realName' => '', 'usergroup' => '8,2', 'disable' => 0]),
         ];
-        return $this->subject->build($groups, $users, $sorting, $kindFilter);
+        $kinds = [
+            new KindDefinition('role', 'Role', 'status-user-group-backend'),
+            new KindDefinition('acl', 'Access rights', 'actions-shield'),
+            new KindDefinition('db_mount', 'Page tree mount', 'actions-pagetree-mount'),
+            new KindDefinition('language', 'Languages', 'mimetypes-x-sys_language'),
+            new KindDefinition('tsconfig', 'TSconfig', 'mimetypes-text-typoscript'),
+            new KindDefinition('my_kind', 'My kind', 'content-news'),
+            new KindDefinition('classic', 'Classic', 'actions-key'),
+        ];
+        return $this->subject->build($groups, $users, $kinds, $sorting, $kindFilter);
     }
 
     private function group(int $uid, string $title, string $kind, string $subgroup = ''): DatabaseRow
