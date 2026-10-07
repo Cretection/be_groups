@@ -322,13 +322,13 @@ Version 1.0.0 enthält alle Phasen (Entscheidung E2). Die Meilensteine erscheine
 
 Der Qualitätsstandard aus Abschnitt 8 erhöht den Aufwand gegenüber der ersten Schätzung um etwa 50 %. Der Mehraufwand steckt vor allem in der Infrastruktur, in Playwright und Barrierefreiheit, in Themes und dark mode, in der Doku und in der Release-Härtung.
 
-| Meilenstein | Inhalt | Ergebnis | Aufwand (Schätzung) |
-|---|---|---|---|
-| M0 Fundament | Branch `relaunch`, Altlasten raus, komplette Qualitäts-Infrastruktur (8.1/8.3), Doku-Gerüst mit Credits-Seite (8.5) | alle Prüfungen grün auf leerem Gerüst | 2–3 PT |
-| M1 Kern | Typen und TCA, gruppierte Rollen-Auswahl, Benutzerfilter, Regeln R1–R4, Upgrade-Wizard, Events | `1.0.0-alpha1` | 5–7 PT |
-| M2 Übersicht | Modul „Rollen & Bausteine“ (TypeScript/Lit, barrierefrei, Themes), `begroups:audit`, Typ-Filter, Präfixe | `1.0.0-beta1` | 6–9 PT |
-| M3 Umstieg | Klassifizierungs- und Aufteilungs-Assistent, Starter-Set | `1.0.0-beta2` | 4–6 PT |
-| M4 Härtung | Security-Review, Performance-Benchmark, Prüfung der Barrierefreiheit, Doku und Screenshots final, Credits mit dem Erfinder abgestimmt, Übersetzungen | `1.0.0-rc1` → **1.0.0** im TER | 2–3 PT |
+| Meilenstein | Inhalt | Ergebnis | Aufwand (Schätzung) | Stand (2026-10-07) |
+|---|---|---|---|---|
+| M0 Fundament | Branch `relaunch`, Altlasten raus, komplette Qualitäts-Infrastruktur (8.1/8.3), Doku-Gerüst mit Credits-Seite (8.5) | alle Prüfungen grün auf leerem Gerüst | 2–3 PT | ✅ erledigt |
+| M1 Kern | Typen und TCA, gruppierte Rollen-Auswahl, Benutzerfilter, Regeln R1–R4, Upgrade-Wizard, Events | `1.0.0-alpha1` | 5–7 PT | ✅ erledigt (Events nach M2 verschoben) |
+| M2 Übersicht | Modul „Rollen & Bausteine“ (TypeScript/Lit, barrierefrei, Themes), `begroups:audit`, Typ-Filter, Präfixe | `1.0.0-beta1` | 6–9 PT | 🟡 Modul ohne Bearbeitung fertig, Rest offen |
+| M3 Umstieg | Klassifizierungs- und Aufteilungs-Assistent, Starter-Set | `1.0.0-beta2` | 4–6 PT | ⬜ offen |
+| M4 Härtung | Security-Review, Performance-Benchmark, Prüfung der Barrierefreiheit, Doku und Screenshots final, Credits mit dem Erfinder abgestimmt, Übersetzungen | `1.0.0-rc1` → **1.0.0** im TER | 2–3 PT | ⬜ offen |
 
 Gesamt etwa 19–28 Personentage.
 
@@ -363,33 +363,9 @@ Gesamt etwa 19–28 Personentage.
 
 ---
 
-## 12. Offene Punkte (Stand 2026-10-07)
+## 12. Arbeitsstand und offene Punkte
 
-**Für den Start von M0 nötig:**
-- **(a) Titel der Extension.** Vorschlag: „Backend Group Kinds - Roles and building blocks for TYPO3 backend permissions“.
-- **(b) Review-Ablauf.** Vorschlag: Jeder Pull Request durchläuft die komplette Pipeline und ein Code-Review. Jonathan gibt jeden Pull Request frei, und bei Meilensteinen kommt ein Review aus der Community.
-
-**Später zu entscheiden:**
-- (c) Übersetzungen über die offizielle TYPO3-Lokalisierung statt des eigenen Crowdin-Projekts (bis M1).
-- (d) E5, Version 1.0.0 (bis M1).
-- (e) Alte Branches und den Crowdin-PR #3 nach dem Relaunch archivieren bzw. schließen (M4).
-
-**Mit Michael Klapper abzustimmen:** Namensnennung, Link und E-Mail-Adresse, ob er die Credits gegenliest, optional ein Blick auf dieses Konzept.
-
-**Zugänge, die Jonathan einrichtet:**
-- GitHub: Branch-Schutz und Pflichtprüfungen (Ende M0).
-- TER: Token als GitHub-Secret (M4).
-- docs.typo3.org: Webhook (M1/M2).
-- Packagist: Auto-Update-Hook prüfen.
-
-**Klärt sich bei der Umsetzung:** siehe Abschnitt 10. Zusätzlich:
-- `render-guides` mit Übersetzungen (M0),
-- TER-Upload ohne `ext_emconf.php` (M0),
-- Feldname von permission-sets (M1),
-- `isImporting` pro Regel (M1),
-- Inhalt des Starter-Sets (M3).
-
-**Nächster Schritt:** Sobald (a) und (b) beantwortet sind, startet M0 auf dem Branch `relaunch`. Der erste Commit enthält das Planungsmaterial (`RELAUNCH.md`, `CODING_GUIDELINES*.md`).
+Der aktuelle Arbeitsstand, offene Entscheidungen, Testanleitungen und die nächsten Aufgaben stehen in [`STATUS.md`](STATUS.md). Dieses Dokument wird am Ende jeder Arbeitssitzung aktualisiert.
 
 ---
 
