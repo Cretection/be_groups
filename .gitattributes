@@ -1,0 +1,23 @@
+# Normalize line endings (CODING_GUIDELINES.md, §2)
+* text=auto eol=lf
+
+# Binary files
+*.png binary
+*.jpg binary
+*.gif binary
+*.ico binary
+*.woff binary
+*.woff2 binary
+
+# Files and folders not needed in releases (Packagist / "composer install --prefer-dist").
+# The documentation stays in the package, docs.typo3.org renders it from the repository.
+/.editorconfig export-ignore
+/.gitattributes export-ignore
+/.github/ export-ignore
+/.gitignore export-ignore
+/Build/ export-ignore
+/CODING_GUIDELINES.de.md export-ignore
+/CODING_GUIDELINES.md export-ignore
+/crowdin.yml export-ignore
+/RELAUNCH.md export-ignore
+/Tests/ export-ignore

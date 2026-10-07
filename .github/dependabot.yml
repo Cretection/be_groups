@@ -1,0 +1,26 @@
+---
+# https://docs.github.com/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file
+version: 2
+updates:
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    commit-message:
+      prefix: "[TASK] "
+
+  - package-ecosystem: "composer"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    # Only the pinned development tools are updated by Dependabot. The TYPO3 version
+    # constraint is a product decision (TYPO3 14.3 LTS), see RELAUNCH.md.
+    allow:
+      - dependency-type: "development"
+    ignore:
+      - dependency-name: "typo3/cms-*"
+      - dependency-name: "phpunit/phpunit"
+        versions: [">= 12.0"]
+    versioning-strategy: "increase"
+    commit-message:
+      prefix: "[TASK] "

@@ -1,0 +1,182 @@
+---
+name: CI
+
+# Quality gates of be_groups, see CODING_GUIDELINES.md, §14.
+#
+# Every "runTests.sh" call passes "-b docker": the script prefers podman whenever
+# it is installed, but podman is not reliable on the GitHub hosted runners (database
+# containers of the functional tests are not reachable), while docker is.
+#
+# Actions are pinned to commit SHAs, Dependabot keeps them up to date.
+
+on:
+  push:
+    branches:
+      - main
+      - relaunch
+  pull_request:
+  workflow_dispatch:
+  schedule:
+    # Weekly run to detect breaking changes in (development) dependencies early
+    - cron: '17 4 * * 1'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  static:
+    name: Static checks
+    runs-on: ubuntu-26.04
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Cache dependencies installed with composer
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          key: "static-php-8.2-composer-${{ hashFiles('composer.json') }}"
+          path: .cache/composer
+          restore-keys: "static-php-8.2-composer-"
+      - name: Install composer dependencies
+        run: Build/Scripts/runTests.sh -b docker -p 8.2 -s composerUpdateMax
+      - name: Check composer.json normalization
+        run: Build/Scripts/runTests.sh -b docker -p 8.2 -s composerNormalize -n
+      - name: Verify PSR-4 autoloading
+        run: Build/Scripts/runTests.sh -b docker -p 8.2 -s psrVerify
+      - name: Lint PHP, JSON and YAML
+        run: Build/Scripts/runTests.sh -b docker -p 8.2 -s lint
+      - name: Check the code style and the license headers
+        run: Build/Scripts/runTests.sh -b docker -p 8.2 -s cgl -n
+      - name: Check for changes proposed by Rector
+        run: Build/Scripts/runTests.sh -b docker -p 8.2 -s rector -n
+      - name: PHPStan (level max, no baseline)
+        run: Build/Scripts/runTests.sh -b docker -p 8.2 -s phpstan
+      - name: PHP integrity checks
+        run: Build/Scripts/runTests.sh -b docker -p 8.2 -s integrity
+      - name: XLIFF integrity
+        run: Build/Scripts/runTests.sh -b docker -p 8.2 -s xliffLint
+      - name: XLIFF formatting
+        run: Build/Scripts/runTests.sh -b docker -p 8.2 -s xliffNormalize -n
+      - name: Shellcheck runTests.sh
+        run: Build/Scripts/runTests.sh -b docker -s shellcheck
+
+  unit:
+    name: Unit tests (PHP ${{ matrix.php-version }}, ${{ matrix.composer-dependencies }} dependencies)
+    runs-on: ubuntu-26.04
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        php-version: ['8.2', '8.3', '8.4', '8.5']
+        composer-dependencies: ['Min', 'Max']
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Cache dependencies installed with composer
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          key: "unit-php-${{ matrix.php-version }}-${{ matrix.composer-dependencies }}-composer-${{ hashFiles('composer.json') }}"
+          path: .cache/composer
+          restore-keys: "unit-php-${{ matrix.php-version }}-${{ matrix.composer-dependencies }}-composer-"
+      - name: Install composer dependencies
+        run: Build/Scripts/runTests.sh -b docker -p ${{ matrix.php-version }} -s composerUpdate${{ matrix.composer-dependencies }}
+      - name: Run the unit tests
+        run: Build/Scripts/runTests.sh -b docker -p ${{ matrix.php-version }} -s unit
+
+  functional:
+    name: Functional tests (PHP ${{ matrix.php-version }}, ${{ matrix.dbms }} ${{ matrix.dbms-version }} ${{ matrix.driver }})
+    runs-on: ubuntu-26.04
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - php-version: '8.2'
+            dbms: sqlite
+          - php-version: '8.5'
+            dbms: sqlite
+          - php-version: '8.5'
+            dbms: mariadb
+            dbms-version: '10.11'
+          - php-version: '8.5'
+            dbms: mariadb
+            dbms-version: '11.8'
+          - php-version: '8.5'
+            dbms: mariadb
+            dbms-version: '11.8'
+            driver: pdo_mysql
+          - php-version: '8.5'
+            dbms: mysql
+            dbms-version: '8.0'
+          - php-version: '8.5'
+            dbms: mysql
+            dbms-version: '8.4'
+          - php-version: '8.5'
+            dbms: mysql
+            dbms-version: '8.4'
+            driver: pdo_mysql
+          - php-version: '8.5'
+            dbms: postgres
+            dbms-version: '14'
+          - php-version: '8.5'
+            dbms: postgres
+            dbms-version: '18'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Cache dependencies installed with composer
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          key: "functional-php-${{ matrix.php-version }}-composer-${{ hashFiles('composer.json') }}"
+          path: .cache/composer
+          restore-keys: "functional-php-${{ matrix.php-version }}-composer-"
+      - name: Install composer dependencies
+        run: Build/Scripts/runTests.sh -b docker -p ${{ matrix.php-version }} -s composerUpdateMax
+      - name: Run the functional tests
+        env:
+          PHP_VERSION: ${{ matrix.php-version }}
+          DBMS: ${{ matrix.dbms }}
+          DBMS_VERSION: ${{ matrix.dbms-version }}
+          DRIVER: ${{ matrix.driver }}
+        run: |
+          OPTIONS=(-d "${DBMS}")
+          if [ -n "${DBMS_VERSION}" ]; then OPTIONS+=(-i "${DBMS_VERSION}"); fi
+          if [ -n "${DRIVER}" ]; then OPTIONS+=(-a "${DRIVER}"); fi
+          Build/Scripts/runTests.sh -b docker -p "${PHP_VERSION}" -s functional "${OPTIONS[@]}"
+
+  docs:
+    name: Documentation rendering
+    runs-on: ubuntu-26.04
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Render the documentation (warnings fail the build)
+        run: Build/Scripts/runTests.sh -b docker -s docs
+
+  # TODO: Add an allowed-to-fail job against TYPO3 v15-dev (PHP 8.5) once the
+  #       15.0.x-dev branch of the TYPO3 Core is installable together with the
+  #       testing framework (CODING_GUIDELINES.md, §14). Sketch:
+  #
+  # typo3-dev:
+  #   name: Unit and functional tests against TYPO3 v15-dev (allowed to fail)
+  #   runs-on: ubuntu-26.04
+  #   continue-on-error: true
+  #   steps:
+  #     - checkout, then "composer require --no-update typo3/cms-core:15.0.x-dev ..."
+  #       on a throwaway copy of composer.json, then the unit and the sqlite functional suite
+  #
+  # TODO: Collect the coverage with "-m" and merge it with "-s coverageMerge" once
+  #       "phpunit/phpcov" is part of the development dependencies.

@@ -1,35 +1,170 @@
 {
-  "name": "cretection/be-groups",
-  "type": "typo3-cms-extension",
-  "description": "This extension provide several new options to restructure large amount of be_groups records",
-  "keywords": ["TYPO3 CMS", "Group Management", "User Access"],
-  "license": "GPL-3.0-or-later",
-  "support": {
-    "source": "https://github.com/cretection/be_groups",
-    "issues": "https://github.com/cretection/be_groups/issues",
-    "docs": "https://github.com/cretection/be_groups/wiki"
-  },
-  "require": {
-    "typo3/cms-core": "~11.4"
-  },
-  "authors": [
-    {
-      "name": "Jonathan Starck",
-      "email": "info@cretection.it",
-      "role": "Developer"
-    }
-  ],
-  "replace": {
-    "typo3-ter/be-groups": "self.version"
-  },
-  "extra": {
-    "typo3/cms": {
-      "extension-key": "be_groups"
-    }
-  },
-  "autoload": {
-    "psr-4": {
-      "Cretection\\BeGroups\\": "Classes/"
-    }
-  }
+	"name": "cretection/be-groups",
+	"description": "Backend Group Kinds - Roles and building blocks for TYPO3 backend permissions",
+	"license": "GPL-2.0-or-later",
+	"type": "typo3-cms-extension",
+	"keywords": [
+		"TYPO3 CMS",
+		"backend groups",
+		"permissions",
+		"roles",
+		"access control"
+	],
+	"authors": [
+		{
+			"name": "Michael Klapper",
+			"role": "Original author"
+		},
+		{
+			"name": "Jonathan Starck",
+			"email": "info@cretection.it",
+			"role": "Maintainer"
+		}
+	],
+	"homepage": "https://extensions.typo3.org/extension/be_groups",
+	"support": {
+		"issues": "https://github.com/Cretection/be_groups/issues",
+		"source": "https://github.com/Cretection/be_groups",
+		"docs": "https://docs.typo3.org/p/cretection/be-groups/main/en-us/"
+	},
+	"require": {
+		"php": "~8.2.0 || ~8.3.0 || ~8.4.0 || ~8.5.0",
+		"psr/log": "^3.0",
+		"typo3/cms-backend": "^14.3",
+		"typo3/cms-core": "^14.3"
+	},
+	"require-dev": {
+		"ergebnis/composer-normalize": "2.54.0",
+		"friendsofphp/php-cs-fixer": "3.95.27",
+		"nikic/php-parser": "^5.4",
+		"php-parallel-lint/php-parallel-lint": "1.4.0",
+		"phpstan/extension-installer": "1.4.3",
+		"phpstan/phpstan": "2.2.16",
+		"phpstan/phpstan-deprecation-rules": "2.0.5",
+		"phpstan/phpstan-phpunit": "2.0.21",
+		"phpstan/phpstan-strict-rules": "2.0.12",
+		"phpunit/phpunit": "11.5.56",
+		"rector/rector": "2.6.7",
+		"saschaegerer/phpstan-typo3": "3.1.0",
+		"seld/jsonlint": "1.12.1",
+		"spaze/phpstan-disallowed-calls": "4.14.0",
+		"ssch/typo3-rector": "3.16.0",
+		"symfony/yaml": "^7.4 || ^8.0",
+		"typo3/cms-dashboard": "^14.3",
+		"typo3/cms-workspaces": "^14.3",
+		"typo3/coding-standards": "0.9.0",
+		"typo3/testing-framework": "9.7.0"
+	},
+	"suggest": {
+		"typo3/cms-dashboard": "Adds the dashboard widget permissions to the \"Access rights\" kind",
+		"typo3/cms-workspaces": "Enables the \"Workspace\" kind"
+	},
+	"prefer-stable": true,
+	"autoload": {
+		"psr-4": {
+			"Cretection\\BeGroups\\": "Classes/"
+		}
+	},
+	"autoload-dev": {
+		"psr-4": {
+			"Cretection\\BeGroups\\Tests\\": "Tests/"
+		}
+	},
+	"config": {
+		"allow-plugins": {
+			"ergebnis/composer-normalize": true,
+			"phpstan/extension-installer": true,
+			"typo3/class-alias-loader": true,
+			"typo3/cms-composer-installers": true
+		},
+		"bin-dir": ".Build/bin",
+		"lock": false,
+		"preferred-install": {
+			"*": "dist"
+		},
+		"sort-packages": true,
+		"vendor-dir": ".Build/vendor"
+	},
+	"extra": {
+		"branch-alias": {
+			"dev-relaunch": "1.0.x-dev"
+		},
+		"typo3/cms": {
+			"Package": {
+				"providesPackages": {}
+			},
+			"extension-key": "be_groups",
+			"version": "1.0.0-dev",
+			"web-dir": ".Build/public"
+		}
+	},
+	"scripts": {
+		"check:composer:normalize": "@composer normalize --no-check-lock --dry-run",
+		"check:composer:psr-verify": "@composer dumpautoload --optimize --strict-psr --no-plugins --dry-run",
+		"check:json:lint": "find . ! -path '*/.cache/*' ! -path '*/.Build/*' ! -path '*/node_modules/*' -name '*.json' | xargs -r php .Build/bin/jsonlint -q",
+		"check:php:cs-fixer": "php-cs-fixer fix --config ./Build/php-cs-fixer/config.php -v --dry-run --diff",
+		"check:php:cs-fixer:header": "php-cs-fixer fix --config ./Build/php-cs-fixer/header-comment.php -v --dry-run --diff",
+		"check:php:integrity": "php Build/Scripts/phpIntegrityChecker.php",
+		"check:php:lint": "parallel-lint *.php Build Classes Configuration Tests",
+		"check:php:rector": "rector process --dry-run --config=./Build/rector/config.php",
+		"check:php:stan": "phpstan analyse --configuration=Build/phpstan/phpstan.neon --no-progress",
+		"check:static": [
+			"@check:composer:normalize",
+			"@check:json:lint",
+			"@check:php:lint",
+			"@check:composer:psr-verify",
+			"@check:php:rector",
+			"@check:php:cs-fixer",
+			"@check:php:cs-fixer:header",
+			"@check:php:stan",
+			"@check:php:integrity",
+			"@check:xliff:lint",
+			"@check:xliff:normalize",
+			"@check:yaml:lint"
+		],
+		"check:tests:functional": "phpunit -c Build/phpunit/FunctionalTests.xml",
+		"check:tests:unit": "phpunit -c Build/phpunit/UnitTests.xml",
+		"check:xliff:lint": "php Build/Scripts/checkIntegrityXliff.php",
+		"check:xliff:normalize": "php Build/Scripts/xliffNormalizer.php --dry-run",
+		"check:yaml:lint": "find . ! -path '*.Build/*' ! -path '*node_modules/*' \\( -name '*.yaml' -o -name '*.yml' \\) | xargs -r php ./.Build/bin/yaml-lint",
+		"fix": [
+			"@fix:composer:normalize",
+			"@fix:php",
+			"@fix:xliff:normalize"
+		],
+		"fix:composer:normalize": "@composer normalize --no-check-lock",
+		"fix:php": [
+			"@fix:php:rector",
+			"@fix:php:cs-fixer"
+		],
+		"fix:php:cs-fixer": [
+			"php-cs-fixer fix --config ./Build/php-cs-fixer/config.php",
+			"php-cs-fixer fix --config ./Build/php-cs-fixer/header-comment.php"
+		],
+		"fix:php:rector": "rector process --config=./Build/rector/config.php",
+		"fix:xliff:normalize": "php Build/Scripts/xliffNormalizer.php"
+	},
+	"scripts-descriptions": {
+		"check:composer:normalize": "Checks the composer.json.",
+		"check:composer:psr-verify": "Verifies PSR-4 namespace correctness.",
+		"check:json:lint": "Lints the JSON files.",
+		"check:php:cs-fixer": "Checks the code style with PHP-CS-Fixer (typo3/coding-standards).",
+		"check:php:cs-fixer:header": "Checks the license header of all PHP files.",
+		"check:php:integrity": "Checks exception codes and test conventions like the TYPO3 Core.",
+		"check:php:lint": "Lints the PHP files for syntax errors.",
+		"check:php:rector": "Checks the code for changes suggested by Rector.",
+		"check:php:stan": "Runs PHPStan on level max without baseline.",
+		"check:static": "Runs all static code checks.",
+		"check:tests:functional": "Runs the functional tests (needs typo3Database* environment variables).",
+		"check:tests:unit": "Runs the unit tests.",
+		"check:xliff:lint": "Checks the integrity of the XLIFF files.",
+		"check:xliff:normalize": "Checks the formatting of the XLIFF files.",
+		"check:yaml:lint": "Lints the YAML files.",
+		"fix": "Runs all automatic fixes.",
+		"fix:composer:normalize": "Normalizes composer.json.",
+		"fix:php": "Runs all fixers for the PHP code.",
+		"fix:php:cs-fixer": "Fixes the code style with PHP-CS-Fixer.",
+		"fix:php:rector": "Updates the code with Rector.",
+		"fix:xliff:normalize": "Normalizes the formatting of the XLIFF files."
+	}
 }
