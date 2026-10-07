@@ -202,7 +202,9 @@ Rechte an Backend-Benutzer-Datensätzen
     Dateirechte, Module, TSconfig und Freigaben. TYPO3 führt sie mit den
     Rechten der Gruppen zusammen. Das Rollenmodell kann sie nicht steuern.
     Halten Sie Benutzer-Datensätze frei von Rechten und vergeben Sie alles
-    über Rollen.
+    über Rollen. Neue Benutzer erhalten standardmäßig alle Dateioperationen
+    (Core-Standardwert). Die Konsistenzprüfung meldet Rechte an
+    Benutzer-Datensätzen, siehe :ref:`usage-audit`.
 
 Rechtefelder anderer Extensions
     Ein Rechtefeld, das eine andere Extension nur über das Core-Formular zu
@@ -215,4 +217,5 @@ Abgelehnte Datensätze bei Importen
     Lehnt eine Regel einen Datensatz ab, zum Beispiel eine klassische Gruppe
     bei abgeschalteten klassischen Gruppen, ist das im Systemprotokoll
     sichtbar, aber nicht in der Fehlerliste des DataHandlers, die
-    Import-Werkzeuge üblicherweise auswerten.
+    Import-Werkzeuge üblicherweise auswerten. Führen Sie nach Importen die
+    Konsistenzprüfung aus, siehe :ref:`usage-audit`.

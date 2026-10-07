@@ -115,6 +115,52 @@ which are grouped by kind (otherwise the identifier is shown):
     $GLOBALS['TCA']['be_users']['columns']['usergroup']['config']['itemGroups']['my_news']
         = 'my_extension.db:be_users.usergroup.group.news';
 
+..  _developer-audit:
+
+Adding checks to the consistency check
+======================================
+
+The event :php:`\Cretection\BeGroups\Event\AfterAuditFindingsCollectedEvent`
+is dispatched after the built-in checks of ``begroups:audit``. Listeners read
+the findings with :php:`getFindings()` and add their own with
+:php:`addFinding()`. The command sorts and counts all findings, so findings
+of listeners affect the exit code like any other.
+
+..  code-block:: php
+    :caption: EXT:my_extension/Classes/EventListener/CheckNewsEditors.php
+
+    <?php
+
+    declare(strict_types=1);
+
+    namespace MyVendor\MyExtension\EventListener;
+
+    use Cretection\BeGroups\Domain\Audit\AuditFinding;
+    use Cretection\BeGroups\Domain\Audit\AuditSeverity;
+    use Cretection\BeGroups\Event\AfterAuditFindingsCollectedEvent;
+    use TYPO3\CMS\Core\Attribute\AsEventListener;
+
+    final readonly class CheckNewsEditors
+    {
+        #[AsEventListener('my-extension/check-news-editors')]
+        public function __invoke(AfterAuditFindingsCollectedEvent $event): void
+        {
+            // Your check, for example based on the kinds of your extension
+            $event->addFinding(new AuditFinding(
+                AuditSeverity::Warning,
+                'my-news-editor-without-storage',
+                'be_groups',
+                12,
+                'News editors',
+                'The role grants the news module, but no storage folder.',
+            ));
+        }
+    }
+
+Use an identifier with a prefix of your extension, so it cannot collide with
+future checks of this extension. :php:`AuditFinding`, :php:`AuditSeverity`
+and the event are public API and follow semantic versioning.
+
 ..  _developer-planned:
 
 Planned
@@ -123,12 +169,11 @@ Planned
 The following parts of the relaunch are planned for version 1.0.0 and are
 not available yet:
 
-*   PSR-14 events at the extension points (kind assignment, classification,
-    consistency check results).
+*   Further PSR-14 events at the extension points (kind assignment,
+    classification).
 *   Editing in the module "Roles & Building Blocks" (a matrix of roles and
     building blocks). The read-only overview is available already, see
     :ref:`usage-module`.
-*   A consistency check on the command line (``begroups:audit``).
 *   Assistants that suggest kinds (``begroups:classify``) and split mixed
     classic groups into building blocks and a role (``begroups:split``).
 

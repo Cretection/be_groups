@@ -26,6 +26,10 @@ Relaunch für TYPO3 14.3 LTS.
     Upgrade-Wizard ``beGroups_kindMigration`` überträgt sie.
 *   Die Regeln R1 – R4 werden bei jedem Speichern durchgesetzt, siehe
     :ref:`concept-rules`.
+*   Die Konsistenzprüfung ``begroups:audit`` findet alles, was nicht dem
+    Rollenmodell folgt, mit Exit-Codes für Deployments und Monitoring und
+    dem Event ``AfterAuditFindingsCollectedEvent`` für Prüfungen anderer
+    Extensions, siehe :ref:`usage-audit`.
 *   Nur noch TYPO3 14.3 LTS und PHP 8.2 – 8.5.
 *   Die Lizenz ist jetzt GPL-2.0-or-later, wie beim TYPO3 Core.
 *   :file:`ext_emconf.php` entfällt; alle Metadaten stehen in der

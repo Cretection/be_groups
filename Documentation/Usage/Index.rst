@@ -91,3 +91,99 @@ of the administrators:
     :caption: User TSconfig
 
     options.hideModules := addToList(begroups_overview)
+
+..  _usage-audit:
+
+Checking groups and users
+=========================
+
+The rules apply to every save operation. Data written around the
+DataHandler – SQL, synchronisation tools, the former extension – and
+assignments stored before the extension was installed are found by the
+consistency check. It reads all groups and users and changes nothing:
+
+..  code-block:: bash
+
+    vendor/bin/typo3 begroups:audit
+
+..  list-table::
+    :header-rows: 1
+    :widths: 30 12 58
+
+    *   - Check
+        - Severity
+        - Finding
+    *   - ``unknown-kind``
+        - error
+        - The kind of the group is not configured, for example a numeric kind
+          of the former extension. Run the upgrade wizard or choose a kind.
+    *   - ``classic-group``
+        - warning
+        - A classic group. Split it into building blocks and a role.
+    *   - ``classic-group-disabled``
+        - error
+        - A classic group, although classic groups are disabled, see
+          :ref:`configuration`.
+    *   - ``building-block-with-subgroups``
+        - error
+        - A building block has subgroups.
+    *   - ``foreign-permissions``
+        - error
+        - A group carries permissions that its kind does not show. They are
+          in effect until the group is saved again.
+    *   - ``role-missing-member``
+        - error
+        - A role contains a group that does not exist (any more).
+    *   - ``role-invalid-member``
+        - error
+        - A role contains a role, a classic group or a group with an unknown
+          kind.
+    *   - ``user-building-block``
+        - error
+        - A building block is assigned to a user directly.
+    *   - ``user-permissions``
+        - warning
+        - A user record carries permissions of its own, which TYPO3 adds to
+          those of the roles. New users get all file operations by default
+          (core default of :sql:`file_permissions`); clear them in the user
+          record.
+    *   - ``user-ignores-group-mounts``
+        - warning
+        - The field :guilabel:`Mount from groups` (:sql:`options`) of a user
+          does not include all page tree and file mounts of the groups.
+
+Hidden groups and disabled users are checked as well and marked
+"(disabled)". Administrators and deleted records are skipped. Extensions can
+add checks of their own, see :ref:`developer-audit`.
+
+Options:
+
+``--format=json``
+    Prints the result as JSON (``errors``, ``warnings`` and ``findings``
+    with ``severity``, ``identifier``, ``table``, ``uid``, ``title`` and
+    ``message``) for monitoring and further processing.
+
+``--fail-on-warnings``
+    Treats warnings like errors when it comes to the exit code.
+
+The exit code makes the check usable in deployments, CI pipelines and
+monitoring:
+
+..  list-table::
+    :header-rows: 1
+    :widths: 15 85
+
+    *   - Code
+        - Meaning
+    *   - ``0``
+        - No errors (warnings are allowed unless ``--fail-on-warnings`` is
+          set).
+    *   - ``1``
+        - Errors found, or warnings with ``--fail-on-warnings``.
+    *   - ``2``
+        - Invalid option, for example an unknown format.
+
+..  code-block:: bash
+    :caption: Example: stop a deployment on errors
+
+    vendor/bin/typo3 begroups:audit --format=json > begroups-audit.json

@@ -1,0 +1,8 @@
+services:
+  _defaults:
+    autowire: true
+    autoconfigure: true
+    public: false
+
+  Cretection\BeGroups\Tests\Functional\Fixtures\Extensions\be_groups_test_audit\Classes\:
+    resource: '../Classes/*'

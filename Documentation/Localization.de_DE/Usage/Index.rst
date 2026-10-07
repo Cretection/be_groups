@@ -95,3 +95,103 @@ User-TSconfig der Administratoren:
     :caption: User-TSconfig
 
     options.hideModules := addToList(begroups_overview)
+
+..  _usage-audit:
+
+Gruppen und Benutzer prüfen
+===========================
+
+Die Regeln greifen bei jedem Speichervorgang. Daten, die am DataHandler
+vorbei geschrieben wurden – per SQL, durch Synchronisations-Werkzeuge oder
+die frühere Extension – und Zuordnungen von vor der Installation findet die
+Konsistenzprüfung. Sie liest alle Gruppen und Benutzer und ändert nichts:
+
+..  code-block:: bash
+
+    vendor/bin/typo3 begroups:audit
+
+..  list-table::
+    :header-rows: 1
+    :widths: 30 12 58
+
+    *   - Prüfung
+        - Schwere
+        - Befund
+    *   - ``unknown-kind``
+        - Fehler
+        - Der Typ der Gruppe ist nicht konfiguriert, zum Beispiel ein
+          numerischer Typ der früheren Extension. Führen Sie den
+          Upgrade-Wizard aus oder wählen Sie einen Typ.
+    *   - ``classic-group``
+        - Warnung
+        - Eine klassische Gruppe. Teilen Sie sie in Bausteine und eine Rolle
+          auf.
+    *   - ``classic-group-disabled``
+        - Fehler
+        - Eine klassische Gruppe, obwohl klassische Gruppen abgeschaltet
+          sind, siehe :ref:`configuration`.
+    *   - ``building-block-with-subgroups``
+        - Fehler
+        - Ein Baustein hat Untergruppen.
+    *   - ``foreign-permissions``
+        - Fehler
+        - Eine Gruppe trägt Rechte, die ihr Typ nicht anzeigt. Sie wirken,
+          bis die Gruppe erneut gespeichert wird.
+    *   - ``role-missing-member``
+        - Fehler
+        - Eine Rolle enthält eine Gruppe, die es nicht (mehr) gibt.
+    *   - ``role-invalid-member``
+        - Fehler
+        - Eine Rolle enthält eine Rolle, eine klassische Gruppe oder eine
+          Gruppe mit unbekanntem Typ.
+    *   - ``user-building-block``
+        - Fehler
+        - Ein Baustein ist einem Benutzer direkt zugewiesen.
+    *   - ``user-permissions``
+        - Warnung
+        - Ein Benutzer-Datensatz trägt eigene Rechte, die TYPO3 zu denen der
+          Rollen hinzufügt. Neue Benutzer erhalten standardmäßig alle
+          Dateioperationen (Core-Standardwert von :sql:`file_permissions`);
+          entfernen Sie sie im Benutzer-Datensatz.
+    *   - ``user-ignores-group-mounts``
+        - Warnung
+        - Das Feld :sql:`options` eines Benutzers (im englischen Backend
+          :guilabel:`Mount from groups`) umfasst nicht alle Seitenbaum- und
+          Datei-Freigaben der Gruppen.
+
+Versteckte Gruppen und deaktivierte Benutzer werden ebenfalls geprüft und
+mit "(disabled)" markiert. Administratoren und gelöschte Datensätze werden
+übersprungen. Extensions können eigene Prüfungen ergänzen, siehe
+:ref:`developer-audit`.
+
+Optionen:
+
+``--format=json``
+    Gibt das Ergebnis als JSON aus (``errors``, ``warnings`` und
+    ``findings`` mit ``severity``, ``identifier``, ``table``, ``uid``,
+    ``title`` und ``message``), für Monitoring und Weiterverarbeitung.
+
+``--fail-on-warnings``
+    Behandelt Warnungen beim Exit-Code wie Fehler.
+
+Über den Exit-Code lässt sich die Prüfung in Deployments, CI-Pipelines und
+Monitoring einsetzen:
+
+..  list-table::
+    :header-rows: 1
+    :widths: 15 85
+
+    *   - Code
+        - Bedeutung
+    *   - ``0``
+        - Keine Fehler (Warnungen sind erlaubt, außer mit
+          ``--fail-on-warnings``).
+    *   - ``1``
+        - Fehler gefunden, oder Warnungen mit ``--fail-on-warnings``.
+    *   - ``2``
+        - Ungültige Option, zum Beispiel ein unbekanntes Format.
+
+..  code-block:: bash
+    :caption: Beispiel: Deployment bei Fehlern abbrechen
+
+    vendor/bin/typo3 begroups:audit --format=json > begroups-audit.json

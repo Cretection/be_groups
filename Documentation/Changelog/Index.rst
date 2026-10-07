@@ -26,6 +26,10 @@ Relaunch for TYPO3 14.3 LTS.
     wizard ``beGroups_kindMigration`` migrates them.
 *   The rules R1 – R4 are enforced on every save operation, see
     :ref:`concept-rules`.
+*   The consistency check ``begroups:audit`` finds everything that does
+    not follow the role model, with exit codes for deployments and
+    monitoring and the event ``AfterAuditFindingsCollectedEvent`` for checks
+    of other extensions, see :ref:`usage-audit`.
 *   TYPO3 14.3 LTS and PHP 8.2 – 8.5 only.
 *   The license changed to GPL-2.0-or-later, in line with the TYPO3 core.
 *   :file:`ext_emconf.php` was removed; all metadata lives in

@@ -44,6 +44,14 @@ Relaunch for TYPO3 14.3 LTS (version 1.0.0).
   building blocks with subgroups or direct users, and unused building blocks.
   The issue count does not depend on the filter; kinds of other extensions
   use their own label and icon.
+- Consistency check `vendor/bin/typo3 begroups:audit` (read-only): unknown
+  kinds, classic groups, building blocks with subgroups, foreign permissions
+  on groups, invalid or missing members of roles, building blocks assigned to
+  users directly, permissions on user records and users that ignore the
+  mounts of their groups. Exit code 1 on errors (`--fail-on-warnings`: on
+  warnings too), JSON output with `--format=json`.
+- PSR-14 event `AfterAuditFindingsCollectedEvent`: other extensions add
+  findings of their own checks.
 - Extension setting `allowClassicGroups` (default: enabled). It takes effect
   immediately: when disabled, the form no longer offers "classic" (except for
   groups that already are classic) and new groups start as "role".

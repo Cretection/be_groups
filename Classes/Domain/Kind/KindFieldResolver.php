@@ -101,12 +101,12 @@ final readonly class KindFieldResolver
     }
 
     /**
-     * Whether a stored or incoming value grants nothing.
+     * Whether a stored or incoming value of a field (of be_groups by default) grants nothing.
      *
      * "0" is a real value in static selects (allowed_languages "0" is the default language),
      * but means "no relation" in relation fields and "nothing" in checkboxes and numbers.
      */
-    public function isEmptyValue(string $fieldName, mixed $value): bool
+    public function isEmptyValue(string $fieldName, mixed $value, string $table = self::TABLE): bool
     {
         if ($value === null || $value === '' || $value === []) {
             return true;
@@ -114,7 +114,10 @@ final readonly class KindFieldResolver
         if ($value !== '0' && $value !== 0) {
             return false;
         }
-        $schema = $this->getSchema();
+        if (!$this->tcaSchemaFactory->has($table)) {
+            return false;
+        }
+        $schema = $this->tcaSchemaFactory->get($table);
         if (!$schema->hasField($fieldName)) {
             return false;
         }

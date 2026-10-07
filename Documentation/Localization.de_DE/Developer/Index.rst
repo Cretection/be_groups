@@ -117,6 +117,53 @@ Listen der Rollen- und Benutzerformulare (sonst wird die Kennung angezeigt):
     $GLOBALS['TCA']['be_users']['columns']['usergroup']['config']['itemGroups']['my_news']
         = 'my_extension.db:be_users.usergroup.group.news';
 
+..  _developer-audit:
+
+Eigene Prüfungen für die Konsistenzprüfung
+==========================================
+
+Das Event :php:`\Cretection\BeGroups\Event\AfterAuditFindingsCollectedEvent`
+wird nach den eingebauten Prüfungen von ``begroups:audit`` ausgelöst.
+Listener lesen die Befunde mit :php:`getFindings()` und ergänzen eigene mit
+:php:`addFinding()`. Der Befehl sortiert und zählt alle Befunde; Befunde von
+Listenern wirken sich also wie alle anderen auf den Exit-Code aus.
+
+..  code-block:: php
+    :caption: EXT:my_extension/Classes/EventListener/CheckNewsEditors.php
+
+    <?php
+
+    declare(strict_types=1);
+
+    namespace MyVendor\MyExtension\EventListener;
+
+    use Cretection\BeGroups\Domain\Audit\AuditFinding;
+    use Cretection\BeGroups\Domain\Audit\AuditSeverity;
+    use Cretection\BeGroups\Event\AfterAuditFindingsCollectedEvent;
+    use TYPO3\CMS\Core\Attribute\AsEventListener;
+
+    final readonly class CheckNewsEditors
+    {
+        #[AsEventListener('my-extension/check-news-editors')]
+        public function __invoke(AfterAuditFindingsCollectedEvent $event): void
+        {
+            // Ihre Prüfung, zum Beispiel anhand der Typen Ihrer Extension
+            $event->addFinding(new AuditFinding(
+                AuditSeverity::Warning,
+                'my-news-editor-without-storage',
+                'be_groups',
+                12,
+                'News editors',
+                'The role grants the news module, but no storage folder.',
+            ));
+        }
+    }
+
+Verwenden Sie eine Kennung mit einem Präfix Ihrer Extension, damit sie nicht
+mit künftigen Prüfungen dieser Extension kollidiert. :php:`AuditFinding`,
+:php:`AuditSeverity` und das Event sind öffentliche API und folgen der
+semantischen Versionierung.
+
 ..  _developer-planned:
 
 Geplant
@@ -125,12 +172,11 @@ Geplant
 Die folgenden Teile des Relaunch sind für Version 1.0.0 geplant und noch
 nicht verfügbar:
 
-*   PSR-14-Events an den Erweiterungspunkten (Typ-Zuordnung,
-    Klassifizierung, Ergebnisse der Konsistenzprüfung).
+*   Weitere PSR-14-Events an den Erweiterungspunkten (Typ-Zuordnung,
+    Klassifizierung).
 *   Bearbeiten im Modul „Rollen & Bausteine“ (eine Matrix aus Rollen und
     Bausteinen). Die Übersicht ohne Bearbeitung ist bereits verfügbar, siehe
     :ref:`usage-module`.
-*   Eine Konsistenzprüfung auf der Kommandozeile (``begroups:audit``).
 *   Assistenten, die Typen vorschlagen (``begroups:classify``) und gemischte
     klassische Gruppen in Bausteine und eine Rolle aufteilen
     (``begroups:split``).

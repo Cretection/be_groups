@@ -192,7 +192,9 @@ Permissions on backend user records
     file permissions, modules, TSconfig and mounts. TYPO3 merges them with
     the permissions of the groups. The role model cannot control them. Keep
     backend user records free of permissions and grant everything through
-    roles.
+    roles. New users get all file operations by default (core default). The
+    consistency check reports permissions on user records, see
+    :ref:`usage-audit`.
 
 Permission fields of other extensions
     A permission field that another extension adds to :sql:`be_groups` only
@@ -204,4 +206,5 @@ Permission fields of other extensions
 Rejected records during imports
     When a rule rejects a record, for example a classic group while classic
     groups are disabled, this is visible in the system log, but not in the
-    error list of the DataHandler that import tools usually evaluate.
+    error list of the DataHandler that import tools usually evaluate. Run
+    the consistency check after imports, see :ref:`usage-audit`.

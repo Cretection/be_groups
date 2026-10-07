@@ -97,6 +97,28 @@ final readonly class BackendUserRepository
         return $users;
     }
 
+    /**
+     * Returns all non-deleted users with their groups, mount options and the given permission fields,
+     * for the consistency check. Passwords and other personal data are not read.
+     *
+     * @param list<string> $permissionFields
+     * @return list<DatabaseRow>
+     */
+    public function findAllForAudit(array $permissionFields): array
+    {
+        $result = $this->createQueryBuilder()
+            ->select('uid', 'username', 'admin', 'disable', 'usergroup', 'options', ...$permissionFields)
+            ->from(self::TABLE)
+            ->orderBy('uid')
+            ->executeQuery();
+
+        $users = [];
+        while ($row = $result->fetchAssociative()) {
+            $users[] = DatabaseRow::fromArray($row);
+        }
+        return $users;
+    }
+
     private function createQueryBuilder(): QueryBuilder
     {
         $queryBuilder = $this->connectionPool->getQueryBuilderForTable(self::TABLE);

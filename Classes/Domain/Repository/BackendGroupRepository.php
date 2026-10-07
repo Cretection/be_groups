@@ -156,6 +156,26 @@ final readonly class BackendGroupRepository
         return $groups;
     }
 
+    /**
+     * Returns all non-deleted groups with all fields, for the consistency check.
+     *
+     * @return list<DatabaseRow>
+     */
+    public function findAllForAudit(): array
+    {
+        $result = $this->createQueryBuilder()
+            ->select('*')
+            ->from(self::TABLE)
+            ->orderBy('uid')
+            ->executeQuery();
+
+        $groups = [];
+        while ($row = $result->fetchAssociative()) {
+            $groups[] = DatabaseRow::fromArray($row);
+        }
+        return $groups;
+    }
+
     private function createQueryBuilder(): QueryBuilder
     {
         $queryBuilder = $this->connectionPool->getQueryBuilderForTable(self::TABLE);
