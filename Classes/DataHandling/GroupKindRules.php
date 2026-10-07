@@ -208,8 +208,9 @@ final class GroupKindRules
      */
     private function getDefaultKind(array $fieldArray, DataHandler $dataHandler): string
     {
-        $pid = $fieldArray['pid'] ?? 0;
-        $pageUid = MathUtility::canBeInterpretedAsInteger($pid) && (int)$pid > 0 ? (int)$pid : 0;
+        // A negative pid means "after record", so only a positive pid is a page.
+        $pageUid = filter_var($fieldArray['pid'] ?? 0, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]);
+        $pageUid = is_int($pageUid) ? $pageUid : 0;
         $candidates = [
             $this->kindRegistry->getDefaultKind(),
             $this->getKindFromTcaDefaults($dataHandler->BE_USER->getTSConfig()),
