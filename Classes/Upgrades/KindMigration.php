@@ -15,7 +15,8 @@ declare(strict_types=1);
 
 namespace Cretection\BeGroups\Upgrades;
 
-use Cretection\BeGroups\DataHandling\UidList;
+use Cretection\BeGroups\Configuration\ExtensionSettings;
+use Cretection\BeGroups\DataHandling\RelationList;
 use Cretection\BeGroups\Domain\Kind\GroupKind;
 use Cretection\BeGroups\Domain\Kind\KindFieldResolver;
 use Cretection\BeGroups\Domain\Repository\BackendGroupRepository;
@@ -27,28 +28,30 @@ use TYPO3\CMS\Core\Attribute\UpgradeWizard;
 use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\CMS\Core\Upgrades\ChattyInterface;
 use TYPO3\CMS\Core\Upgrades\DatabaseUpdatedPrerequisite;
+use TYPO3\CMS\Core\Upgrades\RepeatableInterface;
 use TYPO3\CMS\Core\Upgrades\UpgradeWizardInterface;
 use TYPO3\CMS\Core\Utility\ExtensionManagementUtility;
 
 /**
- * Migrates groups of be_groups 0.0.x (and AOE be_groups 1.x) to the kind model.
+ * Migrates groups of be_groups 0.0.x (and AOE be_groups 1.x) to the kind model
+ * without changing any effective permission.
  *
- * - The numeric kinds 0-9 become the string kinds of GroupKind.
- * - META groups become roles. Their composition is restored from the legacy
- *   "subgroup_*" columns, which repairs groups emptied by a bug of the old version.
- * - File permissions stored on building blocks are moved into new "file operations"
- *   building blocks, which are added wherever the original block is used.
- * - Groups carrying other settings their new kind does not display become "classic",
- *   so that no permission is lost. They are listed for manual review.
+ * - The numeric kinds 0-9 become the kinds of GroupKind (META groups become roles).
+ * - File permissions stored on building blocks move into "file operations" building blocks
+ *   that are added wherever the original group is used. Hidden groups get hidden blocks,
+ *   so nothing that was inactive becomes active.
+ * - Groups carrying other settings their new kind does not display become "classic".
+ * - The composition of roles is not changed. Members that the former form showed in its
+ *   "subgroup_*" fields but that are not effective are reported for manual review.
  *
- * Writes use plain SQL like the core upgrade wizards, because no backend user exists
- * during upgrades; all writes happen in one transaction. The wizard runs only once:
- * afterwards no numeric kind is left.
+ * All records are migrated, including soft-deleted ones. Writes use plain SQL in one
+ * transaction like the core upgrade wizards, because no backend user exists during upgrades.
+ * The wizard is repeatable: it only touches groups that still have a numeric kind.
  *
  * @internal
  */
 #[UpgradeWizard('beGroups_kindMigration')]
-final class KindMigration implements UpgradeWizardInterface, ChattyInterface
+final class KindMigration implements UpgradeWizardInterface, ChattyInterface, RepeatableInterface
 {
     private const GROUPS_TABLE = 'be_groups';
     private const USERS_TABLE = 'be_users';
@@ -59,11 +62,23 @@ final class KindMigration implements UpgradeWizardInterface, ChattyInterface
 
     private OutputInterface $output;
 
+    /**
+     * @var array<int, string> subgroup lists of all groups, kept in sync with the database
+     */
+    private array $subgroupLists = [];
+
+    /**
+     * @var array<int, string> usergroup lists of all users, kept in sync with the database
+     */
+    private array $usergroupLists = [];
+
     public function __construct(
         private readonly ConnectionPool $connectionPool,
         private readonly BackendGroupRepository $backendGroupRepository,
         private readonly BackendUserRepository $backendUserRepository,
         private readonly KindFieldResolver $kindFieldResolver,
+        private readonly ColumnInspector $columnInspector,
+        private readonly ExtensionSettings $extensionSettings,
     ) {
         $this->output = new NullOutput();
     }
@@ -80,8 +95,8 @@ final class KindMigration implements UpgradeWizardInterface, ChattyInterface
 
     public function getDescription(): string
     {
-        return 'Converts groups of the former be_groups extension (numeric kinds, META groups, subgroup_* columns) '
-            . 'to roles and building blocks without losing any permission.';
+        return 'Converts groups of the former be_groups extension (numeric kinds, META groups) to roles and building '
+            . 'blocks without changing any effective permission. Requires the updated database structure.';
     }
 
     /**
@@ -94,36 +109,65 @@ final class KindMigration implements UpgradeWizardInterface, ChattyInterface
 
     public function updateNecessary(): bool
     {
-        return $this->backendGroupRepository->findByKinds(self::LEGACY_KIND_VALUES) !== [];
+        $kindColumn = $this->columnInspector->inspect(self::GROUPS_TABLE)[strtolower(GroupKind::FIELD_NAME)] ?? null;
+        if ($kindColumn === null) {
+            return false;
+        }
+        if (!$kindColumn->isString) {
+            // The column of the former extension still has to be converted by the database analyzer.
+            return true;
+        }
+        return $this->backendGroupRepository->findByKindsIncludingDeleted(self::LEGACY_KIND_VALUES) !== [];
     }
 
     public function executeUpdate(): bool
     {
-        $this->connectionPool->getConnectionForTable(self::GROUPS_TABLE)->transactional(function (): void {
-            $this->migrate();
+        $groupColumns = $this->columnInspector->inspect(self::GROUPS_TABLE);
+        $kindColumn = $groupColumns[strtolower(GroupKind::FIELD_NAME)] ?? null;
+        if ($kindColumn === null || !$kindColumn->isString) {
+            $this->output->writeln(
+                '<error>The column be_groups.tx_begroups_kind still has the integer type of the former extension. '
+                . 'Apply all changes of "Admin Tools > Maintenance > Analyze Database Structure" first, then run this wizard again.</error>',
+            );
+            return false;
+        }
+        $subgroupColumn = $groupColumns['subgroup'] ?? null;
+        $usergroupColumn = $this->columnInspector->inspect(self::USERS_TABLE)['usergroup'] ?? null;
+        if ($subgroupColumn === null || $usergroupColumn === null) {
+            return false;
+        }
+
+        $this->connectionPool->getConnectionForTable(self::GROUPS_TABLE)->transactional(function () use ($subgroupColumn, $usergroupColumn): void {
+            $this->migrate($subgroupColumn, $usergroupColumn);
         });
+
+        $this->output->writeln('<info>Please update the reference index ("vendor/bin/typo3 referenceindex:update").</info>');
+        if ($this->extensionSettings->isLegacyOnlyShowMetaGroupEnabled()) {
+            $this->output->writeln(
+                '<comment>The former option "onlyShowMetaGroup" is enabled. Its successor is "allowClassicGroups": '
+                . 'disable it in the extension configuration to keep allowing only roles for users.</comment>',
+            );
+        }
         return true;
     }
 
-    private function migrate(): void
+    private function migrate(ColumnInfo $subgroupColumn, ColumnInfo $usergroupColumn): void
     {
-        $legacyGroups = $this->backendGroupRepository->findByKinds(self::LEGACY_KIND_VALUES);
+        $legacyGroups = $this->backendGroupRepository->findByKindsIncludingDeleted(self::LEGACY_KIND_VALUES);
+        $this->subgroupLists = $this->backendGroupRepository->findSubgroupListsIncludingDeleted();
+        $this->usergroupLists = $this->backendUserRepository->findUsergroupListsIncludingDeleted();
         $workspacesAvailable = ExtensionManagementUtility::isLoaded('workspaces');
-        /** @var array<string, list<int>> $groupsByFilePermissions */
-        $groupsByFilePermissions = [];
-        /** @var array<int, DatabaseRow> $migratedGroups */
-        $migratedGroups = [];
 
+        /** @var array<string, list<int>> $groupsToSplit groups whose file permissions move into a new building block, by hidden state and permissions */
+        $groupsToSplit = [];
+        $migratedGroups = [];
         foreach ($legacyGroups as $uid => $group) {
             $kind = $this->mapLegacyKind($group->get(GroupKind::FIELD_NAME));
             if ($kind === GroupKind::Workspace && !$workspacesAvailable) {
                 $kind = GroupKind::Classic;
             }
-            $changes = [];
-
             if ($kind === GroupKind::Role) {
-                $changes['subgroup'] = $this->restoreRoleComposition($group)->toString();
-                $group = $group->with($changes);
+                $this->reportIneffectiveLegacyMembers($uid, $group);
             }
 
             if ($kind !== GroupKind::Classic) {
@@ -131,7 +175,7 @@ final class KindMigration implements UpgradeWizardInterface, ChattyInterface
                 $otherForeignFields = array_values(array_diff($foreignFields, [self::FILE_PERMISSIONS]));
                 if ($otherForeignFields !== []) {
                     $this->output->writeln(sprintf(
-                        '<comment>Group [%d] "%s" carries settings its kind "%s" does not display (%s). It becomes "classic" to keep all permissions; please review it.</comment>',
+                        '<comment>Group [%d] "%s" carries settings its kind "%s" does not show (%s). It becomes "classic" to keep its permissions; please review it.</comment>',
                         $uid,
                         $group->get('title'),
                         $kind->value,
@@ -139,17 +183,19 @@ final class KindMigration implements UpgradeWizardInterface, ChattyInterface
                     ));
                     $kind = GroupKind::Classic;
                 } elseif ($foreignFields !== []) {
-                    $groupsByFilePermissions[$group->get(self::FILE_PERMISSIONS)][] = $uid;
-                    $changes[self::FILE_PERMISSIONS] = '';
+                    $groupsToSplit[$group->get('hidden') . '|' . $group->get(self::FILE_PERMISSIONS)][] = $uid;
                 }
             }
 
-            $changes[GroupKind::FIELD_NAME] = $kind->value;
-            $this->updateRecord(self::GROUPS_TABLE, $uid, $changes);
-            $migratedGroups[$uid] = $group->with($changes);
+            $this->updateRecord(self::GROUPS_TABLE, $uid, [GroupKind::FIELD_NAME => $kind->value]);
+            $migratedGroups[$uid] = $group->with([GroupKind::FIELD_NAME => $kind->value]);
         }
 
-        $this->extractFilePermissions($groupsByFilePermissions, $migratedGroups);
+        $number = 0;
+        foreach ($groupsToSplit as $groupUids) {
+            $number++;
+            $this->extractFilePermissions($number, $groupUids, $migratedGroups, $subgroupColumn, $usergroupColumn);
+        }
         $this->output->writeln(sprintf('<info>Migrated %d groups to the kind model.</info>', count($migratedGroups)));
     }
 
@@ -170,54 +216,110 @@ final class KindMigration implements UpgradeWizardInterface, ChattyInterface
     }
 
     /**
-     * The composition of a META group is the union of "subgroup" and all legacy
-     * "subgroup_*" columns, which may already have been renamed by the database analyzer.
+     * The former extension showed the members of META groups in "subgroup_*" fields, while only
+     * "subgroup" was effective. Members that differ are reported, but never added: adding them
+     * would grant permissions the users of the role do not have today.
      */
-    private function restoreRoleComposition(DatabaseRow $group): UidList
+    private function reportIneffectiveLegacyMembers(int $uid, DatabaseRow $group): void
     {
-        $uids = UidList::fromValue($group->get('subgroup'))->uids;
+        $effectiveMembers = RelationList::fromValue($group->get('subgroup'));
+        $legacyMembers = [];
         foreach (self::LEGACY_SUBGROUP_COLUMNS as $column) {
             $value = $group->get($column) !== '' ? $group->get($column) : $group->get(self::DROPPED_COLUMN_PREFIX . $column);
-            $uids = array_merge($uids, UidList::fromValue($value)->uids);
+            $legacyMembers = array_merge($legacyMembers, RelationList::fromValue($value)->getUids());
         }
-        return UidList::fromValue($uids);
+        $ineffectiveMembers = array_values(array_unique(array_diff($legacyMembers, $effectiveMembers->getUids())));
+        if ($ineffectiveMembers !== []) {
+            $this->output->writeln(sprintf(
+                '<comment>Role [%d] "%s": the former form listed the groups %s, but they are not effective and have not been added. Add them in the role form if intended.</comment>',
+                $uid,
+                $group->get('title'),
+                implode(', ', $ineffectiveMembers),
+            ));
+        }
     }
 
     /**
-     * Creates one "file operations" building block per distinct set of file permissions
-     * and adds it everywhere the original group is used, so effective permissions stay the same.
+     * Creates a "file operations" building block for groups sharing the same file permissions and
+     * hidden state, and adds it next to every reference of these groups, so that effective
+     * permissions stay exactly the same. A group whose references cannot take another entry
+     * (column length) keeps its file permissions and becomes "classic" instead.
      *
-     * @param array<string, list<int>> $groupsByFilePermissions
+     * @param list<int> $groupUids
      * @param array<int, DatabaseRow> $migratedGroups
      */
-    private function extractFilePermissions(array $groupsByFilePermissions, array $migratedGroups): void
+    private function extractFilePermissions(int $number, array $groupUids, array $migratedGroups, ColumnInfo $subgroupColumn, ColumnInfo $usergroupColumn): void
     {
-        $number = 0;
-        foreach ($groupsByFilePermissions as $filePermissions => $groupUids) {
-            $number++;
-            $titles = array_map(static fn(int $uid): string => $migratedGroups[$uid]->get('title'), $groupUids);
-            $fileOperationsUid = $this->createFileOperationsBlock($number, $filePermissions, $titles);
-            $this->output->writeln(sprintf('<info>Created file operations block [%d] for: %s</info>', $fileOperationsUid, implode(', ', $titles)));
+        $splittableUids = [];
+        foreach ($groupUids as $groupUid) {
+            if ($this->canInsertNextToReferences($groupUid, $migratedGroups[$groupUid], $subgroupColumn, $usergroupColumn)) {
+                $splittableUids[] = $groupUid;
+                continue;
+            }
+            $this->updateRecord(self::GROUPS_TABLE, $groupUid, [GroupKind::FIELD_NAME => GroupKind::Classic->value]);
+            $this->output->writeln(sprintf(
+                '<comment>Group [%d] "%s" keeps its file permissions and becomes "classic": a list referencing it has no room for another building block.</comment>',
+                $groupUid,
+                $migratedGroups[$groupUid]->get('title'),
+            ));
+        }
+        if ($splittableUids === []) {
+            return;
+        }
 
-            foreach ($groupUids as $groupUid) {
-                if ($migratedGroups[$groupUid]->get(GroupKind::FIELD_NAME) === GroupKind::Role->value) {
-                    // A role cannot carry permissions itself, it gets the new building block instead.
-                    $composition = $this->backendGroupRepository->findFieldsByUid($groupUid, ['subgroup'])?->get('subgroup') ?? '';
-                    $this->updateRecord(self::GROUPS_TABLE, $groupUid, [
-                        'subgroup' => $this->insertAfter(UidList::fromValue($composition), $fileOperationsUid, null)->toString(),
-                    ]);
-                    continue;
+        $firstGroup = $migratedGroups[$splittableUids[0]];
+        $titles = array_map(static fn(int $uid): string => $migratedGroups[$uid]->get('title'), $splittableUids);
+        $fileOperationsUid = $this->createFileOperationsBlock($number, $firstGroup->get(self::FILE_PERMISSIONS), $firstGroup->get('hidden') === '1', $titles);
+        $this->output->writeln(sprintf('<info>Created file operations block [%d] for: %s</info>', $fileOperationsUid, implode(', ', $titles)));
+
+        foreach ($splittableUids as $groupUid) {
+            if ($migratedGroups[$groupUid]->get(GroupKind::FIELD_NAME) === GroupKind::Role->value) {
+                // A role cannot carry permissions itself, it gets the new building block instead.
+                $this->writeSubgroupList($groupUid, RelationList::fromValue($this->subgroupLists[$groupUid] ?? '')->withEntryAfter($fileOperationsUid, null));
+            } else {
+                foreach ($this->subgroupLists as $referencingUid => $list) {
+                    $references = RelationList::fromValue($list);
+                    if ($references->contains($groupUid)) {
+                        $this->writeSubgroupList($referencingUid, $references->withEntryAfter($fileOperationsUid, $groupUid));
+                    }
                 }
-                $this->addNextToReferences(self::GROUPS_TABLE, 'subgroup', $this->backendGroupRepository->findSubgroupLists(), $groupUid, $fileOperationsUid);
-                $this->addNextToReferences(self::USERS_TABLE, 'usergroup', $this->backendUserRepository->findUsergroupLists(), $groupUid, $fileOperationsUid);
+                foreach ($this->usergroupLists as $userUid => $list) {
+                    $references = RelationList::fromValue($list);
+                    if ($references->contains($groupUid)) {
+                        $this->usergroupLists[$userUid] = $references->withEntryAfter($fileOperationsUid, $groupUid)->toString();
+                        $this->updateRecord(self::USERS_TABLE, $userUid, ['usergroup' => $this->usergroupLists[$userUid]]);
+                    }
+                }
+            }
+            $this->updateRecord(self::GROUPS_TABLE, $groupUid, [self::FILE_PERMISSIONS => '']);
+        }
+    }
+
+    /**
+     * Whether every list referencing the group can take one more uid. The largest possible uid
+     * is used for the check, so the result also holds for the uid the new block will get.
+     */
+    private function canInsertNextToReferences(int $groupUid, DatabaseRow $group, ColumnInfo $subgroupColumn, ColumnInfo $usergroupColumn): bool
+    {
+        $largestUid = PHP_INT_MAX;
+        if ($group->get(GroupKind::FIELD_NAME) === GroupKind::Role->value) {
+            return $subgroupColumn->fits(RelationList::fromValue($this->subgroupLists[$groupUid] ?? '')->withEntryAfter($largestUid, null)->toString());
+        }
+        foreach ([[$this->subgroupLists, $subgroupColumn], [$this->usergroupLists, $usergroupColumn]] as [$lists, $column]) {
+            foreach ($lists as $list) {
+                $references = RelationList::fromValue($list);
+                if ($references->contains($groupUid) && !$column->fits($references->withEntryAfter($largestUid, $groupUid)->toString())) {
+                    return false;
+                }
             }
         }
+        return true;
     }
 
     /**
      * @param list<string> $sourceTitles
      */
-    private function createFileOperationsBlock(int $number, string $filePermissions, array $sourceTitles): int
+    private function createFileOperationsBlock(int $number, string $filePermissions, bool $hidden, array $sourceTitles): int
     {
         $connection = $this->connectionPool->getConnectionForTable(self::GROUPS_TABLE);
         $now = time();
@@ -225,6 +327,7 @@ final class KindMigration implements UpgradeWizardInterface, ChattyInterface
             'pid' => 0,
             'tstamp' => $now,
             'crdate' => $now,
+            'hidden' => $hidden ? 1 : 0,
             'title' => sprintf('File operations (migrated %d)', $number),
             'description' => 'Created by the be_groups upgrade wizard from: ' . implode(', ', $sourceTitles),
             GroupKind::FIELD_NAME => GroupKind::FileOperations->value,
@@ -233,34 +336,10 @@ final class KindMigration implements UpgradeWizardInterface, ChattyInterface
         return (int)$connection->lastInsertId();
     }
 
-    /**
-     * Adds $newUid directly after $referencedUid in every list that references it.
-     *
-     * @param array<int, string> $listsByUid
-     */
-    private function addNextToReferences(string $table, string $field, array $listsByUid, int $referencedUid, int $newUid): void
+    private function writeSubgroupList(int $uid, RelationList $list): void
     {
-        foreach ($listsByUid as $uid => $list) {
-            $references = UidList::fromValue($list);
-            if (in_array($referencedUid, $references->uids, true)) {
-                $this->updateRecord($table, $uid, [$field => $this->insertAfter($references, $newUid, $referencedUid)->toString()]);
-            }
-        }
-    }
-
-    private function insertAfter(UidList $list, int $newUid, ?int $afterUid): UidList
-    {
-        if (in_array($newUid, $list->uids, true)) {
-            return $list;
-        }
-        $uids = $list->uids;
-        $position = $afterUid === null ? false : array_search($afterUid, $uids, true);
-        if ($position === false) {
-            $uids[] = $newUid;
-        } else {
-            array_splice($uids, $position + 1, 0, [$newUid]);
-        }
-        return UidList::fromValue($uids);
+        $this->subgroupLists[$uid] = $list->toString();
+        $this->updateRecord(self::GROUPS_TABLE, $uid, ['subgroup' => $this->subgroupLists[$uid]]);
     }
 
     /**
@@ -269,9 +348,8 @@ final class KindMigration implements UpgradeWizardInterface, ChattyInterface
     private function findForeignFieldsWithValue(GroupKind $kind, DatabaseRow $group): array
     {
         $fieldsWithValue = [];
-        foreach ($this->kindFieldResolver->getForeignFieldsWithEmptyValue($kind->value) as $fieldName => $emptyValue) {
-            $value = $group->get($fieldName);
-            if ($value !== '' && $value !== (string)$emptyValue) {
+        foreach (array_keys($this->kindFieldResolver->getForeignFieldsWithEmptyValue($kind->value)) as $fieldName) {
+            if (!$this->kindFieldResolver->isEmptyValue($fieldName, $group->get($fieldName))) {
                 $fieldsWithValue[] = $fieldName;
             }
         }
@@ -279,7 +357,7 @@ final class KindMigration implements UpgradeWizardInterface, ChattyInterface
     }
 
     /**
-     * @param array<string, string> $changes
+     * @param array<string, string|int> $changes
      */
     private function updateRecord(string $table, int $uid, array $changes): void
     {
