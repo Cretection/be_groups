@@ -227,7 +227,9 @@ Rechtefelder anderer Extensions
     :sql:`be_groups` hinzufügt – weil die Extension vor dieser geladen wird
     und das Feld keinem Typ zuordnet –, wird nur bei klassischen Gruppen
     angezeigt und von Regel R1 nicht durchgesetzt. Ordnen Sie solche Felder
-    einem Typ zu, siehe :ref:`developer-fields`.
+    einem Typ zu, siehe :ref:`developer-fields`. Die Konsistenzprüfung
+    meldet Werte in solchen Feldern bei Gruppen anderer Typen, und die
+    Assistenten stellen Gruppen mit Werten darin nicht um.
 
 Abgelehnte Datensätze bei Importen
     Lehnt eine Regel einen Datensatz ab, zum Beispiel eine klassische Gruppe

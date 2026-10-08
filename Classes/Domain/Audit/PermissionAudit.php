@@ -139,6 +139,22 @@ final readonly class PermissionAudit
             );
         }
 
+        $unassignedFields = array_values(array_filter(
+            $this->kindFieldResolver->getUnassignedFieldNames(),
+            fn(string $fieldName): bool => !$this->kindFieldResolver->isEmptyValue($fieldName, $group->get($fieldName)),
+        ));
+        if ($unassignedFields !== []) {
+            $findings[] = $finding(
+                AuditSeverity::Warning,
+                'unassigned-fields',
+                sprintf(
+                    'The fields %s have values, but belong to no kind, so the form of the kind "%s" does not show them. If they grant permissions, assign them to a kind.',
+                    implode(', ', $unassignedFields),
+                    $kind,
+                ),
+            );
+        }
+
         if ($kind === GroupKind::Role->value) {
             foreach ($members as $memberUid) {
                 $member = $groups[$memberUid] ?? null;

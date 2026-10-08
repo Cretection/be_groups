@@ -107,6 +107,12 @@ final readonly class GroupClassifier
             }
         }
         [$concerns, $fieldsWithoutKind] = $this->assignToKinds($values);
+        // Converting the group would hide these fields: no form but the classic one shows them.
+        foreach ($this->kindFieldResolver->getUnassignedFieldNames() as $fieldName) {
+            if (!$this->kindFieldResolver->isEmptyValue($fieldName, $group->get($fieldName))) {
+                $fieldsWithoutKind[] = $fieldName;
+            }
+        }
         $subgroups = $group->get('subgroup');
         $hasSubgroups = $subgroups !== '';
         $proposal = static fn(ClassificationAction $action, ?string $targetKind, string $reason): Classification

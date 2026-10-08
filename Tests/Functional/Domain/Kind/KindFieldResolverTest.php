@@ -28,6 +28,12 @@ final class KindFieldResolverTest extends FunctionalTestCase
     protected array $testExtensionsToLoad = ['cretection/be-groups'];
 
     #[Test]
+    public function everyFieldOfTheClassicFormBelongsToAKindWithoutOtherExtensions(): void
+    {
+        self::assertSame([], $this->get(KindFieldResolver::class)->getUnassignedFieldNames());
+    }
+
+    #[Test]
     public function comparesListsAsSetsUnlessTheirOrderMatters(): void
     {
         $resolver = $this->get(KindFieldResolver::class);

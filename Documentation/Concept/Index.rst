@@ -213,7 +213,9 @@ Permission fields of other extensions
     through the core form – because the extension is loaded before this one
     and does not assign the field to a kind – is only shown for classic
     groups and is not enforced by rule R1. Assign such fields to a kind, see
-    :ref:`developer-fields`.
+    :ref:`developer-fields`. The consistency check reports values in such
+    fields on groups of other kinds, and the assistants do not convert
+    groups that have values in them.
 
 Rejected records during imports
     When a rule rejects a record, for example a classic group while classic

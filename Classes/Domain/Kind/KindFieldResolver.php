@@ -161,6 +161,29 @@ final readonly class KindFieldResolver
     }
 
     /**
+     * Fields that only the form of classic groups shows: fields of other extensions that belong to
+     * no kind, e.g. because the extension is loaded before this one. R1 cannot manage them, so
+     * groups of other kinds must not carry values in them (see the documentation for developers).
+     *
+     * @return list<string>
+     */
+    public function getUnassignedFieldNames(): array
+    {
+        $schema = $this->getSchema();
+        if (!$schema->hasSubSchema(GroupKind::Classic->value)) {
+            return [];
+        }
+        $managedFieldNames = array_flip($this->getManagedFieldNames());
+        $fieldNames = [];
+        foreach ($schema->getSubSchema(GroupKind::Classic->value)->getFields() as $field) {
+            if (!isset($managedFieldNames[$field->getName()]) && !in_array($field->getName(), self::NEUTRAL_FIELDS, true)) {
+                $fieldNames[] = $field->getName();
+            }
+        }
+        return $fieldNames;
+    }
+
+    /**
      * Whether two stored values of a permission field grant the same.
      *
      * Lists of relation and select fields are compared as sets, as TYPO3 merges them;

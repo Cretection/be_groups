@@ -221,6 +221,12 @@ Konsistenzprüfung. Sie liest alle Gruppen und Benutzer und ändert nichts:
           Rollen hinzufügt. Neue Benutzer erhalten standardmäßig alle
           Dateioperationen (Core-Standardwert von :sql:`file_permissions`);
           entfernen Sie sie im Benutzer-Datensatz.
+    *   - ``unassigned-fields``
+        - Warnung
+        - Eine Rolle oder ein Baustein hat Werte in Feldern anderer
+          Extensions, die zu keinem Typ gehören; sein Formular zeigt sie
+          also nicht. Gewähren sie Rechte, ordnen Sie die Felder einem Typ
+          zu, siehe :ref:`developer-fields`.
     *   - ``unclean-group-list``
         - Warnung
         - Die Untergruppen einer Gruppe oder die Gruppen eines Benutzers

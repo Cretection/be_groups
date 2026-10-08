@@ -215,6 +215,12 @@ consistency check. It reads all groups and users and changes nothing:
           those of the roles. New users get all file operations by default
           (core default of :sql:`file_permissions`); clear them in the user
           record.
+    *   - ``unassigned-fields``
+        - warning
+        - A role or a building block has values in fields of other
+          extensions that belong to no kind, so its form does not show them.
+          If they grant permissions, assign the fields to a kind, see
+          :ref:`developer-fields`.
     *   - ``unclean-group-list``
         - warning
         - The subgroups of a group or the groups of a user contain duplicates
