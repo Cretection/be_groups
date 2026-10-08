@@ -15,7 +15,7 @@
 ,13,0,"Role with ignored entry",0,0,"role","be_groups_4,1","","","",""
 "be_users"
 ,"uid","pid","username","admin","deleted","usergroup","options","file_permissions","allowed_languages"
-,1,0,"admin",1,0,"1",0,"readFile",""
+,1,0,"admin",1,0,"1,1",0,"readFile",""
 ,2,0,"editor",0,0,"3",3,"",""
 ,3,0,"direct",0,0,"1",3,"",""
 ,4,0,"own-files",0,0,"3",3,"readFile",""

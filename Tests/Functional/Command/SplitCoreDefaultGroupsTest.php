@@ -90,11 +90,13 @@ final class SplitCoreDefaultGroupsTest extends FunctionalTestCase
             implode(', ', array_map(static fn(int $uid): string => $titles[$uid] ?? (string)$uid, RelationList::fromValue($group->get('subgroup'))->getUids())),
         );
         self::assertSame([
-            'Editor' => 'role [ACL_Editor, DBM_Editor, FM_Editor]',
-            'Advanced Editor' => 'role [ACL_Advanced Editor, DBM_Advanced Editor, FM_Advanced Editor]',
+            'Editor' => 'role [PG_Editor, ACL_Editor, DBM_Editor, FM_Editor]',
+            'Advanced Editor' => 'role [PG_Advanced Editor, ACL_Advanced Editor, DBM_Advanced Editor, FM_Advanced Editor]',
+            'PG_Editor' => 'page_group []',
             'ACL_Editor' => 'acl []',
             'DBM_Editor' => 'db_mount []',
             'FM_Editor' => 'file_mount []',
+            'PG_Advanced Editor' => 'page_group []',
             'ACL_Advanced Editor' => 'acl []',
             'DBM_Advanced Editor' => 'db_mount []',
             'FM_Advanced Editor' => 'file_mount []',

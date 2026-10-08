@@ -21,6 +21,9 @@ use Cretection\BeGroups\Domain\Repository\BackendGroupRepository;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
+use TYPO3\CMS\Core\Database\Connection;
+use TYPO3\CMS\Core\DataHandling\DataHandler;
+use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\TestingFramework\Core\Functional\FunctionalTestCase;
 
 /**
@@ -33,7 +36,12 @@ final class GroupPermissionResolverTest extends FunctionalTestCase
 {
     private const MODULES = ['web_layout', 'web_list', 'web_info', 'records'];
 
-    protected array $testExtensionsToLoad = ['cretection/be-groups'];
+    protected array $coreExtensionsToLoad = ['workspaces'];
+
+    protected array $testExtensionsToLoad = [
+        'cretection/be-groups',
+        __DIR__ . '/../../Fixtures/Extensions/be_groups_test_tsconfig',
+    ];
 
     protected function setUp(): void
     {
@@ -54,6 +62,9 @@ final class GroupPermissionResolverTest extends FunctionalTestCase
             'order of the groups' => [5, '2,4'],
             'root page mount' => [6, '9,1'],
             'usergroup entry TYPO3 ignores' => [7, 'be_groups_1,2'],
+            'included TSconfig file' => [8, '1,10'],
+            'page mounts TYPO3 drops' => [9, '11'],
+            'hidden flag other than 1' => [10, '1,12'],
         ];
     }
 
@@ -73,9 +84,17 @@ final class GroupPermissionResolverTest extends FunctionalTestCase
         foreach (self::MODULES as $module) {
             self::assertSame($backendUser->check('modules', $module), in_array($module, $granted->fields['groupMods'], true), $module);
         }
+        foreach (['pages', 'tt_content', 'sys_note'] as $table) {
+            self::assertSame($backendUser->check('tables_select', $table), in_array($table, $granted->fields['tables_select'], true), $table);
+        }
         $webmounts = $backendUser->getWebmounts();
         sort($webmounts);
         self::assertSame($webmounts, array_map(self::toInt(...), $granted->fields['db_mountpoints']));
+        $categoryMounts = array_values(array_map(static fn(mixed $uid): string => is_scalar($uid) ? (string)$uid : '', $backendUser->getCategoryMountPoints()));
+        sort($categoryMounts);
+        self::assertSame($categoryMounts, $granted->fields['category_perms']);
+        // Live editing (workspace_perms bit 1) is the only workspace the users may have.
+        self::assertSame(($granted->workspacePermissions & 1) === 1 ? 0 : -99, $backendUser->workspace);
         $options = $backendUser->getTSConfig()['options.'] ?? [];
         self::assertSame(is_array($options) ? ($options['probe'] ?? null) : null, $this->getLastProbe($granted));
     }
@@ -85,11 +104,44 @@ final class GroupPermissionResolverTest extends FunctionalTestCase
         return is_numeric($value) ? (int)$value : 0;
     }
 
+    #[Test]
+    #[DataProvider('userDataProvider')]
+    public function hasTheOwnerGroupOfNewPagesThatTypo3Uses(int $userUid, string $usergroupList): void
+    {
+        // Administrators may create pages anywhere; their groups are resolved all the same.
+        $this->getConnectionPool()->getConnectionForTable('be_users')->update('be_users', ['admin' => 1], ['uid' => $userUid]);
+        $this->setUpBackendUser($userUid);
+        $groups = [];
+        foreach ($this->get(BackendGroupRepository::class)->findAll() as $group) {
+            $groups[$group->getUid()] = $group;
+        }
+
+        $dataHandler = GeneralUtility::makeInstance(DataHandler::class);
+        $dataHandler->start(['pages' => ['NEW1' => ['pid' => 0, 'title' => 'New page']]], []);
+        $dataHandler->process_datamap();
+
+        $queryBuilder = $this->getConnectionPool()->getQueryBuilderForTable('pages');
+        // New pages are hidden.
+        $queryBuilder->getRestrictions()->removeAll();
+        $page = $queryBuilder->select('perms_groupid')->from('pages')
+            ->where($queryBuilder->expr()->eq('uid', $queryBuilder->createNamedParameter($dataHandler->substNEWwithIDs['NEW1'] ?? 0, Connection::PARAM_INT)))
+            ->executeQuery()
+            ->fetchAssociative();
+        self::assertIsArray($page);
+        self::assertSame(
+            $this->get(GroupPermissionResolver::class)->resolve($usergroupList, $groups)->firstGroupUid,
+            self::toInt($page['perms_groupid']),
+        );
+    }
+
     private function getLastProbe(GrantedPermissions $granted): ?string
     {
         $probe = null;
         foreach ($granted->tsConfig as $tsConfig) {
-            if (preg_match('/^options\.probe = (\d+)$/', $tsConfig, $matches) === 1) {
+            $content = str_starts_with($tsConfig, 'include: ')
+                ? (string)file_get_contents(GeneralUtility::getFileAbsFileName(substr($tsConfig, 9)))
+                : $tsConfig;
+            if (preg_match('/^options\.probe = (\w+)$/m', $content, $matches) === 1) {
                 $probe = $matches[1];
             }
         }

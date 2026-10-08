@@ -120,21 +120,25 @@ final readonly class BackendUserRepository
     }
 
     /**
-     * @return list<string> every distinct group list of the non-deleted users
+     * Returns all users with all fields, including deleted and disabled ones, ordered by uid.
+     *
+     * @return list<DatabaseRow>
      */
-    public function findDistinctUsergroupLists(): array
+    public function findAllIncludingDeleted(): array
     {
-        $result = $this->createQueryBuilder()
-            ->select('usergroup')
-            ->distinct()
+        $queryBuilder = $this->connectionPool->getQueryBuilderForTable(self::TABLE);
+        $queryBuilder->getRestrictions()->removeAll();
+        $result = $queryBuilder
+            ->select('*')
             ->from(self::TABLE)
+            ->orderBy('uid')
             ->executeQuery();
 
-        $lists = [];
+        $rows = [];
         while ($row = $result->fetchAssociative()) {
-            $lists[] = DatabaseRow::fromArray($row)->get('usergroup');
+            $rows[] = DatabaseRow::fromArray($row);
         }
-        return array_values(array_unique($lists));
+        return $rows;
     }
 
     private function createQueryBuilder(): QueryBuilder

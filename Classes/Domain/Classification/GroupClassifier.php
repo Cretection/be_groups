@@ -47,6 +47,7 @@ final readonly class GroupClassifier
         private PageOwnerRepository $pageOwnerRepository,
         private KindRegistry $kindRegistry,
         private KindFieldResolver $kindFieldResolver,
+        private GroupPermissionResolver $groupPermissionResolver,
     ) {}
 
     /**
@@ -71,16 +72,23 @@ final readonly class GroupClassifier
         $directUserCounts = $this->countDirectUsers();
         $pageOwners = array_flip($this->pageOwnerRepository->findOwnerGroupUids());
 
+        $groupsByUid = [];
+        foreach ($groups as $group) {
+            $groupsByUid[$group->getUid()] = $group;
+        }
         $classifications = [];
         foreach ($groups as $group) {
             if (($onlyUid === null || $group->getUid() === $onlyUid) && $group->get(GroupKind::FIELD_NAME) === GroupKind::Classic->value) {
-                $classifications[] = $this->classifyGroup($group, $directUserCounts[$group->getUid()] ?? 0, isset($pageOwners[$group->getUid()]));
+                $classifications[] = $this->classifyGroup($group, $groupsByUid, $directUserCounts[$group->getUid()] ?? 0, isset($pageOwners[$group->getUid()]));
             }
         }
         return $classifications;
     }
 
-    private function classifyGroup(DatabaseRow $group, int $directUsers, bool $ownsPages): Classification
+    /**
+     * @param array<int, DatabaseRow> $groups all non-deleted groups by uid
+     */
+    private function classifyGroup(DatabaseRow $group, array $groups, int $directUsers, bool $ownsPages): Classification
     {
         $values = [];
         foreach ($this->kindFieldResolver->getManagedFieldNames() as $fieldName) {
@@ -96,7 +104,7 @@ final readonly class GroupClassifier
 
         if (!RelationList::isCanonical($subgroups)) {
             return $proposal(ClassificationAction::Manual, null, sprintf(
-                'The subgroups "%s" contain duplicates or entries TYPO3 ignores. Clean them up first; saving the group in the backend makes every entry effective.',
+                'The subgroups "%s" contain duplicates or entries that TYPO3 and the backend form read differently, e.g. "be_groups_5" or "05". Clean them up first; saving the group in the backend can add or remove groups.',
                 $subgroups,
             ));
         }
@@ -130,7 +138,14 @@ final readonly class GroupClassifier
         } else {
             $reason = sprintf('Is assigned to %d user(s) directly, so it stays their role.', $directUsers);
         }
-        return $proposal(ClassificationAction::Split, GroupKind::Role->value, $reason);
+        // TYPO3 makes the first group a user resolves the owner group of the pages the user creates. If that
+        // is the group itself (no active subgroups), a new page group takes its place as first member: it
+        // belongs to this role only, so the owner group keeps exactly its users.
+        $groups[$group->getUid()] = $group->with(['hidden' => '0']);
+        if ($this->groupPermissionResolver->resolve((string)$group->getUid(), $groups)->firstGroupUid === $group->getUid()) {
+            $concerns = [new Concern(GroupKind::PageGroup->value, []), ...$concerns];
+        }
+        return new Classification($group->getUid(), $group->get('title'), $group->get('hidden') === '1', ClassificationAction::Split, GroupKind::Role->value, $concerns, $reason);
     }
 
     /**

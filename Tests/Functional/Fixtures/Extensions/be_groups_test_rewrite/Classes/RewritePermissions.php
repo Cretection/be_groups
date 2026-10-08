@@ -15,17 +15,23 @@ declare(strict_types=1);
 
 namespace Cretection\BeGroups\Tests\Functional\Fixtures\Extensions\be_groups_test_rewrite\Classes;
 
+use TYPO3\CMS\Core\Database\Connection;
 use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\CMS\Core\DataHandling\DataHandler;
 
 /**
- * Simulates another extension that changes permissions while groups are saved
- * (uids and titles refer to Tests/Functional/Domain/Classification/Fixtures/ClassicGroups.csv):
+ * Simulates another extension that changes data while groups are saved. What it changes is
+ * chosen by the description of the saved group ("rewrite:…"), or by the title of new groups:
  *
- * - the new building block "DBM_Editors" gets page 2 as additional page mount,
- * - group 1 gets page 2 as additional page mount when its kind changes,
- * - groups 6 and 9 get the existing group 12 as additional subgroup when they become a role,
- * - a new group titled "ACL_Database error" causes a database error.
+ * - new group "DBM_Editors": page 2 is added to the page mounts,
+ * - new group "ACL_Database error": a query fails,
+ * - new group "ACL_Unknown column": a column that does not exist is written,
+ * - "rewrite:page-mount": page 2 is added to the page mounts when the kind changes,
+ * - "rewrite:add-subgroup": group 12 is added to the subgroups of the new role,
+ * - "rewrite:widen-other-group": group 12 gets another module,
+ * - "rewrite:add-group-to-user": user 2 gets group 12,
+ * - "rewrite:show-group": the group is no longer hidden,
+ * - "rewrite:move-first-subgroup-last": the first subgroup of the new role becomes the last one.
  */
 final readonly class RewritePermissions
 {
@@ -41,18 +47,41 @@ final readonly class RewritePermissions
         if ($table !== 'be_groups') {
             return;
         }
-        $title = $fieldArray['title'] ?? '';
-        if ($status === 'new' && $title === 'DBM_Editors') {
-            $fieldArray['db_mountpoints'] = '1,2';
+        if ($status === 'new') {
+            match ($fieldArray['title'] ?? '') {
+                'DBM_Editors' => $fieldArray['db_mountpoints'] = '1,2',
+                'ACL_Database error' => $this->connectionPool->getConnectionForTable('be_groups')->executeQuery('SELECT * FROM be_groups_table_that_does_not_exist'),
+                'ACL_Unknown column' => $fieldArray['column_that_does_not_exist'] = 1,
+                default => null,
+            };
+            return;
         }
-        if ($status === 'new' && $title === 'ACL_Database error') {
-            $this->connectionPool->getConnectionForTable('be_groups')->executeQuery('SELECT * FROM be_groups_table_that_does_not_exist');
+        if (!isset($fieldArray['tx_begroups_kind'])) {
+            return;
         }
-        if ($status === 'update' && $id === 1 && isset($fieldArray['tx_begroups_kind'])) {
-            $fieldArray['db_mountpoints'] = '1,2';
-        }
-        if ($status === 'update' && in_array($id, [6, 9], true) && ($fieldArray['tx_begroups_kind'] ?? '') === 'role' && is_string($fieldArray['subgroup'] ?? null)) {
-            $fieldArray['subgroup'] .= ',12';
-        }
+        $connection = $this->connectionPool->getConnectionForTable('be_groups');
+        $queryBuilder = $this->connectionPool->getQueryBuilderForTable('be_groups');
+        // Hidden groups as well
+        $queryBuilder->getRestrictions()->removeAll();
+        $description = $queryBuilder->select('description')->from('be_groups')
+            ->where($queryBuilder->expr()->eq('uid', $queryBuilder->createNamedParameter((int)$id, Connection::PARAM_INT)))
+            ->executeQuery()
+            ->fetchOne();
+        match ($description) {
+            'rewrite:page-mount' => $fieldArray['db_mountpoints'] = '1,2',
+            'rewrite:add-subgroup' => $fieldArray['subgroup'] = (is_string($fieldArray['subgroup'] ?? null) ? $fieldArray['subgroup'] : '') . ',12',
+            'rewrite:widen-other-group' => $connection->update('be_groups', ['groupMods' => 'web_list,web_info'], ['uid' => 12]),
+            'rewrite:add-group-to-user' => $this->connectionPool->getConnectionForTable('be_users')->update('be_users', ['usergroup' => '2,12'], ['uid' => 2]),
+            'rewrite:show-group' => $fieldArray['hidden'] = 0,
+            'rewrite:move-first-subgroup-last' => $fieldArray['subgroup'] = $this->moveFirstEntryLast($fieldArray['subgroup'] ?? ''),
+            default => null,
+        };
+    }
+
+    private function moveFirstEntryLast(mixed $list): string
+    {
+        $entries = explode(',', is_string($list) ? $list : '');
+        $entries[] = array_shift($entries);
+        return implode(',', $entries);
     }
 }

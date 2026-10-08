@@ -156,9 +156,11 @@ Konsistenzprüfung. Sie liest alle Gruppen und Benutzer und ändert nichts:
     *   - ``unclean-group-list``
         - Warnung
         - Die Untergruppen einer Gruppe oder die Gruppen eines Benutzers
-          enthalten Duplikate oder Einträge, die TYPO3 ignoriert, etwa
-          ``be_groups_5``. Speichern im Backend macht jeden Eintrag wirksam;
-          prüfen Sie sie vorher.
+          enthalten Duplikate oder Einträge, die TYPO3 und das
+          Backend-Formular unterschiedlich lesen, etwa ``be_groups_5`` oder
+          ``05``. Speichern im Backend kann Gruppen hinzufügen oder
+          entfernen; prüfen Sie sie vorher.
+    *   - ``user-ignores-group-mounts``
         - Warnung
         - Das Feld :sql:`options` eines Benutzers (im englischen Backend
           :guilabel:`Mount from groups`) umfasst nicht alle Seitenbaum- und

@@ -64,9 +64,10 @@ final class SplitCommandTest extends FunctionalTestCase
         $commandTester = new CommandTester($this->get(SplitCommand::class));
 
         self::assertSame(Command::SUCCESS, $commandTester->execute(['uids' => ['2', '6']]));
-        self::assertSame($groupCount + 5, $this->countGroups());
-        self::assertStringContainsString('be_groups:2 Editors: converted The group is now a role with 4 new building block(s).', $commandTester->getDisplay());
-        self::assertStringContainsString('be_groups:6 Direct mounts: converted The group is now a role with 1 new building block(s).', $commandTester->getDisplay());
+        // Both groups have no subgroups, so each gets a page group as owner of new pages.
+        self::assertSame($groupCount + 7, $this->countGroups());
+        self::assertStringContainsString('be_groups:2 Editors: converted The group is now a role with 5 new building block(s).', $commandTester->getDisplay());
+        self::assertStringContainsString('be_groups:6 Direct mounts: converted The group is now a role with 2 new building block(s).', $commandTester->getDisplay());
         self::assertStringContainsString('2 group(s) split.', $commandTester->getDisplay());
     }
 

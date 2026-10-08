@@ -38,10 +38,11 @@ final readonly class RelationList
     ) {}
 
     /**
-     * Whether a stored list reads the same for TYPO3 and for the DataHandler: only positive numbers,
-     * no duplicates. When resolving groups, TYPO3 ignores other entries (e.g. "be_groups_5") and
-     * applies TSconfig at the last occurrence of a duplicate; the DataHandler makes such entries
-     * effective and keeps the first occurrence.
+     * Whether a stored list reads the same for TYPO3 and for the DataHandler: only positive numbers
+     * without leading zeros or signs, no duplicates. When resolving groups, TYPO3 casts each entry to
+     * a number ("be_groups_5" matches no group, "05" is group 5) and applies TSconfig at the last
+     * occurrence of a duplicate; the DataHandler understands "be_groups_5" as group 5, drops "05" and
+     * keeps the first occurrence.
      */
     public static function isCanonical(string $storedList): bool
     {

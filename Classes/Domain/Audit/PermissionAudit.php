@@ -75,6 +75,10 @@ final readonly class PermissionAudit
             $findings = [...$findings, ...$this->checkGroup($group, $groups), ...$this->checkList(self::GROUPS_TABLE, $group, 'subgroup', $group->get('title'))];
         }
         foreach ($this->backendUserRepository->findAllForAudit(self::USER_PERMISSION_FIELDS) as $user) {
+            if ($user->get('admin') === '1') {
+                // Administrators have all permissions; the role model does not apply to them.
+                continue;
+            }
             $findings = [...$findings, ...$this->checkUser($user, $groups), ...$this->checkList(self::USERS_TABLE, $user, 'usergroup', $user->get('username'))];
         }
 
@@ -158,10 +162,6 @@ final readonly class PermissionAudit
      */
     private function checkUser(DatabaseRow $user, array $groups): array
     {
-        if ($user->get('admin') === '1') {
-            // Administrators have all permissions; the role model does not apply to them.
-            return [];
-        }
         $title = $this->describe($user->get('username'), $user->get('disable') === '1');
         $finding = fn(AuditSeverity $severity, string $identifier, string $message): AuditFinding
             => new AuditFinding($severity, $identifier, self::USERS_TABLE, $user->getUid(), $title, $message);
@@ -202,7 +202,7 @@ final readonly class PermissionAudit
     }
 
     /**
-     * Reports lists of groups that TYPO3 and the DataHandler read differently.
+     * Reports lists of groups that TYPO3 and the DataHandler read differently (see RelationList::isCanonical()).
      *
      * @return list<AuditFinding>
      */
@@ -219,7 +219,7 @@ final readonly class PermissionAudit
             $record->getUid(),
             $this->describe($title, $record->get($disabledField) === '1'),
             sprintf(
-                'The field "%s" ("%s") contains duplicates or entries TYPO3 ignores. Saving the record in the backend makes every entry effective; check them first.',
+                'The field "%s" ("%s") contains duplicates or entries that TYPO3 and the backend form read differently, e.g. "be_groups_5" or "05". Saving the record in the backend can add or remove groups; check them first.',
                 $fieldName,
                 $record->get($fieldName),
             ),

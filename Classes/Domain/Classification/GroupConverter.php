@@ -31,10 +31,15 @@ use TYPO3\CMS\Core\Utility\GeneralUtility;
  * Converts classic groups as proposed by the GroupClassifier.
  *
  * All changes are written through the DataHandler (rules, system log, history, reference
- * index) within one transaction per group. Afterwards, for every combination of groups a
- * user has, the permissions TYPO3 grants are compared with those before the conversion (see
- * GroupPermissionResolver). If anything differs, the transaction is rolled back and the
- * group stays unchanged.
+ * index) within one transaction per group. Before it is committed, the conversion is verified:
+ *
+ * - All other groups and all users are unchanged, and the group itself only changed its kind,
+ *   its subgroups and the permission fields that moved into the building blocks. This also
+ *   catches changes of other extensions while saving.
+ * - For every combination of groups a user has, and for the group itself, TYPO3 grants the
+ *   same as before (see GroupPermissionResolver).
+ *
+ * If anything differs, the transaction is rolled back and the group stays unchanged.
  *
  * Requires an authenticated administrator ($GLOBALS['BE_USER']).
  *
@@ -61,8 +66,9 @@ final readonly class GroupConverter
     {
         return $this->transactional($uid, function () use ($uid): ConversionResult {
             $classification = $this->groupClassifier->classify($uid);
-            $groupsBefore = $this->findGroups();
-            if ($classification === null || !isset($groupsBefore[$uid])
+            $before = $this->takeSnapshot();
+            $groupBefore = $before->groups[$uid] ?? null;
+            if ($classification === null || $groupBefore === null || $groupBefore->get('deleted') === '1'
                 || $classification->action !== ClassificationAction::ChangeKind || $classification->targetKind === null
             ) {
                 return new ConversionResult($uid, ConversionStatus::Skipped, 'Not a classic group whose kind can be changed, see begroups:classify.');
@@ -76,11 +82,11 @@ final readonly class GroupConverter
             }
             // Also covers permission fields of other extensions, which TYPO3 does not merge itself.
             foreach ($this->kindFieldResolver->getManagedFieldNames() as $fieldName) {
-                if (!$this->kindFieldResolver->isSameValue($fieldName, $groupsBefore[$uid]->get($fieldName), $after->get($fieldName))) {
+                if (!$this->kindFieldResolver->isSameValue($fieldName, $groupBefore->get($fieldName), $after->get($fieldName))) {
                     return new ConversionResult($uid, ConversionStatus::Failed, sprintf('The field "%s" would change; nothing was changed.', $fieldName));
                 }
             }
-            $change = $this->findPermissionChange($uid, $groupsBefore, []);
+            $change = $this->findChange($uid, $before, [], null);
             if ($change !== null) {
                 return new ConversionResult($uid, ConversionStatus::Failed, $change);
             }
@@ -96,9 +102,9 @@ final readonly class GroupConverter
     {
         return $this->transactional($uid, function () use ($uid): ConversionResult {
             $classification = $this->groupClassifier->classify($uid);
-            $groupsBefore = $this->findGroups();
-            $group = $groupsBefore[$uid] ?? null;
-            if ($classification === null || $group === null || $classification->action !== ClassificationAction::Split) {
+            $before = $this->takeSnapshot();
+            $group = $before->groups[$uid] ?? null;
+            if ($classification === null || $group === null || $group->get('deleted') === '1' || $classification->action !== ClassificationAction::Split) {
                 return new ConversionResult($uid, ConversionStatus::Skipped, 'Not a classic group that can be split, see begroups:classify.');
             }
 
@@ -132,7 +138,12 @@ final readonly class GroupConverter
                     return new ConversionResult($uid, ConversionStatus::Failed, sprintf('The field "%s" of the role could not be emptied; nothing was changed.', $fieldName));
                 }
             }
-            $change = $this->findPermissionChange($uid, $groupsBefore, $blockUids);
+            // See GroupClassifier: a page group without permissions as first member takes over as owner of new pages.
+            $firstConcern = $classification->concerns[0] ?? null;
+            $ownerPageGroupUid = $firstConcern !== null && $firstConcern->kind === GroupKind::PageGroup->value && $firstConcern->values === []
+                ? $blockUids[0]
+                : null;
+            $change = $this->findChange($uid, $before, $blockUids, $ownerPageGroupUid);
             if ($change !== null) {
                 return new ConversionResult($uid, ConversionStatus::Failed, $change);
             }
@@ -151,8 +162,9 @@ final readonly class GroupConverter
      */
     private function createBlocks(DatabaseRow $group, Classification $classification): ?array
     {
+        $concerns = $classification->concerns;
         $datamap = [];
-        foreach ($classification->concerns as $index => $concern) {
+        foreach ($concerns as $index => $concern) {
             $datamap[self::TABLE]['NEW_begroups_split_' . $index] = [
                 'pid' => (int)$group->get('pid'),
                 'title' => (GroupKind::tryFrom($concern->kind)?->prefix() ?? strtoupper($concern->kind) . '_') . $group->get('title'),
@@ -169,7 +181,7 @@ final readonly class GroupConverter
 
         $dataHandler = $this->process($datamap);
         $blockUids = [];
-        foreach ($classification->concerns as $position => $plannedConcern) {
+        foreach ($concerns as $position => $plannedConcern) {
             $blockUid = $dataHandler->substNEWwithIDs['NEW_begroups_split_' . $position] ?? null;
             $block = is_int($blockUid) ? $this->backendGroupRepository->findByUid($blockUid) : null;
             if ($block === null || !$this->grantsExactly($block, $plannedConcern)) {
@@ -193,23 +205,69 @@ final readonly class GroupConverter
         return true;
     }
 
+    private function takeSnapshot(): ConversionSnapshot
+    {
+        $groups = [];
+        foreach ($this->backendGroupRepository->findAllIncludingDeleted() as $group) {
+            $groups[$group->getUid()] = $group;
+        }
+        $users = [];
+        foreach ($this->backendUserRepository->findAllIncludingDeleted() as $user) {
+            $users[$user->getUid()] = $user;
+        }
+        return new ConversionSnapshot($groups, $users);
+    }
+
+    /**
+     * @param list<int> $createdUids
+     * @param int|null $ownerPageGroupUid the new page group that may take the place of the group as owner of new pages
+     * @return string|null a description of the change, or null if nothing changed
+     */
+    private function findChange(int $uid, ConversionSnapshot $before, array $createdUids, ?int $ownerPageGroupUid): ?string
+    {
+        $after = $this->takeSnapshot();
+        foreach ($before->users as $userUid => $user) {
+            if (($after->users[$userUid] ?? null)?->values !== $user->values) {
+                return sprintf('The user %d would change while saving; nothing was changed.', $userUid);
+            }
+        }
+        foreach ($after->groups as $groupUid => $group) {
+            if ($groupUid !== $uid && !in_array($groupUid, $createdUids, true) && ($before->groups[$groupUid] ?? null)?->values !== $group->values) {
+                return sprintf('The group %d would change while saving; nothing was changed.', $groupUid);
+            }
+        }
+        $changingFields = [
+            'tstamp' => true,
+            GroupKind::FIELD_NAME => true,
+            'subgroup' => true,
+        ] + array_fill_keys($this->kindFieldResolver->getManagedFieldNames(), true);
+        foreach ($before->groups[$uid]->values as $fieldName => $value) {
+            if (!isset($changingFields[$fieldName]) && ($after->groups[$uid]->values[$fieldName] ?? null) !== $value) {
+                return sprintf('The field "%s" of the group would change; nothing was changed.', $fieldName);
+            }
+        }
+        return $this->findPermissionChange($uid, $before->getActiveGroups(), $after->getActiveGroups(), $before->getUsergroupLists(), $createdUids, $ownerPageGroupUid);
+    }
+
     /**
      * Compares what TYPO3 grants every combination of groups a user has, before and after the
      * conversion, and what the group itself grants (also while it is hidden or not assigned).
-     * Only the new building blocks may be added to the resolved groups, and only one of them may
-     * become the owner group of new pages in place of the converted group: they are new and only
-     * reachable through it, so they have exactly the users of the converted group.
+     * Only the new building blocks may be added to the resolved groups. The owner group of new
+     * pages may only change from the group to the new page group: it is new and only reachable
+     * through the group, so it has exactly the users of the group.
+     *
+     * Combinations without the group are not compared: all other groups and users are unchanged.
      *
      * @param array<int, DatabaseRow> $groupsBefore
+     * @param array<int, DatabaseRow> $groupsAfter
+     * @param list<string> $usergroupLists
      * @param list<int> $createdUids
-     * @return string|null a description of the change, or null if nothing changes
      */
-    private function findPermissionChange(int $uid, array $groupsBefore, array $createdUids): ?string
+    private function findPermissionChange(int $uid, array $groupsBefore, array $groupsAfter, array $usergroupLists, array $createdUids, ?int $ownerPageGroupUid): ?string
     {
-        $groupsAfter = $this->findGroups();
         $checks = array_map(
             static fn(string $usergroupList): array => [$usergroupList, sprintf('users with the groups "%s"', $usergroupList), $groupsBefore, $groupsAfter],
-            $this->backendUserRepository->findDistinctUsergroupLists(),
+            $usergroupLists,
         );
         $checks[] = [(string)$uid, 'the group itself', $this->withVisibleGroup($groupsBefore, $uid), $this->withVisibleGroup($groupsAfter, $uid)];
 
@@ -229,7 +287,7 @@ final readonly class GroupConverter
                 $after->tsConfig !== $before->tsConfig => 'TSconfig',
                 array_values(array_diff($after->groupUids, $createdUids)) !== $before->groupUids => 'group memberships',
                 $after->firstGroupUid !== $before->firstGroupUid
-                    && !($before->firstGroupUid === $uid && in_array($after->firstGroupUid, $createdUids, true)) => 'owner group of new pages',
+                    && !($before->firstGroupUid === $uid && $after->firstGroupUid === $ownerPageGroupUid) => 'owner group of new pages',
                 default => null,
             };
             if ($change !== null) {
@@ -247,18 +305,6 @@ final readonly class GroupConverter
     {
         if (isset($groups[$uid])) {
             $groups[$uid] = $groups[$uid]->with(['hidden' => '0']);
-        }
-        return $groups;
-    }
-
-    /**
-     * @return array<int, DatabaseRow> all non-deleted groups by uid
-     */
-    private function findGroups(): array
-    {
-        $groups = [];
-        foreach ($this->backendGroupRepository->findAll() as $group) {
-            $groups[$group->getUid()] = $group;
         }
         return $groups;
     }

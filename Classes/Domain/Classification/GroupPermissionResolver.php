@@ -83,7 +83,7 @@ final readonly class GroupPermissionResolver
 
     /**
      * Reads the values of a field the way TYPO3 uses them: page mounts as numbers including the
-     * root "0" (getWebmounts()), file mounts as numbers of existing records (getFileMountRecords()),
+     * root "0" (filterValidWebMounts(), getWebmounts()), file mounts as numbers of existing records (getFileMountRecords()),
      * category mounts without empty values (getCategoryMountPoints()), all others as strings.
      *
      * @return list<string>
@@ -92,7 +92,10 @@ final readonly class GroupPermissionResolver
     {
         $values = GeneralUtility::trimExplode(',', $value, true);
         return match ($fieldName) {
-            'db_mountpoints' => array_map(static fn(string $uid): string => (string)(int)$uid, $values),
+            'db_mountpoints' => array_map(
+                static fn(string $uid): string => (string)(int)$uid,
+                array_values(array_filter($values, self::isKeptWebMount(...))),
+            ),
             'file_mountpoints' => array_map(strval(...), array_values(array_filter(
                 GeneralUtility::intExplode(',', $value, true),
                 static fn(int $uid): bool => $uid > 0,
@@ -100,6 +103,17 @@ final readonly class GroupPermissionResolver
             'category_perms' => array_values(array_filter($values, static fn(string $uid): bool => (bool)$uid)),
             default => $values,
         };
+    }
+
+    /**
+     * BackendUserAuthentication::filterValidWebMounts() drops every entry that is greater than 0 in
+     * PHP comparison and no key of the readable pages, i.e. no plain positive number (e.g. "05", "+5",
+     * "abc"); all other entries remain and are read as numbers by getWebmounts().
+     */
+    private static function isKeptWebMount(string $entry): bool
+    {
+        $isGreaterThanZero = is_numeric($entry) ? (float)$entry > 0 : strcmp($entry, '0') > 0;
+        return !$isGreaterThanZero || preg_match('/^[1-9]\d*$/', $entry) === 1;
     }
 
     /**
@@ -113,7 +127,8 @@ final readonly class GroupPermissionResolver
         $resolved = [];
         foreach ($groupUids as $uid) {
             $group = $groups[$uid] ?? null;
-            if ($group === null || $group->get('hidden') === '1' || in_array($uid, $ancestors, true)) {
+            // The HiddenRestriction only accepts hidden = 0.
+            if ($group === null || $group->get('hidden') !== '0' || in_array($uid, $ancestors, true)) {
                 continue;
             }
             $subgroupUids = GeneralUtility::intExplode(',', $group->get('subgroup'), true);

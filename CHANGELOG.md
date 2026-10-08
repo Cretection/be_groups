@@ -60,10 +60,13 @@ Relaunch for TYPO3 14.3 LTS (version 1.0.0).
   combine other groups (role) or only own pages (page group).
 - Assistant `begroups:split` (uids or `--all`, `--dry-run`): moves the
   permissions of a classic group into new building blocks, one per kind, and
-  makes the group a role with the same uid, so assignments stay unchanged.
+  makes the group a role with the same uid, so assignments stay unchanged. A
+  new page group takes over as owner group of new pages where the group itself
+  had this task.
 - Both assistants write through the DataHandler in one transaction per group.
-  They compare what TYPO3 grants every combination of groups of the users and
-  the group itself before and after, and roll back if anything differs.
+  They verify that all other groups and all users are unchanged and that TYPO3
+  grants every combination of groups of the users, and the group itself, the
+  same as before, and roll back otherwise.
 - `begroups:audit` reports lists of groups with duplicates or entries TYPO3
   ignores (`unclean-group-list`).
 - Extension setting `allowClassicGroups` (default: enabled). It takes effect

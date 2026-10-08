@@ -146,7 +146,8 @@ Rechte zu verändern. Beide zeigen ihren Plan zuerst mit ``--dry-run``:
     Gruppen, über die Sie entscheiden müssen, jeweils mit Begründung – zum
     Beispiel eine leere Gruppe, ein Rechtefeld, das zu keinem Typ gehört,
     die Wurzel des Seitenbaums als Freigabe oder Untergruppen mit Duplikaten
-    oder Einträgen, die TYPO3 ignoriert (etwa ``be_groups_5``).
+    oder Einträgen, die TYPO3 und das Backend-Formular unterschiedlich lesen
+    (etwa ``be_groups_5`` oder ``05``).
 
 ``begroups:split`` teilt die per uid genannten Gruppen auf, oder mit
 ``--all`` jede Gruppe, für die ``begroups:classify`` das Aufteilen vorschlägt:
@@ -159,6 +160,12 @@ Rechte zu verändern. Beide zeigen ihren Plan zuerst mit ``--dry-run``:
 *   **Die Gruppe behält ihre uid und wird zur Rolle.** Benutzer und andere
     Gruppen behalten ihre Zuweisungen. Die neuen Bausteine folgen auf die
     bisherigen Untergruppen, damit der Vorrang des TSconfig gleich bleibt.
+*   TYPO3 macht die erste Gruppe eines Benutzers zur Eigentümergruppe der
+    Seiten, die er anlegt. Ist das die Gruppe selbst – sie hat keine aktiven
+    Untergruppen –, wird eine neue Seitenrechte-Gruppe ohne Rechte (zum
+    Beispiel ``PG_Editors``) ihr erstes Mitglied und übernimmt diese
+    Aufgabe. Sie gehört nur zur Rolle, die Eigentümergruppe hat also genau
+    dieselben Mitglieder wie vorher.
 *   Die Bausteine werden immer neu angelegt, auch wenn es einen gleichen
     gibt. Eine bestehende Gruppe kann anderswo referenziert sein – als
     Eigentümergruppe von Seiten, als Workspace-Mitglied oder in
@@ -168,23 +175,38 @@ Rechte zu verändern. Beide zeigen ihren Plan zuerst mit ``--dry-run``:
 
 Beide Assistenten schreiben über den DataHandler: Jede Änderung steht im
 Systemprotokoll und in der Historie des Datensatzes. Jede Gruppe wird in
-einer Transaktion umgestellt. Vor dem Abschluss ermittelt die Extension,
-was TYPO3 jeder Gruppen-Kombination eines Benutzers und der Gruppe selbst
-(auch versteckt oder noch nicht zugewiesen) vorher und nachher gewährt: die
-zusammengeführten Rechte, die Workspace-Rechte, das TSconfig in der
-Reihenfolge, in der TYPO3 es anwendet, die Gruppenmitgliedschaften und die
-Eigentümergruppe neuer Seiten. Unterscheidet sich etwas – zum Beispiel, weil
-eine andere Extension beim Speichern Werte ändert –, wird die Transaktion
-zurückgerollt und die Gruppe bleibt unverändert. Das gilt auch für
-Datenbankfehler; das Ergebnis nennt den Fehler, da auch die Einträge im
-Systemprotokoll zurückgerollt werden.
+einer Transaktion umgestellt, die nur abgeschlossen wird, wenn
 
-TYPO3 löst Gruppen über interne API auf, daher verwendet die Extension ein
-Modell davon; Tests vergleichen das Modell mit TYPO3 selbst. Die Transaktion
-umfasst die Datenbankverbindung von :sql:`be_groups`: Sind :sql:`sys_log`,
-:sql:`sys_history` oder :sql:`sys_refindex` einer anderen Verbindung
-zugeordnet, bleiben deren Einträge einer zurückgerollten Umstellung
-erhalten.
+*   alle anderen Gruppen und alle Benutzer unverändert sind und sich an der
+    Gruppe selbst nur Typ, Untergruppen und die in Bausteine verschobenen
+    Rechte geändert haben, und
+*   TYPO3 jeder Gruppen-Kombination eines Benutzers und der Gruppe selbst
+    (auch versteckt oder noch nicht zugewiesen) dasselbe gewährt wie vorher:
+    die zusammengeführten Rechte, die Workspace-Rechte, das TSconfig in der
+    Reihenfolge, in der TYPO3 es anwendet, die Gruppenmitgliedschaften bis
+    auf die neuen Bausteine und die Eigentümergruppe neuer Seiten bis auf die
+    neue Seitenrechte-Gruppe.
+
+Andernfalls – zum Beispiel, weil eine andere Extension beim Speichern Daten
+ändert – wird die Transaktion zurückgerollt und die Gruppe bleibt
+unverändert. Das gilt auch für Datenbankfehler; das Ergebnis nennt die vom
+DataHandler protokollierten Fehler, da auch das Systemprotokoll
+zurückgerollt wird. Unter PostgreSQL nennt das Ergebnis nur die
+abgebrochene Transaktion.
+
+Grenzen der Prüfung:
+
+*   TYPO3 löst Gruppen über interne API auf, daher verwendet die Extension
+    ein Modell davon; Tests vergleichen das Modell mit TYPO3 selbst.
+*   Bedingungen, die die vollständige Gruppenliste eines Benutzers
+    vergleichen (zum Beispiel ``backend.user.userGroupList``), sehen auch
+    die neuen Bausteine. Gruppen, die Listener des Core-Events
+    ``AfterGroupsResolvedEvent`` zur Laufzeit ergänzen (etwa Single
+    Sign-on), kennt die Prüfung nicht.
+*   Die Transaktion umfasst die Datenbankverbindung von :sql:`be_groups`:
+    Sind :sql:`sys_log`, :sql:`sys_history` oder :sql:`sys_refindex` einer
+    anderen Verbindung zugeordnet, bleiben deren Einträge einer
+    zurückgerollten Umstellung erhalten.
 
 Danach:
 
@@ -215,6 +237,6 @@ beginnen:
     vendor/bin/typo3 begroups:split --all
 
 Das Ergebnis sind die Rollen „Editor“ und „Advanced Editor“ mit jeweils
-eigenen Bausteinen für Zugriffsrechte, Seitenbaum-Einstiegspunkt und
-Dateifreigabe (zum Beispiel ``ACL_Editor``, ``DBM_Editor`` und
-``FM_Editor``).
+eigenen Bausteinen: einer Seitenrechte-Gruppe als Eigentümerin neuer
+Seiten, Zugriffsrechten, Seitenbaum-Einstiegspunkt und Dateifreigabe (zum
+Beispiel ``PG_Editor``, ``ACL_Editor``, ``DBM_Editor`` und ``FM_Editor``).

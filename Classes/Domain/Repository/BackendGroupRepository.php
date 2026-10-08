@@ -191,6 +191,28 @@ final readonly class BackendGroupRepository
         return is_array($row) ? DatabaseRow::fromArray($row) : null;
     }
 
+    /**
+     * Returns all groups with all fields, including deleted and disabled ones, ordered by uid.
+     *
+     * @return list<DatabaseRow>
+     */
+    public function findAllIncludingDeleted(): array
+    {
+        $queryBuilder = $this->connectionPool->getQueryBuilderForTable(self::TABLE);
+        $queryBuilder->getRestrictions()->removeAll();
+        $result = $queryBuilder
+            ->select('*')
+            ->from(self::TABLE)
+            ->orderBy('uid')
+            ->executeQuery();
+
+        $rows = [];
+        while ($row = $result->fetchAssociative()) {
+            $rows[] = DatabaseRow::fromArray($row);
+        }
+        return $rows;
+    }
+
     private function createQueryBuilder(): QueryBuilder
     {
         $queryBuilder = $this->connectionPool->getQueryBuilderForTable(self::TABLE);

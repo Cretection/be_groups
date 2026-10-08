@@ -55,11 +55,11 @@ final class GroupClassifierTest extends FunctionalTestCase
     {
         self::assertSame([
             1 => 'change-kind db_mount',
-            2 => 'split acl, db_mount, file_operations, tsconfig',
+            2 => 'split page_group, acl, db_mount, file_operations, tsconfig',
             3 => 'change-kind role',
             4 => 'manual',
             5 => 'change-kind page_group',
-            6 => 'split db_mount',
+            6 => 'split page_group, db_mount',
             8 => 'manual',
             9 => 'split acl, file_operations',
         ], $this->summarize($this->get(GroupClassifier::class)->classifyAll()));
@@ -81,6 +81,7 @@ final class GroupClassifierTest extends FunctionalTestCase
         $concerns = $this->get(GroupClassifier::class)->classify(2)->concerns ?? [];
 
         self::assertSame([
+            ['page_group', []],
             ['acl', ['groupMods' => 'web_layout']],
             ['db_mount', ['db_mountpoints' => '1']],
             ['file_operations', ['file_permissions' => 'readFile,writeFile']],
@@ -101,7 +102,7 @@ final class GroupClassifierTest extends FunctionalTestCase
         self::assertNotNull($duplicates);
         self::assertNotNull($ignoredEntry);
         self::assertSame(ClassificationAction::Manual, $duplicates->action);
-        self::assertStringContainsString('duplicates or entries TYPO3 ignores', $duplicates->reason);
+        self::assertStringContainsString('duplicates or entries that TYPO3 and the backend form read differently', $duplicates->reason);
         self::assertSame(ClassificationAction::Manual, $ignoredEntry->action);
     }
 

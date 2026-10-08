@@ -150,8 +150,9 @@ consistency check. It reads all groups and users and changes nothing:
     *   - ``unclean-group-list``
         - warning
         - The subgroups of a group or the groups of a user contain duplicates
-          or entries TYPO3 ignores, such as ``be_groups_5``. Saving the record
-          in the backend makes every entry effective; check them first.
+          or entries that TYPO3 and the backend form read differently, such
+          as ``be_groups_5`` or ``05``. Saving the record in the backend can
+          add or remove groups; check them first.
     *   - ``user-ignores-group-mounts``
         - warning
         - The field :guilabel:`Mount from groups` (:sql:`options`) of a user
