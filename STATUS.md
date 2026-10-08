@@ -1,6 +1,6 @@
 # Arbeitsstand be_groups-Relaunch
 
-Stand: **2026-10-07** · Branch **`relaunch`** (lokal, noch nicht gepusht) · Ziel: **1.0.0 für TYPO3 14.3 LTS**
+Stand: **2026-10-08** · Branch **`relaunch`** (lokal, noch nicht gepusht) · Ziel: **1.0.0 für TYPO3 14.3 LTS**
 
 Dieses Dokument ist der Einstiegspunkt, um die Arbeit fortzusetzen. Das Konzept steht in [`RELAUNCH.md`](RELAUNCH.md), die verbindlichen Regeln für den Code in [`CODING_GUIDELINES.de.md`](CODING_GUIDELINES.de.md) bzw. [`CODING_GUIDELINES.md`](CODING_GUIDELINES.md).
 
@@ -11,8 +11,14 @@ Dieses Dokument ist der Einstiegspunkt, um die Arbeit fortzusetzen. Das Konzept 
 - **Umgesetzt:**
   - der Kern (M0 und M1): Gruppentypen, Regeln R1–R4, Upgrade-Wizard,
   - das Übersichtsmodul ohne Bearbeitung (Teil von M2),
+  - die Konsistenzprüfung `begroups:audit` mit dem Event `AfterAuditFindingsCollectedEvent` (Teil von M2),
+  - die Assistenten `begroups:classify` und `begroups:split` und das Starter-Set über den Core-Befehl (M3),
+  - das Event `ModifyKindOfNewGroupEvent` für Import- und Sync-Werkzeuge (Teil von M2),
   - die Doku auf Deutsch und Englisch.
-- **Review:** Ein strenges Code-Review hat 15 echte Fehler gefunden. Alle sind behoben, jeder mit einem Test, der den alten Fehler nachweislich erkennt.
+- **Reviews:**
+  - Das erste strenge Review (2026-10-07) fand 15 echte Fehler. Alle sind behoben, jeder mit einem Test, der den alten Fehler nachweislich erkennt.
+  - Ein unabhängiges Review der Teile vom 2026-10-08 fand 12 Punkte, darunter einen kritischen: Die Wiederverwendung bestehender Bausteine konnte Benutzern Rechte geben. Alle sind behoben (`c04fa92`, Details in Abschnitt 9).
+  - Ein zweites Review dieses Fixes ist angestoßen; das Ergebnis steht in Abschnitt 7.
 - **Testbasis:** Alle Prüfungen sind grün, auf allen Datenbanken, mit PHP 8.2 und 8.5, auf TYPO3 14.3 und 15-dev.
 - **Nächster Schritt:** Test im DDEV-Projekt (Abschnitt 5), danach Push und erster CI-Lauf auf GitHub (Abschnitt 7).
 
@@ -34,28 +40,36 @@ Dieses Dokument ist der Einstiegspunkt, um die Arbeit fortzusetzen. Das Konzept 
 | `[BUGFIX] Migrate legacy groups without changing effective permissions` | Review-Korrekturen: Upgrade-Wizard |
 | `[BUGFIX] Show unknown kinds and rule violations in the overview` | Review-Korrekturen: Übersichtsmodul |
 | `[DOCS] Document compatibility, support and the reworked rules` | Support-Regel (gebunden an das TYPO3-EOL), Doku zu allen Änderungen |
+| `[DOCS] Add the status document for continuing the relaunch` | dieses Dokument |
+| `[FEATURE] Add the consistency check begroups:audit` | Konsistenzprüfung (CLI, Exit-Codes, JSON), Event für eigene Prüfungen |
+| `[FEATURE] Add the assistants begroups:classify and begroups:split` | Umstellung klassischer Gruppen ohne Änderung wirksamer Rechte |
+| `[TASK] Parse the page of new groups without relying on annotations` | PHPStan-Befund gegen TYPO3 15-dev behoben |
+| `[DOCS] Document the starter set based on the default groups of TYPO3` | Starter-Set: `setup:begroups:default` + `begroups:split --all` |
+| `[BUGFIX] Keep hidden groups restorable and report database errors` | sichtbare Bausteine für versteckte Gruppen, Datenbankfehler als Ergebnis statt Abbruch |
+| `[FEATURE] Let listeners choose the kind of new groups` | Event `ModifyKindOfNewGroupEvent` |
+| `[BUGFIX] Verify conversions per user and never share building blocks` | Korrekturen aus dem unabhängigen Review (Abschnitt 9) |
 
 **Stand der Meilensteine** (Details in `RELAUNCH.md` §9):
 
 | Meilenstein | Stand |
 |---|---|
 | M0 Fundament | ✅ erledigt. Der CI-Lauf auf GitHub steht noch aus, weil nichts gepusht ist. |
-| M1 Kern | ✅ erledigt. Die eigenen PSR-14-Events fehlen noch und sind nach M2 verschoben. |
-| M2 Übersicht | 🟡 teilweise. Das Modul ohne Bearbeitung ist fertig; Matrix-Bearbeitung, `begroups:audit`, Events, Typ-Filter im Users-Modul und Präfixe sind offen. |
-| M3 Umstieg | ⬜ offen |
+| M1 Kern | ✅ erledigt. Die eigenen PSR-14-Events sind nach M2 verschoben. |
+| M2 Übersicht | 🟡 teilweise. Fertig: Modul ohne Bearbeitung, `begroups:audit` mit Event, `ModifyKindOfNewGroupEvent`. Verworfen: Typ-Filter im Users-Modul (E12). Offen: Matrix-Bearbeitung, Präfixe (Entscheidung offen, siehe Abschnitt 6). |
+| M3 Umstieg | ✅ erledigt: `begroups:classify`, `begroups:split`, Starter-Set über den Core-Befehl (E13). |
 | M4 Härtung und Release | ⬜ offen |
 
 ---
 
-## 3. Qualitätsnachweis (letzter Lauf am 2026-10-07)
+## 3. Qualitätsnachweis (letzter Lauf am 2026-10-08)
 
 | Prüfung | Ergebnis |
 |---|---|
 | Unit-Tests | 31 Tests grün |
-| Functional Tests | 44 Tests grün auf SQLite, MariaDB 10.11, MySQL 8.0 und PostgreSQL 14 |
-| PHP-Versionen | 8.2 (niedrigste Abhängigkeiten) und 8.5 |
-| TYPO3-Versionen | 14.3.7 und 15.0-dev (Core `main`, PHPUnit 12) |
-| PHPStan | Level max, ohne Baseline, mit Prüfung auf `@internal`: 0 Fehler |
+| Functional Tests | 98 Tests grün auf SQLite, MariaDB 10.11, MySQL 8.0 und PostgreSQL 14 |
+| PHP-Versionen | 8.2 (niedrigste Abhängigkeiten) und 8.5, beide mit allen 98 Functional Tests |
+| TYPO3-Versionen | 14.3.7 und 15.0-dev (Core `main`, PHPUnit 12), beide mit allen Tests |
+| PHPStan | Level max, ohne Baseline, mit Prüfung auf `@internal`: 0 Fehler. Gegen 15-dev: `Classes/` ohne Befund; die Tests melden dort `mixed` aus `get()`, weil das Testing-Framework für v15 die Typisierung geändert hat (vor dem Wechsel auf v15 zu lösen). |
 | Weitere Prüfungen | php-cs-fixer, Lizenzköpfe, Rector, Lint, PSR-4, Integrität (Exception-Codes, Testkonventionen), XLIFF, YAML, JSON, `composer normalize`: alle grün |
 | Doku | `render-guides` (EN und DE) ohne Warnungen |
 | Gegen TYPO3 15 | 0 genutzte APIs, die in v15 deprecated oder intern sind |
@@ -135,6 +149,9 @@ Oder einfach `ddev snapshot restore vor-be-groups`.
 6. Einstellungen > Extension-Konfiguration > be_groups: „Klassische Gruppen erlauben“ abschalten. „Klassisch“ verschwindet sofort aus der Auswahl, und neue Gruppen starten als Rolle.
 7. Das Modul *Administration > Rollen & Bausteine*: Sortierung, Typ-Filter, markierte Inkonsistenzen und Bearbeiten-Links.
 8. Mit Daten der alten Extension: zuerst *Analyze Database Structure*, dann den Wizard „Migrate be_groups kinds“ ausführen und seine Ausgabe lesen.
+9. Konsistenzprüfung: `ddev typo3 begroups:audit` (auch `--format=json`, `--fail-on-warnings`). Neue Benutzer erscheinen mit `user-permissions`, weil der Core ihnen alle Dateioperationen gibt.
+10. Assistenten, immer zuerst mit `--dry-run`: `ddev typo3 begroups:classify --dry-run`, dann ohne; `ddev typo3 begroups:split --all --dry-run`, dann ohne. Jede Umstellung wird intern pro Benutzer nachgeprüft und sonst zurückgerollt. Trotzdem mit „Benutzer wechseln“ prüfen, dass Benutzer genau dasselbe sehen und dürfen wie vorher (Seitenbaum, Module, Dateien, TSconfig-Wirkung), und `begroups:audit` erneut ausführen. Als „failed“ oder „manual“ gemeldete Gruppen mit Begründung notieren.
+11. Starter-Set in einer leeren Testumgebung: `ddev typo3 setup:begroups:default --groups=Both`, dann `ddev typo3 begroups:split --all`.
 
 Beim Ändern von Typ oder Rollenzusammensetzung fragt TYPO3 nach dem Passwort. Das ist der Sudo-Mode des Core und gewollt.
 
@@ -151,6 +168,8 @@ Beim Ändern von Typ oder Rollenzusammensetzung fragt TYPO3 nach dem Passwort. D
 | c | Übersetzungen | Offizielle TYPO3-Lokalisierung oder das eigene Crowdin-Projekt (`crowdin.yml` ist auf die neuen Dateien angepasst). **Offen, bis M4.** |
 | d | Versionsnummer | Empfehlung 1.0.0 (E5). `composer.json` steht auf `1.0.0-dev`. |
 | e | Alte Branches und Crowdin-PR #3 | Nach dem Relaunch archivieren bzw. schließen (M4). |
+| f | E12 Typ-Filter im Users-Modul verworfen, E13 Starter-Set über den Core-Befehl | Autonom entschieden am 2026-10-08, begründet in `RELAUNCH.md` §11. **Bestätigung offen.** |
+| g | Präfixe (R_, ACL_, …) in Listen anzeigen (M2) | Die Listen sind bereits nach Typ gruppiert, das Modul zeigt Typ-Icons, und `begroups:split` benennt neue Bausteine mit Präfix. Eine zusätzliche Präfix-Anzeige wäre doppelt. Vorschlag: streichen. **Entscheidung offen.** |
 | – | Mit Michael Klapper | Namensnennung (ohne/mit Firma), Link und E-Mail-Adresse, ob er die Credits-Seite gegenliest, optional ein Blick auf das Konzept. Bis zur Freigabe wird nur sein Name genannt. |
 
 **Zugänge, die Jonathan einrichtet:**
@@ -172,26 +191,16 @@ Beim Ändern von Typ oder Rollenzusammensetzung fragt TYPO3 nach dem Passwort. D
    - Die Pipeline beobachten, besonders den Runner `ubuntu-26.04`, die Container-Images und den Job `typo3-next`.
    - Danach den Branch-Schutz einrichten.
    - Offen: Die Testabdeckung zusammenführen (TODO in `ci.yml`, braucht `phpunit/phpcov`).
-3. **M2 vervollständigen:**
-   - **Konsistenzprüfung** `begroups:audit` (CLI, Exit-Code für CI oder Monitoring). Sie prüft:
-     - unbekannte oder alte Typen,
-     - Rollen mit Mitgliedern, die keine Bausteine sind oder fehlen,
-     - Bausteine mit Untergruppen,
-     - Bausteine, die Benutzern direkt zugewiesen sind,
-     - Rechtefelder, die nicht zum Typ passen,
-     - klassische Gruppen (Warnung, bei abgeschalteter Option ein Fehler),
-     - Rechte direkt an Benutzerdatensätzen.
-   - **Eigene PSR-14-Events** (öffentliche API): z. B. zum Anpassen der verwalteten Rechtefelder und der Typ-Definitionen sowie für die Ergebnisse der Konsistenzprüfung.
-   - **Typ-Filter im Core-Modul „Users“** über `AfterBackendGroupListConstraintsAssembledFromDemandEvent` (vorher prüfen, ob die Oberfläche das zulässt).
+3. **Unabhängiges strenges Review** der Teile vom 2026-10-08 (`begroups:audit`, `begroups:classify`, `begroups:split`), mit Fokus darauf, dass sich wirksame Rechte nie ändern (u. a. Auflösungsreihenfolge, `firstMainGroup`, TSconfig-Vorrang, Transaktionen).
+4. **M2 vervollständigen:**
+   - **Weitere PSR-14-Events** nur bei einem konkreten Anwendungsfall (vorhanden: `AfterAuditFindingsCollectedEvent`, `ModifyKindOfNewGroupEvent`). Typen und Felder bleiben TCA (keine eigene Registry).
    - **Frontend-Tooling** aufsetzen, bevor JavaScript entsteht: `package.json`, TypeScript strict, ESLint (Konfiguration des Core), Stylelint 17 (Konfiguration von tea), rollup ohne Bündelung, web-test-runner, Playwright mit axe (WCAG 2.2 AA).
    - **Matrix-Bearbeitung** im Modul: Rollen × Bausteine. Geschrieben wird ausschließlich über den DataHandler (AJAX-Route mit `methods: POST`), mit Sudo-Mode und Barrierefreiheit (Tastatur, ARIA-Grid). Alle Themes hell und dunkel.
-   - **Präfixe** (R_, ACL_, …) optional in Listen anzeigen.
-4. **M3:**
-   - Klassifizierungs-Assistent `begroups:classify --dry-run`.
-   - Aufteilungs-Assistent `begroups:split`; die ursprüngliche uid bleibt die Rolle.
-   - Starter-Set nach den Core-Standardgruppen.
+   - **Präfixe** in Listen: Entscheidung (g) in Abschnitt 6.
 5. **M4:**
-   - Security-Review (`CODING_GUIDELINES.de.md` §15), Performance-Benchmark (1.000 Gruppen und 5.000 Benutzer), Prüfung der Barrierefreiheit.
+   - Security-Review (`CODING_GUIDELINES.de.md` §15), Performance-Benchmark (1.000 Gruppen und 5.000 Benutzer), Prüfung der Barrierefreiheit. Bekannt: Jede Umstellung klassifiziert neu und liest dafür alle Gruppen und Benutzer; die Nachprüfung löst jede vorkommende Gruppen-Kombination zweimal auf. Bei sehr vielen Gruppen wächst der Aufwand von `begroups:split --all` quadratisch.
+   - Den Test des Starter-Sets mit dem echten Core-Befehl ausführen: `typo3/cms-install` als Entwicklungsabhängigkeit aufnehmen. Bisher bildet `SplitCoreDefaultGroupsTest` die Inserts des Core nach (Stand 14.3.7, ohne `file_permissions` und TSconfig).
+   - Vor dem Wechsel auf TYPO3 15: Tests an das typisierungsfreie `get()` des Testing-Frameworks anpassen (siehe Abschnitt 3).
    - Screenshots pro Theme, Übersetzungen, Credits mit Michael Klapper abstimmen.
    - Release-Workflow (`.github/workflows/publish.yml` mit tailor 2.x, TER-Upload ohne `ext_emconf.php` testen), Tag `1.0.0`.
 
@@ -204,9 +213,10 @@ Beim Ändern von Typ oder Rollenzusammensetzung fragt TYPO3 nach dem Passwort. D
 
 ## 8. Bekannte Grenzen (dokumentiert in der Doku, Kapitel *Concept*)
 
-- **Rechte am Benutzerdatensatz:** be_users hat eigene Rechtefelder (z. B. `file_permissions`, Module, TSconfig, Freigaben), die TYPO3 mit den Gruppenrechten zusammenführt. Das Rollenmodell steuert sie nicht. Empfehlung: Benutzerdatensätze frei von Rechten halten (Kandidat für `begroups:audit`).
+- **Rechte am Benutzerdatensatz:** be_users hat eigene Rechtefelder (z. B. `file_permissions`, Module, TSconfig, Freigaben), die TYPO3 mit den Gruppenrechten zusammenführt. Das Rollenmodell steuert sie nicht. Neue Benutzer bekommen im Core alle Dateioperationen. `begroups:audit` meldet das als Warnung `user-permissions`.
 - **Rechtefelder anderer Extensions:** Werden sie nur im Core-Formular ergänzt (Extension lädt vor be_groups und ordnet das Feld keinem Typ zu), erscheinen sie nur bei klassischen Gruppen und werden nicht durchgesetzt. Abhilfe: das Feld per `addToAllTCAtypes` einem Typ zuordnen.
 - **Importe:** Lehnen die Regeln bei einem Import einen Datensatz ab, steht das im Systemprotokoll, nicht in der Fehlerliste des DataHandler. Diese ist `@internal`.
+- **Transaktionen der Assistenten:** Sie umfassen die Datenbankverbindung von `be_groups`. Sind `sys_log`, `sys_history` oder `sys_refindex` einer anderen Verbindung zugeordnet, bleiben deren Einträge einer zurückgerollten Umstellung erhalten.
 - **Alte Werte bleiben:** R2 und R4 lehnen nur *neu hinzugefügte* Beziehungen ab. Bereits gespeicherte Verstöße bleiben bestehen, damit niemand Zugriff verliert. Sie werden im Modul markiert.
 
 ---
@@ -229,6 +239,18 @@ Sie sind wichtig, damit niemand die behobenen Fehler versehentlich wieder einbau
   - Er bezieht auch gelöschte Datensätze ein und lässt sich wiederholen.
 - **`be_groups.subgroup` ist auf 2048 Zeichen erweitert**, weil Rollen viele Bausteine bündeln.
 - **Nur öffentliche Core-API**, geprüft per PHPStan `internalTag`. Ausnahme: der Wert `2` für `applicationType` in Tests, weil die Core-Konstante intern ist.
+- **Assistenten ändern keine wirksamen Rechte** (nach dem unabhängigen Review vom 2026-10-08 neu gefasst):
+  - Alles läuft über den DataHandler, pro Gruppe in einer Transaktion.
+  - **Nachprüfung pro Benutzer:** Vor dem Commit löst `GroupPermissionResolver` jede vorkommende Gruppen-Kombination der Benutzer und die Gruppe selbst (auch versteckt) vorher und nachher auf. Verglichen werden die zusammengeführten Rechte, die Workspace-Rechte, das TSconfig in Anwendungsreihenfolge, die Mitgliedschaften und `firstMainGroup`. Bei jeder Abweichung folgt ein Rollback.
+  - Das ist ein **Modell** der Core-Auflösung, weil `fetchGroupData()`, `GroupResolver`, `groupData` und `firstMainGroup` im Core `@internal` sind. `GroupPermissionResolverTest` gleicht das Modell über die öffentliche API (`userGroupsUID`, `check()`, `getWebmounts()`, `getTSConfig()`) mit dem Core ab.
+  - **Bausteine werden nie wiederverwendet.** Bestehende Gruppen können als Seiten-Eigentümer, Workspace-Mitglied oder in TSconfig-Bedingungen referenziert sein; zusätzliche Mitglieder könnten Rechte gewinnen (Review-Befund 1, kritisch).
+  - **Listen wie der Core lesen:** TYPO3 liest Gruppenlisten per `intExplode`. `be_groups_5` wird dabei zu 0 und trifft nichts, Duplikate zählen an ihrer letzten Position. Der DataHandler liest dieselben Listen anders. Gruppen mit solchen Listen behandeln die Assistenten nicht (`RelationList::isCanonical`); das Audit meldet sie (`unclean-group-list`).
+  - Felder liest das Modell wie der Core: Seitenfreigabe `0` ist die Wurzel und zählt; Datei- und Kategoriefreigabe `0` zählt nicht. Gruppen mit Seitenfreigabe `0` lassen sich nicht aufteilen, weil der DataHandler `0` nicht in einen neuen Baustein schreibt.
+  - TYPO3 löst Untergruppen **vor** der Gruppe auf. Neue Bausteine kommen deshalb **hinter** die bisherigen Untergruppen (TSconfig-Vorrang).
+  - Bausteine versteckter Gruppen sind sichtbar. Sie sind nur über die versteckte Rolle erreichbar, und Einblenden stellt die Rechte wie vorher her.
+  - Bei einem Fehlschlag nennt das Ergebnis die vom DataHandler protokollierten Datenbankfehler (`sys_log` Typ 1), weil das Protokoll mit zurückgerollt wird.
+- **Ausgaben auf der Konsole** laufen durch `ConsoleText::escape()`: Titel sind Redakteursdaten und dürfen weder Konsolen-Formatierung noch Steuerzeichen (ANSI) ins Terminal tragen.
+- **Testdaten:** Der CSV-Import des Testing-Frameworks füllt fehlende Spalten mit TCA-Defaults (z. B. `file_permissions` = alle Dateioperationen). Rechtefelder in Fixtures daher immer ausdrücklich setzen.
 
 ---
 
@@ -241,6 +263,10 @@ Sie sind wichtig, damit niemand die behobenen Fehler versehentlich wieder einbau
 | Formular | `Configuration/TCA/Overrides/be_groups.php` und `be_users.php`, `Classes/Form/FormDataProvider/KindSelection.php` |
 | Modul | `Configuration/Backend/Modules.php`, `Classes/Controller/OverviewController.php`, `Classes/Domain/Overview/`, `Resources/Private/Templates/Overview/Index.fluid.html` |
 | Migration | `Classes/Upgrades/` (`KindMigration`, `ColumnInspector`, `ColumnInfo`) |
+| Befehle | `Classes/Command/` (`AuditCommand`, `ClassifyCommand`, `SplitCommand`), Konsolenausgabe `Classes/Utility/ConsoleTextUtility.php` |
+| Konsistenzprüfung | `Classes/Domain/Audit/` (`PermissionAudit`; öffentliche API: `AuditFinding`, `AuditSeverity`), `Classes/Event/AfterAuditFindingsCollectedEvent.php` (öffentliche API) |
+| Assistenten | `Classes/Domain/Classification/`: `GroupClassifier` schlägt vor, `GroupConverter` setzt um und prüft nach, `GroupPermissionResolver` modelliert die Core-Auflösung |
+| Events (öffentliche API) | `Classes/Event/` (`AfterAuditFindingsCollectedEvent`, `ModifyKindOfNewGroupEvent`) |
 | Datenzugriff | `Classes/Domain/Repository/` (nur lesend; geschrieben wird über den DataHandler bzw. im Wizard per SQL) |
 | Labels | `Resources/Private/Language/` (`db.xlf`, `messages.xlf`, `Modules/overview.xlf`, jeweils mit `de.`) |
 | Tests | `Tests/Unit/`, `Tests/Functional/` (Fixtures in `Fixtures/`, Test-Extensions in `Fixtures/Extensions/`) |

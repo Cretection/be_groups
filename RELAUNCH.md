@@ -115,8 +115,8 @@ Eine Variante mit `selectCheckBox` wurde im Spike gerendert, aber verworfen: Sie
 - **Effektive Rechte:** Verlinkung auf die Core-Detailansicht für Gruppen (v14, #99065).
 - **Schreiben:** ausschließlich über den DataHandler. Sudo-Mode, Historie und Log greifen damit wie im Core. Für AJAX existiert ein Core-`sudo-mode-interceptor`.
 
-### 4.6 Integration in das Core-Modul „Users“ (M2, zu prüfen)
-Ein Typ-Filter für die Gruppenliste über `AfterBackendGroupListConstraintsAssembledFromDemandEvent`.
+### 4.6 Integration in das Core-Modul „Users“ (M2, geprüft: verworfen, E12)
+Geplant war ein Typ-Filter für die Gruppenliste über `AfterBackendGroupListConstraintsAssembledFromDemandEvent`. Das Filter-DTO des Core (`BackendUserGroup`) kennt nur den Titel; ein zusätzliches Filterfeld ginge nur über überschriebene Core-Templates. Das Modul „Rollen & Bausteine“ filtert bereits nach Typ.
 
 ---
 
@@ -322,12 +322,12 @@ Version 1.0.0 enthält alle Phasen (Entscheidung E2). Die Meilensteine erscheine
 
 Der Qualitätsstandard aus Abschnitt 8 erhöht den Aufwand gegenüber der ersten Schätzung um etwa 50 %. Der Mehraufwand steckt vor allem in der Infrastruktur, in Playwright und Barrierefreiheit, in Themes und dark mode, in der Doku und in der Release-Härtung.
 
-| Meilenstein | Inhalt | Ergebnis | Aufwand (Schätzung) | Stand (2026-10-07) |
+| Meilenstein | Inhalt | Ergebnis | Aufwand (Schätzung) | Stand (2026-10-08) |
 |---|---|---|---|---|
 | M0 Fundament | Branch `relaunch`, Altlasten raus, komplette Qualitäts-Infrastruktur (8.1/8.3), Doku-Gerüst mit Credits-Seite (8.5) | alle Prüfungen grün auf leerem Gerüst | 2–3 PT | ✅ erledigt |
 | M1 Kern | Typen und TCA, gruppierte Rollen-Auswahl, Benutzerfilter, Regeln R1–R4, Upgrade-Wizard, Events | `1.0.0-alpha1` | 5–7 PT | ✅ erledigt (Events nach M2 verschoben) |
-| M2 Übersicht | Modul „Rollen & Bausteine“ (TypeScript/Lit, barrierefrei, Themes), `begroups:audit`, Typ-Filter, Präfixe | `1.0.0-beta1` | 6–9 PT | 🟡 Modul ohne Bearbeitung fertig, Rest offen |
-| M3 Umstieg | Klassifizierungs- und Aufteilungs-Assistent, Starter-Set | `1.0.0-beta2` | 4–6 PT | ⬜ offen |
+| M2 Übersicht | Modul „Rollen & Bausteine“ (TypeScript/Lit, barrierefrei, Themes), `begroups:audit`, Typ-Filter, Präfixe | `1.0.0-beta1` | 6–9 PT | 🟡 Modul ohne Bearbeitung, `begroups:audit` mit Event, `ModifyKindOfNewGroupEvent` fertig; Typ-Filter im Core-Modul verworfen (E12); offen: Matrix-Bearbeitung, Präfixe (Entscheidung offen) |
+| M3 Umstieg | Klassifizierungs- und Aufteilungs-Assistent, Starter-Set | `1.0.0-beta2` | 4–6 PT | ✅ erledigt: `begroups:classify`, `begroups:split`; Starter-Set über den Core-Befehl (E13) |
 | M4 Härtung | Security-Review, Performance-Benchmark, Prüfung der Barrierefreiheit, Doku und Screenshots final, Credits mit dem Erfinder abgestimmt, Übersetzungen | `1.0.0-rc1` → **1.0.0** im TER | 2–3 PT | ⬜ offen |
 
 Gesamt etwa 19–28 Personentage.
@@ -360,6 +360,8 @@ Gesamt etwa 19–28 Personentage.
 | E9 | Coding-Leitlinien | ✅ verbindlich laut `CODING_GUIDELINES.md` (Englisch) und `CODING_GUIDELINES.de.md` (Deutsch) (2026-10-06) |
 | E10 | Sprachen | ✅ Deutsch und Englisch für alles, was Menschen lesen: README, Leitlinien, `CONTRIBUTING`, Doku und Labels. Bei Widersprüchen gilt die englische Fassung, Code und Commits sind Englisch (2026-10-07). |
 | E11 | Kompatibilität und Support | ✅ Support pro TYPO3-Version bis zu deren offiziellem EOL der Community-Version (ELTS zählt nicht); zwei TYPO3-Hauptversionen pro be_groups-Hauptversion; TYPO3 14: 1.x bis 30.06.2029; keine absehbar wegfallenden APIs (Abschnitt 8.6, 2026-10-07) |
+| E12 | Typ-Filter im Core-Modul „Users“ | Verworfen: Das Filter-DTO des Core kennt nur den Titel, ein Filterfeld bräuchte überschriebene Core-Templates und bräche bei Core-Updates. Das eigene Modul filtert nach Typ (Abschnitt 4.6, 2026-10-08). **Bestätigung durch Jonathan offen.** |
+| E13 | Starter-Set | Kein eigener Befehl: `setup:begroups:default` des Core legt „Editor“ und „Advanced Editor“ an, `begroups:split --all` macht daraus Rollen mit gemeinsamen Bausteinen. Weniger Code, und Änderungen der Core-Presets kommen automatisch an (2026-10-08). **Bestätigung durch Jonathan offen.** |
 
 ---
 
