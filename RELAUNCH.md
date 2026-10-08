@@ -319,7 +319,7 @@ Der Qualitätsstandard aus Abschnitt 8 erhöht den Aufwand gegenüber der ersten
 | M1 Kern | Typen und TCA, gruppierte Rollen-Auswahl, Benutzerfilter, Regeln R1–R4, Events | `1.0.0-alpha1` | 5–7 PT | ✅ erledigt (Events nach M2 verschoben; der Upgrade-Wizard entfällt, E14) |
 | M2 Übersicht | Modul „Rollen & Bausteine“ (TypeScript/Lit, barrierefrei, Themes), `begroups:audit`, Typ-Filter, Präfixe | `1.0.0-beta1` | 6–9 PT | 🟡 Modul ohne Bearbeitung, `begroups:audit` mit Event, `ModifyKindOfNewGroupEvent` fertig; Typ als Präfix überall (Entscheidung g); Typ-Filter im Core-Modul verworfen (E12); offen: Matrix-Bearbeitung |
 | M3 Umstieg | Klassifizierungs- und Aufteilungs-Assistent, Starter-Set | `1.0.0-beta2` | 4–6 PT | ✅ erledigt: `begroups:classify`, `begroups:split`; Starter-Set über den Core-Befehl (E13) |
-| M4 Härtung | Security-Review, Performance-Benchmark, Prüfung der Barrierefreiheit, Doku und Screenshots final, Credits mit dem Erfinder abgestimmt, Übersetzungen | `1.0.0-rc1` → **1.0.0** im TER | 2–3 PT | ⬜ offen |
+| M4 Härtung | Security-Review, Performance-Benchmark, Prüfung der Barrierefreiheit, Doku und Screenshots final, Credits mit dem Erfinder abgestimmt, Übersetzungen | `1.0.0-rc1` → **1.0.0** im TER | 2–3 PT | 🟡 Security-Review, Performance, Barrierefreiheit (axe), Screenshots und Release-Workflow fertig (2026-10-08); offen: Credits, Übersetzungen, Release |
 
 Gesamt etwa 19–28 Personentage.
 
