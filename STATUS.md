@@ -16,7 +16,8 @@ Dieses Dokument ist der Einstiegspunkt, um die Arbeit fortzusetzen. Das Konzept 
   - das Event `ModifyKindOfNewGroupEvent` für Import- und Sync-Werkzeuge (Teil von M2),
   - der Typ als Präfix überall, wo TYPO3 Gruppen zeigt („META: Redakteur“), inklusive Core-Modul „Users“ und eigenem Modul,
   - der Release-Workflow für das TER mit Versionsprüfung (`.github/workflows/publish.yml`, ohne `ext_emconf.php`),
-  - die Doku auf Deutsch und Englisch, mit Screenshots in hellem und dunklem Theme.
+  - die Doku auf Deutsch und Englisch, mit Screenshots in hellem und dunklem Theme,
+  - die Qualitätsziele aus `RELAUNCH.md` §8.1 als Prüfungen: E2E-Tests mit Playwright und axe in hellem und dunklem Theme (`-s e2e`), zusammengeführte Testabdeckung mit Mindestwert (`-s coverageCheck`) und Mutationstests mit Infection (`-s mutation`).
 - **Reviews:**
   - Das erste strenge Review (2026-10-07) fand 15 echte Fehler. Alle sind behoben, jeder mit einem Test, der den alten Fehler nachweislich erkennt.
   - Ein unabhängiges Review der Teile vom 2026-10-08 fand 12 Punkte, darunter einen kritischen: Die Wiederverwendung bestehender Bausteine konnte Benutzern Rechte geben. Alle sind behoben (`c04fa92`, Details in Abschnitt 9).
@@ -31,7 +32,7 @@ Dieses Dokument ist der Einstiegspunkt, um die Arbeit fortzusetzen. Das Konzept 
   - **Barrierefreiheit** (2026-10-08, M4): axe-core 4.13 nach WCAG 2.2 AA in hellem und dunklem Theme. Modul, Rollen- und Bausteinformular und die überschriebenen Templates des Users-Moduls haben 0 Verstöße; der einzige Fund (Zielgröße der Benutzer-Links) ist behoben (`9320b38`).
   - **Laufzeit** (2026-10-08, M4): bei 1.000 Gruppen und 5.000 Benutzern `classify` 24 s statt 199 s, `split --all` 100 s statt über 10 Minuten.
 - **Testbasis:** Alle Prüfungen sind grün, auf allen Datenbanken, mit PHP 8.2 und 8.5, auf TYPO3 14.3 und 15-dev (Stand je Zeile in Abschnitt 3).
-- **Nächster Schritt:** Push und erster CI-Lauf auf GitHub, sobald Jonathan ihn freigibt (Abschnitt 7). Danach der Rest von M4: Credits, Übersetzungen, Release.
+- **Nächster Schritt:** Push und erster CI-Lauf auf GitHub. Jonathan hat ihn freigegeben (2026-10-08); er scheitert noch daran, dass im GitHub-Konto `Cretection` kein SSH-Schlüssel hinterlegt ist (Abschnitt 7). Danach der Rest von M4: Credits, Übersetzungen, Release.
 
 ---
 
@@ -79,6 +80,16 @@ Dieses Dokument ist der Einstiegspunkt, um die Arbeit fortzusetzen. Das Konzept 
 | `[TASK] Harden the console output and the template overrides` | Unsichtbare Steuerzeichen, Vergleichstest Override gegen Core |
 | `[TASK] Meet WCAG 2.2 AA in the module "Roles & Building Blocks"` | Abstand der Benutzer-Links, Kommas, Zusammenfassung ohne Plural |
 | `[DOCS] Add screenshots of the forms and the module` | 5 Screenshots, hell und dunkel, in beiden Handbüchern |
+| `[TASK] Check defaults only for fields of the record type` | `TCAdefaults` nur für Felder, die der Satztyp hat |
+| `[DOCS] Record that the TER key and the Packagist package already exist` | Key und Paket gehören `cretection` |
+| `[DOCS] Move the editing matrix of the module to version 1.1` | Entscheidung E2 angepasst |
+| `[TASK] Merge the coverage of all tests and check the minimum in CI` | Job `coverage`, `-s coverageCheck` (≥ 90 % in `Classes/`) |
+| `[TASK] Add end-to-end tests with accessibility checks` | Playwright und axe, Instanz aus `setupE2E.sh`, Job `e2e` |
+| `[TASK] Translate through the Crowdin project of TYPO3` | `.crowdin.yml`, Workflow `Crowdin`, E15 und E16 |
+| `[FEATURE] Show the TSconfig precedence of roles in the module` | Vorrangfolge bei zwei oder mehr TSconfig-Bausteinen |
+| `[TASK] Add mutation tests with Infection` | `-s mutation`, PHAR mit Prüfsumme, Job `mutation` (wöchentlich) |
+| `[TASK] Test the gaps in the rules that mutation testing found` | Neue Regeltests, kein Fehler im Code |
+| `[TASK] Compare file mounts and file operations of the model with the core` | Abgleich über öffentliche API |
 
 **Stand der Meilensteine** (Details in `RELAUNCH.md` §9):
 
@@ -88,7 +99,7 @@ Dieses Dokument ist der Einstiegspunkt, um die Arbeit fortzusetzen. Das Konzept 
 | M1 Kern | ✅ erledigt. Die eigenen PSR-14-Events sind nach M2 verschoben. |
 | M2 Übersicht | 🟡 teilweise. Fertig: Modul ohne Bearbeitung, `begroups:audit` mit Event, `ModifyKindOfNewGroupEvent`. Typ als Präfix überall (Entscheidung g). Verworfen: Typ-Filter im Users-Modul (E12). Die Matrix-Bearbeitung kommt mit 1.1 (E2, 2026-10-08). |
 | M3 Umstieg | ✅ erledigt: `begroups:classify`, `begroups:split`, Starter-Set über den Core-Befehl (E13). |
-| M4 Härtung und Release | 🟡 teilweise. Fertig: Sicherheitsprüfung, Performance-Benchmark, Barrierefreiheit (axe), Screenshots, Release-Workflow. Offen: Credits mit Michael Klapper, Übersetzungen, erster CI-Lauf, Release. |
+| M4 Härtung und Release | 🟡 teilweise. Fertig: Sicherheitsprüfung, Performance-Benchmark, Barrierefreiheit (axe, jetzt als E2E-Test), Screenshots, Release-Workflow, Testabdeckung und Mutationstests, Übersetzungsweg (E15). Offen: Credits mit Michael Klapper, Crowdin-Projekt beantragen, erster CI-Lauf, Release. |
 
 ---
 
@@ -96,15 +107,17 @@ Dieses Dokument ist der Einstiegspunkt, um die Arbeit fortzusetzen. Das Konzept 
 
 | Prüfung | Ergebnis |
 |---|---|
-| Unit-Tests | 35 Tests grün |
-| Functional Tests | 155 Tests grün |
-| Lokales CI-Raster | Alle Jobs von `ci.yml` lokal nachgestellt (2026-10-08, Stand `06795e9`): 40 von 40 grün. Statische Prüfungen mit PHP 8.2; Unit-Tests mit PHP 8.2, 8.3, 8.4 und 8.5, jeweils niedrigste und höchste Abhängigkeiten; Functional Tests mit PHP 8.2 (SQLite) und 8.5 auf SQLite, MariaDB 10.11 und 11.8 (mysqli und pdo_mysql), MySQL 8.0 und 8.4 (mysqli und pdo_mysql), PostgreSQL 14 und 18; TYPO3 15-dev (Core `784b432`) mit Unit- und Functional Tests; Doku. Der Folgestand `16e219e` zusätzlich auf SQLite, MariaDB 10.11, MySQL 8.0 und PostgreSQL 14 grün. Skript: `run-matrix.sh` im Scratchpad. |
+| Unit-Tests | 37 Tests grün |
+| Functional Tests | 170 Tests grün (2026-10-08, SQLite) |
+| Lokales CI-Raster | Alle Jobs von `ci.yml` lokal nachgestellt (2026-10-08, Stand `06795e9`): 40 von 40 grün. Statische Prüfungen mit PHP 8.2; Unit-Tests mit PHP 8.2, 8.3, 8.4 und 8.5, jeweils niedrigste und höchste Abhängigkeiten; Functional Tests mit PHP 8.2 (SQLite) und 8.5 auf SQLite, MariaDB 10.11 und 11.8 (mysqli und pdo_mysql), MySQL 8.0 und 8.4 (mysqli und pdo_mysql), PostgreSQL 14 und 18; TYPO3 15-dev (Core `784b432`) mit Unit- und Functional Tests; Doku. Der Folgestand `16e219e` zusätzlich auf SQLite, MariaDB 10.11, MySQL 8.0 und PostgreSQL 14 grün, ebenso der Stand `a4abc2d` (170 Functional Tests, PHP 8.5). Die neuen Jobs `coverage`, `e2e` und `mutation` liefen lokal (Abschnitt 3); `typo3-next` gegen den neuen Stand steht aus und läuft mit dem ersten CI-Lauf. Skript: `run-matrix.sh` im Scratchpad. |
 | Massentest | Generierte Installation (150 Gruppen, 403 Benutzer, alle Sonderfälle): `classify` + `split --all`, wirksame Rechte aller Benutzer vorher und nachher über den Core verglichen. Wiederholt am 2026-10-08 mit korrigiertem Dump, der auch deaktivierte Benutzer lädt und nichts schreibt: 44 + 101 Gruppen umgestellt, 0 fehlgeschlagen, 0 Abweichungen. Bei 387 Benutzern ist eine neue Seitenrechte-Gruppe Eigentümerin neuer Seiten (beabsichtigt). Danach meldet das Audit 143 × `role-invalid-member` (Rollen in Rollen), 1 × `role-missing-member` (gelöschte Gruppe aus den Testdaten) und 4 klassische Gruppen zur Entscheidung. Werkzeuge im Testprojekt: `generate-test-data.php`, `dump-permissions.php`. |
 | Lasttest | 1.000 Gruppen, 5.000 Benutzer (Seed 11), Endstand 2026-10-08: `classify` 24 s (240 umgestellt), `split --all` 100 s (739 umgestellt), 0 fehlgeschlagen; wirksame Rechte aller 5.007 Benutzer über den Core verglichen: 0 Abweichungen; 0 Fehler im Systemprotokoll. Vorher: `classify` 199 s, `split --all` über 10 Minuten. Werkzeuge im Testprojekt: `benchmark.sh`, Skript `e2e.sh` im Scratchpad (Erzeugen, Dump, Assistenten, Vergleich, Log). |
 | Log-Test | Nach Testdaten, Assistenten und Rundgang durch das Backend: 0 Fehler im Systemprotokoll (nur Einträge des DataHandler), keine neuen Einträge im Datei-Log, keine Konsolenfehler (2026-10-08). |
 | PHP- und TYPO3-Versionen | PHP 8.2 bis 8.5 mit niedrigsten und höchsten Abhängigkeiten, TYPO3 14.3.7 und 15.0-dev: siehe lokales CI-Raster |
 | Testabdeckung | 94,09 % der Zeilen in `Classes/` (1.530 von 1.626), Unit- und Functional-Tests (SQLite) zusammengeführt, PHP 8.5 mit Xdebug (2026-10-08). Ziel laut `CODING_GUIDELINES.md` §13: mindestens 90 %; die CI prüft das im Job `coverage` (`-s coverageMerge`, `-s coverageCheck`). Der Bericht enthält auch `Configuration/` und `ext_localconf.php` (0 %, weil TYPO3 sie vor der Messung lädt); sie bleiben in `<source>`, damit Notices und Deprecations dort die Tests scheitern lassen. Größte Lücken: `BackendGroupRepository` (28 Zeilen), `BackendUserRepository` (13), `GroupConverter` (11). |
 | Mutationsproben | 11 gezielte Mutanten in Prüfung und Modell, dazu Gegenproben aller Korrekturen vom 2026-10-08 (u. a. MariaDB mit `clearCacheCmd`, Platzhalter, `TCAdefaults`, gespeicherte Listen, Override-Vergleich): alle von Tests erkannt |
+| Mutationstests | Infection 0.35.4 über `Classes/Domain` und `Classes/DataHandling` mit Unit- und Functional-Tests (2026-10-08, Stand `4dd5839`): 1.342 Mutanten, 1.082 getötet, 3 Fehler, 2 Timeouts, 255 überlebt, MSI **81 %** (Ziel 80 %), 1 h 27 min. Danach geschlossen: Lücken in den Regeln (`8be8dab`) und im Abgleich des Modells mit dem Core für Dateifreigaben und Dateioperationen (`a4abc2d`); kein Fehler im Code gefunden. Nachlauf nur für die Regel-Engine (`DataHandling/`, Stand `8be8dab`): 364 Mutanten, 297 getötet, 67 überlebt, MSI **81,6 %** (Ziel 80 % laut `RELAUNCH.md` §8.1); alle gezielten Mutanten (u. a. `trim` des Typs, abgeschaltete klassische Gruppen, Platzhalter späterer Gruppen, Ausdruck für unsichere Werte) werden erkannt. Die Überlebenden im Modell, die beide Seiten des Vorher-nachher-Vergleichs gleich verändern (z. B. `array_values`, `intExplode(…, false)` mit nachgelagertem Filter), können keine Rechteänderung verdecken. |
+| E2E-Tests | 32 Tests grün (2026-10-08, `-s e2e`, Playwright 1.63, TYPO3 14.3.7): Modul (Listen, Filter, Sortierung, Inkonsistenzen, Vorrang im TSconfig, Bearbeiten-Links), Formulare aller Bausteintypen und der Rolle, Ablehnung „Rolle in Rolle“ und „Baustein am Benutzer“ samt Sudo-Mode, Präfixe im Core-Modul „Users“; axe (WCAG 2.2 AA) im hellen und im dunklen Theme, eine Prüfung der Textfarbe stellt sicher, dass der dunkle Lauf wirklich dunkel ist. Gegenprobe: ein Bild ohne Alt-Text im Modul lässt beide axe-Tests scheitern. |
 | Barrierefreiheit | axe-core 4.13 (WCAG 2.2 AA) per Playwright 1.63 in hellem und dunklem Theme: 0 Verstöße in Modul, Rollen- und Bausteinformular und überschriebenen Users-Templates. Offene „needs review“-Hinweise betreffen das Modulmenü des Core. Bedienung nur über native Links und Buttons, keine eigenen Widgets. |
 | Release-Probe | Release 1.0.0 in einer Kopie simuliert: `setVersion.php`, Changelogs, `checkReleaseVersion.php`, annotierter Tag, `git archive`; `tailor create-artefact` validiert das Paket. Kein Upload ins TER. |
 | PHPStan | Level max, ohne Baseline, mit Prüfung auf `@internal`: 0 Fehler. Gegen 15-dev (Core `784b432`, 2026-10-08): `Classes/` ohne Befund; 403 Meldungen nur in den Tests (`mixed` aus `get()`, weil das Testing-Framework für v15 die Typisierung geändert hat; vor dem Wechsel auf v15 zu lösen). |
@@ -210,23 +223,31 @@ Beim Ändern von Typ oder Rollenzusammensetzung fragt TYPO3 nach dem Passwort. D
 
 | # | Frage | Stand |
 |---|---|---|
-| a | Titel der Extension | Vorschlag umgesetzt: „Backend Group Kinds - Roles and building blocks for TYPO3 backend permissions“ (`composer.json`, Doku). **Bestätigung offen.** |
-| b | Review-Ablauf | Vorschlag: Jeder Pull Request durchläuft die komplette Pipeline und ein strenges Code-Review, Jonathan gibt frei, bei Meilensteinen kommt ein Review aus der Community. **Bestätigung offen.** |
-| c | Übersetzungen | Offizielle TYPO3-Lokalisierung oder das eigene Crowdin-Projekt (`crowdin.yml` ist auf die neuen Dateien angepasst). **Offen, bis M4.** |
+| a | Titel der Extension | ✅ Bestätigt von Jonathan (2026-10-08): „Backend Group Kinds - Roles and building blocks for TYPO3 backend permissions“ (`composer.json`, Doku). |
+| b | Review-Ablauf | ✅ Entschieden von Jonathan (2026-10-08, E16): Jeder Pull Request durchläuft die komplette Pipeline und ein strenges Code-Review, Jonathan gibt frei. Kein zusätzliches Community-Review. |
+| c | Übersetzungen | ✅ Entschieden von Jonathan (2026-10-08, E15): Crowdin-Projekt von TYPO3. Umgesetzt: `.crowdin.yml` nach der offiziellen Vorlage, Workflow `Crowdin` (lädt die englischen Labels hoch, ohne Secrets übersprungen). Deutsch bleibt im Repo und hat Vorrang vor dem Sprachpaket. Schritte bei Jonathan: siehe unten. |
 | d | Versionsnummer | Empfehlung 1.0.0 (E5). `composer.json` steht auf `1.0.0-dev`. |
 | e | Alte Branches und Crowdin-PR #3 | Nach dem Relaunch archivieren bzw. schließen (M4). |
 | – | E14 Keine Migration früherer Versionen | ✅ Entschieden von Jonathan (2026-10-08); Wizard entfernt. |
 | – | Keine Fehler im Log | ✅ Vorgabe von Jonathan (2026-10-08): Bei der Nutzung der Extension entstehen keine Fehler im Log, weil keine erzeugt werden, nicht weil sie unterdrückt werden. Umgesetzt in `42071fe` (siehe Abschnitt 9), geprüft im Log-Test (Abschnitt 3). |
-| f | E12 Typ-Filter im Users-Modul verworfen, E13 Starter-Set über den Core-Befehl | Autonom entschieden am 2026-10-08, begründet in `RELAUNCH.md` §11. **Bestätigung offen.** |
+| f | E12 Typ-Filter im Users-Modul verworfen, E13 Starter-Set über den Core-Befehl | ✅ Bestätigt von Jonathan (2026-10-08). |
 | – | Matrix-Bearbeitung | ✅ Entschieden von Jonathan (2026-10-08): kommt mit Version 1.1 (E2). |
+| – | Infection und E2E-Tests | ✅ Entschieden von Jonathan (2026-10-08): beide vor 1.0. Umgesetzt als `-s mutation` und `-s e2e`. |
+| – | PHP-Versionen | ✅ Vorgabe von Jonathan (2026-10-08): die volle Spanne, die TYPO3 14 erlaubt (PHP 8.2 bis 8.5). Werkzeuge mit höheren Anforderungen (Infection braucht PHP 8.3) laufen nur als PHAR im Container und werden keine Abhängigkeit. |
 | g | Präfixe in Listen | ✅ Entschieden von Jonathan (2026-10-08): Der Typ erscheint überall automatisch als Präfix vor dem Titel („META: Redakteur“), Titel enthalten keinen Typ. Umgesetzt (`f208342`), inklusive Core-Modul „Users“ per abgesichertem Template-Override. |
 | – | Mit Michael Klapper | Namensnennung (ohne/mit Firma), Link und E-Mail-Adresse, ob er die Credits-Seite gegenliest, optional ein Blick auf das Konzept. Bis zur Freigabe wird nur sein Name genannt. |
 
 **Zugänge, die Jonathan einrichtet:**
+- **GitHub, SSH-Schlüssel:** Gepusht wird nur als `Cretection`. Das Konto hat keinen SSH-Schlüssel (`github.com/cretection.keys` ist leer, 2026-10-08); der Secretive-Schlüssel `cretection@github.com` muss dort als „Authentication Key“ eingetragen werden. Die SSH-Konfiguration (`github.com-cretection`) ist richtig; `IdentitiesOnly yes` verhindert den Rückfall auf den 8devs-Schlüssel.
 - **GitHub:** Branch-Schutz für `main` mit Pflichtprüfungen, sobald die Pipeline einmal gelaufen ist.
 - **TER:** einen Token (`tailor ter:token:create`) als Secret `TYPO3_API_TOKEN` in der GitHub-Environment `ter` für den Release-Workflow (M4). Der Extension-Key `be_groups` gehört bereits `cretection` (TER-API, geprüft am 2026-10-08; letzte Version 0.0.9 für TYPO3 11).
 - **docs.typo3.org:** den Webhook für das Rendering der Doku.
+- **Crowdin (E15):** Im TYPO3-Slack, Kanal `#typo3-localization-team`, die Aufnahme von `be_groups` beantragen (Name der Extension, E-Mail-Adresse für die Einladung). Danach im Repo die Secrets `CROWDIN_PROJECT_ID` und `CROWDIN_PERSONAL_TOKEN` anlegen (Token-Rechte laut [Doku](https://docs.typo3.org/permalink/t3coreapi:crowdin-extension-integration)), die deutschen Übersetzungen als „existing translations“ hochladen (`zip translations.zip Resources/Private/Language/*.*.xlf Resources/Private/Language/Modules/*.*.xlf`) und freigeben. Den Link zum Projekt in `CONTRIBUTING*.md` eintragen.
 - **Packagist:** Das Paket `cretection/be-groups` besteht bereits (0.0.1–0.0.9 aus `Cretection/be_groups`, geprüft am 2026-10-08). Offen: prüfen, ob der Auto-Update-Hook aktiv ist.
+
+**An den TYPO3 Core zu melden (Forge, öffentlich, keine Sicherheitslücke):**
+- `SelectCheckBoxElement` (TYPO3 14.3.7, Zeile 164) rendert die Köpfe gruppierter Checkboxen als `role="tab"` ohne Tabliste und mit einem Button darin; axe meldet `aria-required-parent` und `nested-interactive`. Betrifft z. B. die Dateioperationen jeder Backend-Gruppe, auch ohne be_groups. Die E2E-Tests nehmen genau diese Elemente aus.
+- Ohne `typo3/cms-frontend` lässt sich TYPO3 14.3.7 nicht hochfahren (`PageTypeLinkResolver` verlangt `LinkFactory`). Die E2E-Instanz installiert deshalb das Frontend mit.
 
 **Inzwischen geklärt:**
 - `render-guides` unterstützt übersetzte Handbücher (`Documentation/Localization.de_DE/`).
@@ -236,7 +257,8 @@ Beim Ändern von Typ oder Rollenzusammensetzung fragt TYPO3 nach dem Passwort. D
 
 ## 7. Nächste Aufgaben (Reihenfolge)
 
-1. **Push und erster CI-Lauf** (`git push -u origin relaunch`), sobald Jonathan ihn freigibt.
+1. **Push und erster CI-Lauf** (`git push -u origin relaunch`), freigegeben von Jonathan (2026-10-08), sobald der SSH-Schlüssel im Konto `Cretection` liegt (Abschnitt 6). Vor dem Push alle Commits auf Hinweise auf LLMs prüfen.
+   - Neu im ersten Lauf: die Jobs `e2e` und `coverage`. Den Job `mutation` einmal über „Run workflow“ starten.
    - Die Pipeline beobachten, besonders die Container-Images und den Job `typo3-next`. Der Runner `ubuntu-26.04` ist seit dem 2026-09-17 allgemein verfügbar; `actionlint` 1.7.12 kennt das Label noch nicht (falscher Alarm).
    - Danach den Branch-Schutz einrichten.
    - Die Testabdeckung wird zusammengeführt und geprüft (Job `coverage`, siehe Abschnitt 3).
@@ -332,9 +354,11 @@ Sie sind wichtig, damit niemand die behobenen Fehler versehentlich wieder einbau
 | Datenzugriff | `Classes/Domain/Repository/` (nur lesend; geschrieben wird ausschließlich über den DataHandler) |
 | Labels | `Resources/Private/Language/` (`db.xlf`, `messages.xlf`, `Modules/overview.xlf`, jeweils mit `de.`) |
 | Tests | `Tests/Unit/`, `Tests/Functional/` (Fixtures in `Fixtures/`, Test-Extensions in `Fixtures/Extensions/`) |
+| E2E-Tests | `Build/tests/playwright/` (Specs in `e2e/`, Backend-Fixture mit axe in `fixtures/backend.ts`, Testdaten `scenario.php`), Instanz aus `Build/Scripts/setupE2E.sh` in `.Build/e2e`, Werkzeuge in `Build/package.json` |
+| Mutationstests | `Build/infection/` (Konfiguration und gemeinsame PHPUnit-Konfiguration beider Suiten), PHAR mit Prüfsumme über `Build/Scripts/downloadVerifiedFile.php` |
 | Tooling | `Build/` (runTests.sh, PHPStan, php-cs-fixer, Rector, PHPUnit, Integritätsprüfungen), `.github/workflows/ci.yml` |
 | Doku | `Documentation/` (EN) und `Documentation/Localization.de_DE/` (DE) |
-| Planung | `RELAUNCH.md` (Konzept, Entscheidungen E1–E11, Roadmap), `STATUS.md` (dieses Dokument) |
+| Planung | `RELAUNCH.md` (Konzept, Entscheidungen E1–E16, Roadmap), `STATUS.md` (dieses Dokument) |
 
 ---
 
