@@ -110,7 +110,7 @@ Eine Variante mit `selectCheckBox` wurde im Spike gerendert, aber verworfen: Sie
   - Rollen mit Bausteinen und Benutzern, Bausteine mit allen verwendenden Gruppen und Benutzern, klassische Gruppen sowie Gruppen mit unbekanntem Typ.
   - Sortierung, Typ-Filter, Markierung von Inkonsistenzen (die Anzahl hängt nicht vom Filter ab).
   - Typen anderer Extensions mit eigener Bezeichnung und eigenem Icon.
-- **Matrix:** Rollen als Zeilen, Bausteine nach Typ gruppiert als Spalten, Haken per Klick.
+- **Matrix (Version 1.1, E2):** Rollen als Zeilen, Bausteine nach Typ gruppiert als Spalten, Haken per Klick.
 - **Verwendungsnachweis:** In welchen Rollen steckt ein Baustein? Welche Benutzer haben eine Rolle?
 - **Effektive Rechte:** Verlinkung auf die Core-Detailansicht für Gruppen (v14, #99065).
 - **Schreiben:** ausschließlich über den DataHandler. Sudo-Mode, Historie und Log greifen damit wie im Core. Für AJAX existiert ein Core-`sudo-mode-interceptor`.
@@ -309,7 +309,7 @@ be_groups geht auf **Michael Klapper** zurück. Er hat die Idee 2012 bei morphod
 
 ## 9. Roadmap und Aufwand
 
-Version 1.0.0 enthält alle Phasen (Entscheidung E2). Die Meilensteine erscheinen vorab als Vorabversionen auf Packagist, damit früh getestet werden kann.
+Version 1.0.0 enthält alle Phasen außer der Matrix-Bearbeitung, die mit Version 1.1 kommt (Entscheidung E2). Die Meilensteine erscheinen vorab als Vorabversionen auf Packagist, damit früh getestet werden kann.
 
 Der Qualitätsstandard aus Abschnitt 8 erhöht den Aufwand gegenüber der ersten Schätzung um etwa 50 %. Der Mehraufwand steckt vor allem in der Infrastruktur, in Playwright und Barrierefreiheit, in Themes und dark mode, in der Doku und in der Release-Härtung.
 
@@ -317,7 +317,7 @@ Der Qualitätsstandard aus Abschnitt 8 erhöht den Aufwand gegenüber der ersten
 |---|---|---|---|---|
 | M0 Fundament | Branch `relaunch`, Altlasten raus, komplette Qualitäts-Infrastruktur (8.1/8.3), Doku-Gerüst mit Credits-Seite (8.5) | alle Prüfungen grün auf leerem Gerüst | 2–3 PT | ✅ erledigt |
 | M1 Kern | Typen und TCA, gruppierte Rollen-Auswahl, Benutzerfilter, Regeln R1–R4, Events | `1.0.0-alpha1` | 5–7 PT | ✅ erledigt (Events nach M2 verschoben; der Upgrade-Wizard entfällt, E14) |
-| M2 Übersicht | Modul „Rollen & Bausteine“ (TypeScript/Lit, barrierefrei, Themes), `begroups:audit`, Typ-Filter, Präfixe | `1.0.0-beta1` | 6–9 PT | 🟡 Modul ohne Bearbeitung, `begroups:audit` mit Event, `ModifyKindOfNewGroupEvent` fertig; Typ als Präfix überall (Entscheidung g); Typ-Filter im Core-Modul verworfen (E12); offen: Matrix-Bearbeitung |
+| M2 Übersicht | Modul „Rollen & Bausteine“ (TypeScript/Lit, barrierefrei, Themes), `begroups:audit`, Typ-Filter, Präfixe | `1.0.0-beta1` | 6–9 PT | 🟡 Modul ohne Bearbeitung, `begroups:audit` mit Event, `ModifyKindOfNewGroupEvent` fertig; Typ als Präfix überall (Entscheidung g); Typ-Filter im Core-Modul verworfen (E12); Matrix-Bearbeitung in 1.1 (E2) |
 | M3 Umstieg | Klassifizierungs- und Aufteilungs-Assistent, Starter-Set | `1.0.0-beta2` | 4–6 PT | ✅ erledigt: `begroups:classify`, `begroups:split`; Starter-Set über den Core-Befehl (E13) |
 | M4 Härtung | Security-Review, Performance-Benchmark, Prüfung der Barrierefreiheit, Doku und Screenshots final, Credits mit dem Erfinder abgestimmt, Übersetzungen | `1.0.0-rc1` → **1.0.0** im TER | 2–3 PT | 🟡 Security-Review, Performance, Barrierefreiheit (axe), Screenshots und Release-Workflow fertig (2026-10-08); offen: Credits, Übersetzungen, Release |
 
@@ -341,7 +341,7 @@ Gesamt etwa 19–28 Personentage.
 | # | Frage | Entscheidung |
 |---|---|---|
 | E1 | Extension-Key und Name | ✅ Key `be_groups` und Paket `cretection/be-groups` bleiben, mit sprechendem Titel (2026-10-06) |
-| E2 | Umfang von 1.0 | ✅ alles, M0–M3 inklusive Übersichtsmodul und Assistenten, Vorabversionen pro Meilenstein (2026-10-06) |
+| E2 | Umfang von 1.0 | ✅ alles, M0–M3 inklusive Übersichtsmodul und Assistenten, Vorabversionen pro Meilenstein (2026-10-06). Ausnahme: Die Matrix-Bearbeitung im Modul kommt mit Version 1.1, weil sie das ganze Frontend-Tooling voraussetzt und das Bearbeiten über die Formulare des Core geht (2026-10-08). |
 | E3 | Typenliste | ✅ an der Doku ausgerichtet, 11 Typen inklusive `file_operations` (2026-10-06) |
 | E4 | Typ „Klassisch“ | ✅ erlaubt und über die Extension-Konfiguration abschaltbar (Standard: an). Bei „aus“ gibt es keine neuen klassischen Gruppen, Benutzer bekommen nur Rollen angeboten und die Konsistenzprüfung meldet einen Fehler. Bestehende Gruppen wirken weiter, und es werden keine Rechte gelöscht. Doku und Schnellstart empfehlen, die Option nach der Umstellung abzuschalten (2026-10-07). |
 | E5 | Version | Empfehlung: 1.0.0 |

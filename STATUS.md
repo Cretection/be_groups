@@ -86,7 +86,7 @@ Dieses Dokument ist der Einstiegspunkt, um die Arbeit fortzusetzen. Das Konzept 
 |---|---|
 | M0 Fundament | ✅ erledigt. Der CI-Lauf auf GitHub steht noch aus, weil nichts gepusht ist. |
 | M1 Kern | ✅ erledigt. Die eigenen PSR-14-Events sind nach M2 verschoben. |
-| M2 Übersicht | 🟡 teilweise. Fertig: Modul ohne Bearbeitung, `begroups:audit` mit Event, `ModifyKindOfNewGroupEvent`. Typ als Präfix überall (Entscheidung g). Verworfen: Typ-Filter im Users-Modul (E12). Offen: Matrix-Bearbeitung. |
+| M2 Übersicht | 🟡 teilweise. Fertig: Modul ohne Bearbeitung, `begroups:audit` mit Event, `ModifyKindOfNewGroupEvent`. Typ als Präfix überall (Entscheidung g). Verworfen: Typ-Filter im Users-Modul (E12). Die Matrix-Bearbeitung kommt mit 1.1 (E2, 2026-10-08). |
 | M3 Umstieg | ✅ erledigt: `begroups:classify`, `begroups:split`, Starter-Set über den Core-Befehl (E13). |
 | M4 Härtung und Release | 🟡 teilweise. Fertig: Sicherheitsprüfung, Performance-Benchmark, Barrierefreiheit (axe), Screenshots, Release-Workflow. Offen: Credits mit Michael Klapper, Übersetzungen, erster CI-Lauf, Release. |
 
@@ -217,6 +217,7 @@ Beim Ändern von Typ oder Rollenzusammensetzung fragt TYPO3 nach dem Passwort. D
 | – | E14 Keine Migration früherer Versionen | ✅ Entschieden von Jonathan (2026-10-08); Wizard entfernt. |
 | – | Keine Fehler im Log | ✅ Vorgabe von Jonathan (2026-10-08): Bei der Nutzung der Extension entstehen keine Fehler im Log, weil keine erzeugt werden, nicht weil sie unterdrückt werden. Umgesetzt in `42071fe` (siehe Abschnitt 9), geprüft im Log-Test (Abschnitt 3). |
 | f | E12 Typ-Filter im Users-Modul verworfen, E13 Starter-Set über den Core-Befehl | Autonom entschieden am 2026-10-08, begründet in `RELAUNCH.md` §11. **Bestätigung offen.** |
+| – | Matrix-Bearbeitung | ✅ Entschieden von Jonathan (2026-10-08): kommt mit Version 1.1 (E2). |
 | g | Präfixe in Listen | ✅ Entschieden von Jonathan (2026-10-08): Der Typ erscheint überall automatisch als Präfix vor dem Titel („META: Redakteur“), Titel enthalten keinen Typ. Umgesetzt (`f208342`), inklusive Core-Modul „Users“ per abgesichertem Template-Override. |
 | – | Mit Michael Klapper | Namensnennung (ohne/mit Firma), Link und E-Mail-Adresse, ob er die Credits-Seite gegenliest, optional ein Blick auf das Konzept. Bis zur Freigabe wird nur sein Name genannt. |
 
@@ -242,8 +243,8 @@ Beim Ändern von Typ oder Rollenzusammensetzung fragt TYPO3 nach dem Passwort. D
    - Sichtprüfung am 2026-10-08 abgeschlossen: alle Typ-Formulare, Ablehnungen im Formular (Rolle in Rolle, Baustein am Benutzer) mit Titel und uid in der Meldung, Typ-Auswahl bei abgeschalteten klassischen Gruppen (neue Gruppen starten als Rolle, bestehende klassische Gruppen behalten „Classic“), Rollenformular mit über 3.000 Gruppen in der Auswahl (Aufbau etwa 1 s).
    - Vorschlag: Das Modul zeigt die Bausteine einer Rolle nach Typ gruppiert, nicht in der gespeicherten Reihenfolge, die den TSconfig-Vorrang bestimmt. Die Reihenfolge zusätzlich anzeigen (**Entscheidung offen**).
    - Hinweis zur Testumgebung: `backend:user:create` legt Benutzer ohne `workspace_perms` an. Mit EXT:workspaces sehen sie dann kein Modul; das Backend-Formular setzt den Standardwert 1. Für den Testbenutzer `editor` ist der Wert gesetzt.
-3. **M2 vervollständigen:**
-   - **Matrix-Bearbeitung** im Modul: Rollen × Bausteine. Geschrieben wird ausschließlich über den DataHandler (AJAX-Route mit `methods: POST`), mit Sudo-Mode und Barrierefreiheit (Tastatur, ARIA-Grid). Alle Themes hell und dunkel. **Entscheidung offen:** in 1.0 (E2) oder 1.1; Empfehlung 1.1, weil sie das ganze Frontend-Tooling voraussetzt und das Bearbeiten heute über die normalen Formulare geht.
+3. **Für Version 1.1** (Rest von M2, nicht Teil von 1.0):
+   - **Matrix-Bearbeitung** im Modul: Rollen × Bausteine. Geschrieben wird ausschließlich über den DataHandler (AJAX-Route mit `methods: POST`), mit Sudo-Mode und Barrierefreiheit (Tastatur, ARIA-Grid). Alle Themes hell und dunkel. ✅ Entschieden von Jonathan (2026-10-08): **Version 1.1** (E2), weil sie das ganze Frontend-Tooling voraussetzt und das Bearbeiten über die normalen Formulare geht.
    - **Frontend-Tooling** aufsetzen, bevor JavaScript entsteht: `package.json`, TypeScript strict, ESLint (Konfiguration des Core), Stylelint 17 (Konfiguration von tea), rollup ohne Bündelung, web-test-runner, Playwright mit axe (WCAG 2.2 AA). Die axe-Prüfung vom 2026-10-08 lief einmalig außerhalb des Repos.
    - **Weitere PSR-14-Events** nur bei einem konkreten Anwendungsfall (vorhanden: `AfterAuditFindingsCollectedEvent`, `ModifyKindOfNewGroupEvent`). Typen und Felder bleiben TCA (keine eigene Registry).
    - **Idee von Jonathan:** Die Vorschläge der Assistenten (`classify`/`split --dry-run`) auch im Modul „Rollen & Bausteine“ anzeigen.

@@ -217,8 +217,8 @@ wird abgelehnt, solange klassische Gruppen abgeschaltet sind.
 Geplant
 =======
 
-Die folgenden Teile des Relaunch sind für Version 1.0.0 geplant und noch
-nicht verfügbar:
+Der folgende Teil des Relaunch ist für Version 1.1 geplant und noch nicht
+verfügbar:
 
 *   Bearbeiten im Modul „Rollen & Bausteine“ (eine Matrix aus Rollen und
     Bausteinen). Die Übersicht ohne Bearbeitung ist bereits verfügbar, siehe

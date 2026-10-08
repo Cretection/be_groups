@@ -215,8 +215,8 @@ groups are disabled.
 Planned
 =======
 
-The following parts of the relaunch are planned for version 1.0.0 and are
-not available yet:
+The following part of the relaunch is planned for version 1.1 and is not
+available yet:
 
 *   Editing in the module "Roles & Building Blocks" (a matrix of roles and
     building blocks). The read-only overview is available already, see
