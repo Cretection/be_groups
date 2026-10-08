@@ -1,6 +1,7 @@
 /.Build/
 /.cache/
 /node_modules/
+/Build/node_modules/
 /.phpunit.cache/
 /var/
 *.zip

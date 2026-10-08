@@ -62,7 +62,19 @@ Build/Scripts/runTests.sh -s phpstan
 
 # Render the documentation (English and German)
 Build/Scripts/runTests.sh -s docs
+
+# End-to-end tests with axe (WCAG 2.2 AA) in the light and the dark theme
+Build/Scripts/runTests.sh -s e2e
+
+# Coverage of all tests, at least 90 % of the lines in Classes/
+Build/Scripts/runTests.sh -s unit -m
+Build/Scripts/runTests.sh -s functional -m
+Build/Scripts/runTests.sh -s coverageMerge
+Build/Scripts/runTests.sh -s coverageCheck
 ```
+
+The end-to-end tests set up their own TYPO3 instance in `.Build/e2e` with the
+scenario of `Build/tests/playwright/scenario.php`.
 
 On GitHub Actions we use `-b docker`; locally Podman is the default.
 
@@ -131,7 +143,9 @@ Versions follow semantic versioning. The version lives in `composer.json`
 releases it carries the suffix `-dev` (for example `1.2.1-dev`), which TYPO3
 reads as the stability of the extension.
 
-1. Prepare the release in a pull request:
+1. Make sure that the jobs `typo3-next` and `e2e` are green.
+
+2. Prepare the release in a pull request:
 
    ```bash
    php Build/Scripts/setVersion.php 1.2.0
@@ -146,7 +160,7 @@ reads as the stability of the extension.
    php Build/Scripts/checkReleaseVersion.php 1.2.0
    ```
 
-2. After the pull request is merged, tag the commit on `main` with an
+3. After the pull request is merged, tag the commit on `main` with an
    annotated tag and push it. The message of the tag becomes the upload
    comment in the TER:
 
@@ -161,7 +175,7 @@ reads as the stability of the extension.
    files as the Composer package (`export-ignore` in `.gitattributes`).
    Packagist and docs.typo3.org update through their webhooks.
 
-3. Start the next version, e.g. `php Build/Scripts/setVersion.php 1.2.1-dev`,
+4. Start the next version, e.g. `php Build/Scripts/setVersion.php 1.2.1-dev`,
    and add a new section `## [Unreleased]` to `CHANGELOG.md`.
 
 Tags of pre-releases such as `1.2.0-rc1` are not uploaded to the TER, which

@@ -379,10 +379,10 @@ final readonly class DeriveRoleCompositionTca
   - They run against SQLite, MariaDB, MySQL and PostgreSQL. [Core]
 - Every bug fix starts with a test that reproduces the bug. The scenarios from the feasibility study are mandatory tests. [Project]
 - **E2E:**
-  - Playwright in `Build/tests/playwright/` with a setup login and page objects from the Core (`backend-page`, `modal`, `doc-header`).
-  - axe checks against `wcag2a`, `wcag2aa`, `wcag21aa` and `wcag22aa`. [Core][Project]
-- **JS unit tests** with web-test-runner. [Core]
-- **Coverage:** ≥ 90 % lines in `Classes/`. Infection (MSI ≥ 80 %) for `Domain/` and `DataHandling/`. [Project]
+  - Playwright in `Build/tests/playwright/` with a setup login and page objects after the Core (`backend-page`), against an instance of `Build/Scripts/setupE2E.sh` (`runTests.sh -s e2e`).
+  - axe checks against `wcag2a`, `wcag2aa`, `wcag21a`, `wcag21aa` and `wcag22aa`, in the light and the dark theme. [Core][Project]
+- **JS unit tests** with web-test-runner, as soon as the extension has JavaScript of its own. [Core]
+- **Coverage:** ≥ 90 % lines in `Classes/` (`runTests.sh -s coverageCheck`). Infection (MSI ≥ 80 %) for `Domain/` and `DataHandling/`. [Project]
 
 ---
 

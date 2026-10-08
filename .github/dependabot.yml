@@ -9,6 +9,19 @@ updates:
     commit-message:
       prefix: "[TASK] "
 
+  - package-ecosystem: "npm"
+    directory: "/Build"
+    schedule:
+      interval: "weekly"
+    groups:
+      # runTests.sh takes the browser image of the version of "@playwright/test"
+      playwright:
+        patterns:
+          - "@playwright/test"
+          - "playwright-core"
+    commit-message:
+      prefix: "[TASK] "
+
   - package-ecosystem: "composer"
     directory: "/"
     schedule:

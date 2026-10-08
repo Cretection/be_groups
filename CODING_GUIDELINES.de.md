@@ -379,10 +379,10 @@ final readonly class DeriveRoleCompositionTca
   - Sie laufen gegen SQLite, MariaDB, MySQL und PostgreSQL. [Core]
 - Jeder Fehler, der behoben wird, bekommt zuerst einen Test, der ihn reproduziert. Die Szenarien aus der Machbarkeitsprüfung sind Pflicht-Tests. [Projekt]
 - **E2E:**
-  - Playwright unter `Build/tests/playwright/` mit Setup-Login, Page-Objects aus dem Core (`backend-page`, `modal`, `doc-header`).
-  - axe-Prüfung gegen `wcag2a`, `wcag2aa`, `wcag21aa` und `wcag22aa`. [Core][Projekt]
-- **JS-Unit-Tests** mit web-test-runner. [Core]
-- **Abdeckung:** ≥ 90 % Zeilen in `Classes/`. Infection (MSI ≥ 80 %) für `Domain/` und `DataHandling/`. [Projekt]
+  - Playwright unter `Build/tests/playwright/` mit Setup-Login und Page-Objects nach dem Core (`backend-page`), gegen eine Instanz aus `Build/Scripts/setupE2E.sh` (`runTests.sh -s e2e`).
+  - axe-Prüfung gegen `wcag2a`, `wcag2aa`, `wcag21a`, `wcag21aa` und `wcag22aa`, im hellen und im dunklen Theme. [Core][Projekt]
+- **JS-Unit-Tests** mit web-test-runner, sobald die Extension eigenes JavaScript hat. [Core]
+- **Abdeckung:** ≥ 90 % Zeilen in `Classes/` (`runTests.sh -s coverageCheck`). Infection (MSI ≥ 80 %) für `Domain/` und `DataHandling/`. [Projekt]
 
 ---
 

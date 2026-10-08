@@ -62,7 +62,19 @@ Build/Scripts/runTests.sh -s phpstan
 
 # Dokumentation rendern (Englisch und Deutsch)
 Build/Scripts/runTests.sh -s docs
+
+# End-to-End-Tests mit axe (WCAG 2.2 AA) im hellen und im dunklen Theme
+Build/Scripts/runTests.sh -s e2e
+
+# Abdeckung aller Tests, mindestens 90 % der Zeilen in Classes/
+Build/Scripts/runTests.sh -s unit -m
+Build/Scripts/runTests.sh -s functional -m
+Build/Scripts/runTests.sh -s coverageMerge
+Build/Scripts/runTests.sh -s coverageCheck
 ```
+
+Die End-to-End-Tests richten eine eigene TYPO3-Instanz in `.Build/e2e` ein, mit
+dem Szenario aus `Build/tests/playwright/scenario.php`.
 
 In GitHub Actions verwenden wir `-b docker`; lokal ist Podman der Standard.
 
@@ -135,7 +147,9 @@ Versionen folgen der semantischen Versionierung. Die Version steht in
 Handbücher; zwischen zwei Releases trägt sie das Suffix `-dev` (zum Beispiel
 `1.2.1-dev`), das TYPO3 als Stabilität der Extension liest.
 
-1. Das Release in einem Pull Request vorbereiten:
+1. Sicherstellen, dass die Jobs `typo3-next` und `e2e` grün sind.
+
+2. Das Release in einem Pull Request vorbereiten:
 
    ```bash
    php Build/Scripts/setVersion.php 1.2.0
@@ -151,7 +165,7 @@ Handbücher; zwischen zwei Releases trägt sie das Suffix `-dev` (zum Beispiel
    php Build/Scripts/checkReleaseVersion.php 1.2.0
    ```
 
-2. Nach dem Merge den Commit auf `main` mit einem annotierten Tag versehen und
+3. Nach dem Merge den Commit auf `main` mit einem annotierten Tag versehen und
    ihn pushen. Die Nachricht des Tags wird zum Upload-Kommentar im TER:
 
    ```bash
@@ -165,7 +179,7 @@ Handbücher; zwischen zwei Releases trägt sie das Suffix `-dev` (zum Beispiel
    Composer-Paket (`export-ignore` in `.gitattributes`). Packagist und
    docs.typo3.org aktualisieren sich über ihre Webhooks.
 
-3. Die nächste Version beginnen, z. B. mit
+4. Die nächste Version beginnen, z. B. mit
    `php Build/Scripts/setVersion.php 1.2.1-dev`, und in `CHANGELOG.md` einen
    neuen Abschnitt `## [Unreleased]` anlegen.
 

@@ -185,6 +185,36 @@ jobs:
       - name: Functional tests (SQLite)
         run: Build/Scripts/runTests.sh -b docker -p 8.5 -s functional -d sqlite
 
+  e2e:
+    name: End-to-end tests with accessibility checks
+    runs-on: ubuntu-26.04
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Cache dependencies installed with composer and npm
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          key: "e2e-composer-npm-${{ hashFiles('composer.json', 'Build/package-lock.json') }}"
+          path: |
+            .cache/composer
+            .cache/.npm
+          restore-keys: "e2e-composer-npm-"
+      - name: Run the end-to-end tests in the light and the dark theme
+        run: Build/Scripts/runTests.sh -b docker -p 8.5 -s e2e
+      - name: Upload the report of failed tests
+        if: failure()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: e2e-report
+          path: |
+            .Build/logs/playwright-report
+            .Build/logs/playwright-results
+            .Build/logs/e2e-*.log
+          if-no-files-found: ignore
+
   coverage:
     name: Code coverage (unit and functional tests)
     runs-on: ubuntu-26.04

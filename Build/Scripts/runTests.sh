@@ -227,6 +227,10 @@ Options:
             - coverageMerge: Merges the coverage collected with -m into one clover report and
               one text report (needs "phpunit/phpcov").
             - docs: Renders the documentation and fails on rendering warnings and errors.
+            - e2e: End-to-end tests with Playwright and axe (WCAG 2.2 AA) in the light and the
+              dark theme, after a type check of the tests. Sets up a TYPO3 instance with SQLite in
+              ".Build/e2e" (setupE2E.sh) and runs it with Apache and PHP-FPM. Arguments after "--" go to Playwright, e.g.
+              "-- module.spec.ts". The reports are written to ".Build/logs/playwright-*".
             - fix: Runs all automatic fixes (composer normalize, Rector, PHP-CS-Fixer, XLIFF).
               All steps run; the suite fails if any of them fails.
             - functional: PHP functional tests
@@ -380,6 +384,41 @@ composerNormalize() {
     fi
     COMMAND="composer normalize --no-check-lock ${NORMALIZE_OPTIONS}"
     ${CONTAINER_BIN} run ${CONTAINER_COMMON_PARAMS} --name composer-normalize-${SUFFIX} ${COMPOSER_PARAMS} ${IMAGE_PHP} /bin/sh -c "${COMMAND}"
+}
+
+e2e() {
+    # After the pattern of "runPlaywright()" in the runTests.sh of the TYPO3 Core: the instance is
+    # set up in the PHP container, Apache and PHP-FPM serve it, Playwright runs in its own container.
+    local E2E_DOCROOT="${ROOT_DIR}/.Build/e2e/public"
+    ${CONTAINER_BIN} run ${CONTAINER_COMMON_PARAMS} --name e2e-setup-${SUFFIX} -e XDEBUG_MODE=off \
+        -e COMPOSER_CACHE_DIR=${ROOT_DIR}/.cache/composer -e COMPOSER_HOME=${ROOT_DIR}/.cache/composer-home \
+        ${IMAGE_PHP} Build/Scripts/setupE2E.sh || return 1
+    if [ ! -e "${ROOT_DIR}/Build/node_modules/.bin/playwright" ]; then
+        ${CONTAINER_BIN} run ${CONTAINER_COMMON_PARAMS} --name e2e-npm-ci-${SUFFIX} -e HOME=${ROOT_DIR}/.cache \
+            ${IMAGE_PLAYWRIGHT} npm --prefix=Build ci --no-audit --no-fund || return 1
+    fi
+    local APACHE_OPTIONS="-e APACHE_RUN_USER=#${HOST_UID} -e APACHE_RUN_SERVERNAME=web -e APACHE_RUN_GROUP=#${HOST_PID} -e APACHE_RUN_DOCROOT=${E2E_DOCROOT} -e PHPFPM_HOST=phpfpm -e PHPFPM_PORT=9000"
+    if [ "${CONTAINER_BIN}" = "docker" ]; then
+        ${CONTAINER_BIN} run --rm -d --name e2e-phpfpm-${SUFFIX} --network ${NETWORK} --network-alias phpfpm ${USERSET} -e XDEBUG_MODE=off \
+            -e PHPFPM_USER=${HOST_UID} -e PHPFPM_GROUP=${HOST_PID} -v ${ROOT_DIR}:${ROOT_DIR} ${IMAGE_PHP} php-fpm >/dev/null || return 1
+    else
+        ${CONTAINER_BIN} run --rm ${CI_PARAMS} -d --name e2e-phpfpm-${SUFFIX} --network ${NETWORK} --network-alias phpfpm ${USERSET} -e XDEBUG_MODE=off \
+            -e PHPFPM_USER=0 -e PHPFPM_GROUP=0 -v ${ROOT_DIR}:${ROOT_DIR} ${IMAGE_PHP} php-fpm -R >/dev/null || return 1
+    fi
+    ${CONTAINER_BIN} run --rm ${CI_PARAMS} -d --name e2e-web-${SUFFIX} --network ${NETWORK} --network-alias web -v ${ROOT_DIR}:${ROOT_DIR} ${APACHE_OPTIONS} ${IMAGE_APACHE} >/dev/null || return 1
+    waitFor phpfpm 9000
+    waitFor web 80
+    ${CONTAINER_BIN} run ${CONTAINER_COMMON_PARAMS} --name e2e-types-${SUFFIX} -e HOME=${ROOT_DIR}/.cache \
+        ${IMAGE_PLAYWRIGHT} npm --prefix=Build run check:types || return 1
+    ${CONTAINER_BIN} run ${CONTAINER_COMMON_PARAMS} --name e2e-${SUFFIX} -e CI=1 -e HOME=${ROOT_DIR}/.cache \
+        -e PLAYWRIGHT_BASE_URL=http://web:80/typo3/ ${IMAGE_PLAYWRIGHT} npm --prefix=Build run e2e -- "$@"
+    local E2E_EXIT_CODE=$?
+    if [ ${E2E_EXIT_CODE} -ne 0 ]; then
+        mkdir -p "${ROOT_DIR}/.Build/logs"
+        ${CONTAINER_BIN} logs "e2e-web-${SUFFIX}" > "${ROOT_DIR}/.Build/logs/e2e-web.log" 2>&1
+        ${CONTAINER_BIN} logs "e2e-phpfpm-${SUFFIX}" > "${ROOT_DIR}/.Build/logs/e2e-phpfpm.log" 2>&1
+    fi
+    return ${E2E_EXIT_CODE}
 }
 
 integrity() {
@@ -601,6 +640,10 @@ mkdir -p .Build/public/typo3temp/var/tests
 
 IMAGE_PHP="ghcr.io/typo3/core-testing-$(echo "php${PHP_VERSION}" | sed -e 's/\.//'):$(getPhpImageVersion ${PHP_VERSION})"
 IMAGE_SHELLCHECK="docker.io/koalaman/shellcheck:v0.11.0"
+IMAGE_APACHE="ghcr.io/typo3/core-testing-apache24:1.7"
+# The browsers of the image belong to the version of "@playwright/test" in "Build/package.json"
+PLAYWRIGHT_VERSION=$(sed -n 's/.*"@playwright\/test": "\([0-9.]*\)".*/\1/p' Build/package.json)
+IMAGE_PLAYWRIGHT="mcr.microsoft.com/playwright:v${PLAYWRIGHT_VERSION}-noble"
 IMAGE_DOCS="ghcr.io/typo3-documentation/render-guides:0.45.0"
 IMAGE_MARIADB="docker.io/mariadb:${DBMS_VERSION}"
 IMAGE_MYSQL="docker.io/mysql:${DBMS_VERSION}"
@@ -744,6 +787,10 @@ case ${TEST_SUITE} in
                 SUITE_EXIT_CODE=$?
             fi
         fi
+        ;;
+    e2e)
+        e2e "$@"
+        SUITE_EXIT_CODE=$?
         ;;
     docs)
         mkdir -p Documentation-GENERATED-temp
