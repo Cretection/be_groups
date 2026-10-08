@@ -88,6 +88,17 @@
                                             </f:for>
                                         </div>
                                     </f:for>
+                                    <f:if condition="{role.tsconfigPrecedence}">
+                                        <div class="mb-1">
+                                            <strong><f:translate key="tsconfigPrecedence.label" domain="be_groups.modules.overview" /></strong>
+                                            <span class="text-body-secondary">(<f:translate key="tsconfigPrecedence.description" domain="be_groups.modules.overview" />)</span>
+                                            <ol class="mb-0">
+                                                <f:for each="{role.tsconfigPrecedence}" as="tsconfigBuildingBlock">
+                                                    <li class="py-1"><f:render section="GroupLink" arguments="{group: tsconfigBuildingBlock, returnUrl: returnUrl}" /></li>
+                                                </f:for>
+                                            </ol>
+                                        </div>
+                                    </f:if>
                                     <f:for each="{role.invalidMembers}" as="invalidMember">
                                         <div class="mb-1">
                                             <span class="badge badge-danger" title="{f:translate(key: 'issue.invalidMember.description', domain: 'be_groups.modules.overview')}"><f:translate key="issue.invalidMember" domain="be_groups.modules.overview" /></span>

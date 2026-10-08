@@ -179,7 +179,16 @@ final readonly class OverviewBuilder
                 $kindGroups[] = new KindGroups($definition->value, $definition->label, $definition->iconIdentifier, $this->sortGroups($membersOfKind));
             }
         }
-        return new RoleItem($role, $kindGroups, $invalidMembers, $missingMemberUids, $this->sortUsers($users));
+        // TYPO3 applies the TSconfig of the members in their stored order, hidden groups not at all.
+        // The order only matters when two or more TSconfig building blocks take part.
+        $tsconfigPrecedence = array_values(array_filter(
+            $buildingBlocks,
+            static fn(GroupItem $member): bool => $member->kind === GroupKind::TsConfig->value && !$member->hidden,
+        ));
+        if (count($tsconfigPrecedence) < 2) {
+            $tsconfigPrecedence = [];
+        }
+        return new RoleItem($role, $kindGroups, $invalidMembers, $missingMemberUids, $this->sortUsers($users), $tsconfigPrecedence);
     }
 
     /**

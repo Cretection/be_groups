@@ -27,6 +27,8 @@ final readonly class RoleItem
      * @param list<GroupItem> $invalidMembers subgroups that are no building blocks
      * @param list<int> $missingMemberUids subgroups that do not exist (anymore)
      * @param list<UserItem> $users
+     * @param list<GroupItem> $tsconfigPrecedence active TSconfig building blocks in the order TYPO3
+     *        applies them (later ones override earlier ones); empty unless there are two or more
      */
     public function __construct(
         public GroupItem $group,
@@ -34,6 +36,7 @@ final readonly class RoleItem
         public array $invalidMembers,
         public array $missingMemberUids,
         public array $users,
+        public array $tsconfigPrecedence,
     ) {}
 
     public function hasIssues(): bool

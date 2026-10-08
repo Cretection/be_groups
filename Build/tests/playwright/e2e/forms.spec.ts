@@ -70,6 +70,7 @@ test.describe('Forms of groups', () => {
       /FO: Upload and edit files/,
       /L: English/,
       /TS: Clear page cache/,
+      /TS: Editor defaults/,
     ]);
   });
 

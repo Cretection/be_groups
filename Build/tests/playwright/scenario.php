@@ -64,6 +64,7 @@ $descriptions = [
     'Upload and edit files' => 'Upload, edit and rename files, without deleting them.',
     'English' => 'Content in the default language.',
     'Clear page cache' => 'Lets editors clear the page cache.',
+    'Editor defaults' => 'Settings of the backend for editors.',
     'Marketing pages' => 'Owner group of the pages of the marketing team.',
     'Products' => 'Product categories.',
     'Drafts' => 'Edits the live workspace.',
@@ -101,11 +102,12 @@ $datamap = [
         ]),
         'NEWlanguage' => $group('English', 'language', ['allowed_languages' => '0']),
         'NEWts' => $group('Clear page cache', 'tsconfig', ['TSconfig' => 'options.clearCache.pages = 1']),
+        'NEWtsEditor' => $group('Editor defaults', 'tsconfig', ['TSconfig' => 'options.pageTree.showPageIdWithTitle = 1']),
         'NEWpg' => $group('Marketing pages', 'page_group'),
         'NEWcm' => $group('Products', 'category_mount', ['category_perms' => (string)$products]),
         'NEWws' => $group('Drafts', 'workspace', ['workspace_perms' => 1]),
         'NEWroleContent' => $group('Content manager', 'role', [
-            'subgroup' => 'NEWaclContent,NEWaclPages,NEWaclMedia,NEWdbm,NEWfmImages,NEWfmDocuments,NEWfo,NEWlanguage,NEWts',
+            'subgroup' => 'NEWaclContent,NEWaclPages,NEWaclMedia,NEWdbm,NEWfmImages,NEWfmDocuments,NEWfo,NEWlanguage,NEWts,NEWtsEditor',
         ]),
         'NEWroleMarketing' => $group('Marketing', 'role', [
             'subgroup' => 'NEWpg,NEWaclContent,NEWdbm,NEWfmImages,NEWfo,NEWcm,NEWws',

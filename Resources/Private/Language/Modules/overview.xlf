@@ -108,6 +108,12 @@
       <trans-unit id="label.edit">
         <source>Edit "%1$s"</source>
       </trans-unit>
+      <trans-unit id="tsconfigPrecedence.label">
+        <source>TSconfig precedence</source>
+      </trans-unit>
+      <trans-unit id="tsconfigPrecedence.description">
+        <source>later building blocks override earlier ones</source>
+      </trans-unit>
       <trans-unit id="issue.invalidMember">
         <source>not a building block</source>
       </trans-unit>

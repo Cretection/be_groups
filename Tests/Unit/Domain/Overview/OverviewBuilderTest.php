@@ -168,6 +168,48 @@ final class OverviewBuilderTest extends UnitTestCase
     }
 
     #[Test]
+    public function roleShowsTheTsconfigBuildingBlocksInTheOrderTypo3AppliesThem(): void
+    {
+        $overview = $this->subject->build(
+            [
+                $this->group(1, 'TS b', 'tsconfig'),
+                $this->group(2, 'TS a', 'tsconfig'),
+                $this->group(3, 'ACL a', 'acl'),
+                $this->group(4, 'R editor', 'role', '1,3,2'),
+            ],
+            [],
+            [new KindDefinition('role', 'Role', 'status-user-group-backend'), new KindDefinition('acl', 'Access rights', 'actions-shield'), new KindDefinition('tsconfig', 'TSconfig', 'actions-code')],
+            OverviewBuilder::SORT_TITLE,
+            '',
+        );
+
+        // Later building blocks override earlier ones, so the stored order counts, not the title
+        self::assertSame(['TS b', 'TS a'], array_map(static fn(GroupItem $group): string => $group->title, $this->findRole($overview, 'R editor')->tsconfigPrecedence));
+    }
+
+    #[Test]
+    public function tsconfigPrecedenceIsOnlyShownWithTwoOrMoreActiveTsconfigBuildingBlocks(): void
+    {
+        $overview = $this->subject->build(
+            [
+                $this->group(1, 'TS a', 'tsconfig'),
+                $this->group(2, 'TS hidden', 'tsconfig', '', true),
+                $this->group(3, 'R one', 'role', '1'),
+                $this->group(4, 'R with hidden', 'role', '1,2'),
+            ],
+            [],
+            [new KindDefinition('role', 'Role', 'status-user-group-backend'), new KindDefinition('tsconfig', 'TSconfig', 'actions-code')],
+            OverviewBuilder::SORT_TITLE,
+            '',
+        );
+
+        // TYPO3 does not apply hidden groups, so they take no part in the precedence
+        self::assertSame([], $this->findRole($overview, 'R one')->tsconfigPrecedence);
+        self::assertSame([], $this->findRole($overview, 'R with hidden')->tsconfigPrecedence);
+        self::assertSame([], $this->findRole($this->build(), 'R editor')->tsconfigPrecedence);
+    }
+
+    #[Test]
     public function classicGroupsAreListedSeparately(): void
     {
         self::assertSame(['Classic'], array_map(static fn(GroupItem $group): string => $group->title, $this->build()->classicGroups));
@@ -206,9 +248,9 @@ final class OverviewBuilderTest extends UnitTestCase
         return $this->subject->build($groups, $users, $kinds, $sorting, $kindFilter);
     }
 
-    private function group(int $uid, string $title, string $kind, string $subgroup = ''): DatabaseRow
+    private function group(int $uid, string $title, string $kind, string $subgroup = '', bool $hidden = false): DatabaseRow
     {
-        return DatabaseRow::fromArray(['uid' => $uid, 'title' => $title, 'tx_begroups_kind' => $kind, 'subgroup' => $subgroup, 'hidden' => 0]);
+        return DatabaseRow::fromArray(['uid' => $uid, 'title' => $title, 'tx_begroups_kind' => $kind, 'subgroup' => $subgroup, 'hidden' => (int)$hidden]);
     }
 
     private function findRole(Overview $overview, string $title): RoleItem

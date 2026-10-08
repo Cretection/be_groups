@@ -43,9 +43,10 @@ Relaunch for TYPO3 14.3 LTS (version 1.0.0).
   with their building blocks and users, building blocks with every group and
   user using them, classic groups and groups with an unknown kind; sorting by
   title or usage, filtering by kind; markers for roles with invalid members,
-  building blocks with subgroups or direct users, and unused building blocks.
-  The issue count does not depend on the filter; kinds of other extensions
-  use their own label and icon.
+  building blocks with subgroups or direct users, and unused building blocks;
+  the order of the TSconfig building blocks for roles with two or more of
+  them, as later ones override earlier ones. The issue count does not depend
+  on the filter; kinds of other extensions use their own label and icon.
 - Consistency check `vendor/bin/typo3 begroups:audit` (read-only): unknown
   kinds, classic groups, building blocks with subgroups, foreign permissions
   on groups, invalid or missing members of roles, building blocks assigned to

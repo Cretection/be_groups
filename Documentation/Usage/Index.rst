@@ -141,7 +141,9 @@ The module "Roles & Building Blocks"
 Administrators find the module *Administration > Roles & Building Blocks*
 next to the *Users* module. It is read-only and shows:
 
-*   every role with its building blocks, grouped by kind, and its users,
+*   every role with its building blocks, grouped by kind, and its users;
+    for a role with two or more TSconfig building blocks also the order in
+    which TYPO3 applies them, as later ones override earlier ones,
 *   every building block with the roles and other groups using it and the
     users it is assigned to directly,
 *   the remaining classic groups,

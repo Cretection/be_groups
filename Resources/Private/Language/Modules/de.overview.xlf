@@ -143,6 +143,14 @@
         <source>Edit "%1$s"</source>
         <target>„%1$s“ bearbeiten</target>
       </trans-unit>
+      <trans-unit id="tsconfigPrecedence.label" approved="yes">
+        <source>TSconfig precedence</source>
+        <target>Vorrang im TSconfig</target>
+      </trans-unit>
+      <trans-unit id="tsconfigPrecedence.description" approved="yes">
+        <source>later building blocks override earlier ones</source>
+        <target>spätere Bausteine überschreiben frühere</target>
+      </trans-unit>
       <trans-unit id="issue.invalidMember" approved="yes">
         <source>not a building block</source>
         <target>kein Baustein</target>

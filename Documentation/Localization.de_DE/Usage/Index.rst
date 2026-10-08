@@ -145,7 +145,9 @@ Das Modul „Rollen & Bausteine“
 Administratoren finden das Modul *Administration > Rollen & Bausteine* neben
 dem Modul *Benutzer*. Es ändert nichts, sondern zeigt:
 
-*   jede Rolle mit ihren Bausteinen, gruppiert nach Typ, und ihren Benutzern,
+*   jede Rolle mit ihren Bausteinen, gruppiert nach Typ, und ihren Benutzern;
+    bei einer Rolle mit zwei oder mehr TSconfig-Bausteinen auch die
+    Reihenfolge, in der TYPO3 sie anwendet, denn spätere überschreiben frühere,
 *   jeden Baustein mit den Rollen und anderen Gruppen, die ihn verwenden, und
     den Benutzern, denen er direkt zugewiesen ist,
 *   die verbliebenen klassischen Gruppen,

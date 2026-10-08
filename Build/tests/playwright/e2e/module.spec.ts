@@ -26,6 +26,16 @@ test.describe('Module "Roles & Building Blocks"', () => {
     await expect(contentManager.getByRole('link', { name: 'anna' })).toBeVisible();
   });
 
+  test('shows the TSconfig precedence of a role with several TSconfig building blocks', async ({ backend }) => {
+    const frame = backend.contentFrame;
+    const contentManager = frame.getByRole('row').filter({ has: frame.getByRole('rowheader', { name: 'Content manager' }) });
+    await expect(contentManager).toContainText('TSconfig precedence (later building blocks override earlier ones)');
+    await expect(contentManager.locator('ol > li')).toHaveText(['Clear page cache', 'Editor defaults']);
+    // Marketing has no TSconfig building block, so the order does not matter there
+    const marketing = frame.getByRole('row').filter({ has: frame.getByRole('rowheader', { name: 'Marketing', exact: true }) });
+    await expect(marketing).not.toContainText('TSconfig precedence');
+  });
+
   test('marks a role that contains a role', async ({ backend }) => {
     const frame = backend.contentFrame;
     await expect(frame.getByText('Inconsistencies found')).toBeVisible();
