@@ -3,8 +3,9 @@
 use TYPO3\CMS\Core\Imaging\IconProvider\SvgIconProvider;
 
 return [
-    'module-be-groups' => [
+    'module-begroups-roles' => [
         'provider' => SvgIconProvider::class,
-        'source' => 'EXT:be_groups/Resources/Public/Icons/Extension.svg',
+        // Monochrome like the module icons of the core: only the role uses the accent color.
+        'source' => 'EXT:be_groups/Resources/Public/Icons/module-roles.svg',
     ],
 ];

@@ -29,7 +29,7 @@ use TYPO3\CMS\Core\Schema\TcaSchemaFactory;
 final readonly class KindRegistry
 {
     private const TABLE = 'be_groups';
-    private const FALLBACK_ICON = 'status-user-group-backend';
+    private const FALLBACK_ICON = 'actions-users';
 
     public function __construct(
         private TcaSchemaFactory $tcaSchemaFactory,

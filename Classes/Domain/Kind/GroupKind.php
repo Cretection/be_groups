@@ -46,16 +46,16 @@ enum GroupKind: string
     public function iconIdentifier(): string
     {
         return match ($this) {
-            self::Role => 'status-user-group-backend',
+            self::Role => 'actions-users',
             self::AccessControl => 'actions-shield',
-            self::PageGroup => 'apps-pagetree-page-backend-users',
+            self::PageGroup => 'actions-lock',
             self::DatabaseMount => 'actions-pagetree-mount',
-            self::FileMount => 'apps-filetree-mount',
+            self::FileMount => 'actions-folder',
             self::FileOperations => 'actions-file-shield',
-            self::CategoryMount => 'mimetypes-x-sys_category',
-            self::Language => 'mimetypes-x-sys_language',
-            self::TsConfig => 'mimetypes-text-typoscript',
-            self::Workspace => 'mimetypes-x-sys_workspace',
+            self::CategoryMount => 'actions-category',
+            self::Language => 'actions-translate',
+            self::TsConfig => 'actions-code',
+            self::Workspace => 'actions-workspace',
             self::Classic => 'actions-key',
         };
     }

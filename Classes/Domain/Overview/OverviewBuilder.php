@@ -33,7 +33,7 @@ final readonly class OverviewBuilder
     public const SORT_USAGE = 'usage';
     public const SORTINGS = [self::SORT_TITLE, self::SORT_USAGE];
 
-    private const FALLBACK_ICON = 'status-user-group-backend';
+    private const FALLBACK_ICON = 'actions-users';
 
     /**
      * @param list<DatabaseRow> $groupRows fields: uid, title, tx_begroups_kind, subgroup, hidden

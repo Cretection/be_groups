@@ -13,7 +13,7 @@ return [
         'access' => 'admin',
         'workspaces' => 'live',
         'path' => '/module/users/roles',
-        'iconIdentifier' => 'module-be-groups',
+        'iconIdentifier' => 'module-begroups-roles',
         'labels' => 'be_groups.modules.overview',
         'routes' => [
             '_default' => [

@@ -85,6 +85,9 @@ Relaunch for TYPO3 14.3 LTS (version 1.0.0).
     repeatable.
   - It prints a hint if the former setting `onlyShowMetaGroup` is still
     enabled; its successor is `allowClassicGroups`.
+- Icons in the style of TYPO3 14 for the light and the dark backend theme:
+  the kinds use monochrome icons of the core, the module has its own
+  monochrome icon with the accent color of the theme.
 - Documentation in English and German, including a credits and history
   page for the original author Michael Klapper.
 

@@ -63,6 +63,8 @@ defined('TYPO3') or die();
     $GLOBALS['TCA'][$table]['ctrl']['type'] = $kindField;
     $GLOBALS['TCA'][$table]['ctrl']['typeicon_column'] = $kindField;
     $GLOBALS['TCA'][$table]['ctrl']['default_sortby'] = 'title';
+    // Monochrome icons of the core, so they follow the light and the dark backend theme.
+    $GLOBALS['TCA'][$table]['ctrl']['typeicon_classes']['default'] = 'actions-users';
     foreach ($availableKinds as $kind) {
         $GLOBALS['TCA'][$table]['ctrl']['typeicon_classes'][$kind->value] = $kind->iconIdentifier();
     }
