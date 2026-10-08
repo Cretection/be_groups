@@ -167,7 +167,7 @@ vendor/bin/typo3 extension:setup && vendor/bin/typo3 cache:flush
 - `create-docs-scenario.php` ersetzt erzeugte Daten durch ein kleines, realistisches Szenario: Rollen „Content manager“, „Marketing“ und „Team lead“ (mit einer Rolle als Mitglied), passende Bausteine, eine klassische Gruppe und die Benutzer anna, ben, carla und dan. **Das ist der aktuelle Stand der Testumgebung**; die Screenshots der Doku stammen daraus. Platzhalter in Verknüpfungen dürfen keinen Unterstrich enthalten, weil TYPO3 dort `tabelle_uid` liest.
 - `benchmark.sh` misst die Assistenten, `set-color-scheme.php <Benutzer> <auto|light|dark>` setzt das Farbschema eines Benutzers (für Screenshots in beiden Themes; der Admin steht wieder auf „dark“).
 - Für Browser-Automatisierung ist die Umgebung unter http://127.0.0.1:64263 erreichbar, Playwright-Container im Netz `ddev-begroups-test_default` unter `http://ddev-begroups-test-web`.
-- Starten mit `cd ~/Developer/Local/begroups-test && ddev start`. Die anderen DDEV-Projekte bleiben unberührt; nie `ddev poweroff` oder `ddev stop --all` verwenden.
+- Starten mit `cd ~/Developer/Local/begroups-test && ddev start`. Die anderen DDEV-Projekte bleiben unberührt; nie `ddev poweroff` oder `ddev stop --all` verwenden, kein `docker system prune` und keinen Neustart von Docker, weil das laufende Testcontainer abbricht.
 
 Das andere DDEV-Projekt gehört zu einem **anderen Projekt**. Deshalb zuerst einen Snapshot anlegen und die Extension nur als Kopie einbinden. Voraussetzung ist TYPO3 14.3 im Composer-Modus.
 
@@ -222,9 +222,9 @@ Beim Ändern von Typ oder Rollenzusammensetzung fragt TYPO3 nach dem Passwort. D
 
 **Zugänge, die Jonathan einrichtet:**
 - **GitHub:** Branch-Schutz für `main` mit Pflichtprüfungen, sobald die Pipeline einmal gelaufen ist.
-- **TER:** einen Token als GitHub-Secret für den Release-Workflow (M4).
+- **TER:** einen Token (`tailor ter:token:create`) als Secret `TYPO3_API_TOKEN` in der GitHub-Environment `ter` für den Release-Workflow (M4). Der Extension-Key `be_groups` gehört bereits `cretection` (TER-API, geprüft am 2026-10-08; letzte Version 0.0.9 für TYPO3 11).
 - **docs.typo3.org:** den Webhook für das Rendering der Doku.
-- **Packagist:** prüfen, ob der Auto-Update-Hook aktiv ist.
+- **Packagist:** Das Paket `cretection/be-groups` besteht bereits (0.0.1–0.0.9 aus `Cretection/be_groups`, geprüft am 2026-10-08). Offen: prüfen, ob der Auto-Update-Hook aktiv ist.
 
 **Inzwischen geklärt:**
 - `render-guides` unterstützt übersetzte Handbücher (`Documentation/Localization.de_DE/`).
