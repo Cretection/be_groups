@@ -65,8 +65,8 @@ next to the *Users* module. It is read-only and shows:
 *   every building block with the roles and other groups using it and the
     users it is assigned to directly,
 *   the remaining classic groups,
-*   groups with an unknown kind, for example a numeric kind of the former
-    extension before the upgrade wizard has run, with a warning.
+*   groups with an unknown kind, for example the kind of an uninstalled
+    extension, with a warning.
 
 Roles can be sorted by title or by number of users, building blocks by title
 or by usage. Building blocks can be filtered by kind; the selection is kept
@@ -98,7 +98,7 @@ Checking groups and users
 =========================
 
 The rules apply to every save operation. Data written around the
-DataHandler – SQL, synchronisation tools, the former extension – and
+DataHandler – SQL, synchronisation tools – and
 assignments stored before the extension was installed are found by the
 consistency check. It reads all groups and users and changes nothing:
 
@@ -115,8 +115,8 @@ consistency check. It reads all groups and users and changes nothing:
         - Finding
     *   - ``unknown-kind``
         - error
-        - The kind of the group is not configured, for example a numeric kind
-          of the former extension. Run the upgrade wizard or choose a kind.
+        - The kind of the group is not configured, for example the kind of an
+          uninstalled extension. Choose a kind.
     *   - ``classic-group``
         - warning
         - A classic group. Split it into building blocks and a role.

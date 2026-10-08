@@ -105,9 +105,9 @@ Alle Typen haben außerdem Titel, Beschreibung und das Feld „Deaktiviert“.
 
 Gültig sind nur die konfigurierten Typen: die Einträge des Felds
 :sql:`tx_begroups_kind`, die ein eigenes Formular haben. Ein gespeicherter
-Wert, der kein solcher Eintrag ist – zum Beispiel ein numerischer Typ der
-früheren Extension, bevor der Upgrade-Wizard gelaufen ist, oder der Typ einer
-deinstallierten Extension –, ist weder Rolle noch Baustein. Solche Gruppen
+Wert, der kein solcher Eintrag ist – zum Beispiel der Typ einer
+deinstallierten Extension oder ein per SQL geschriebener Wert –, ist weder
+Rolle noch Baustein. Solche Gruppen
 werden nicht verändert, können keiner Rolle hinzugefügt werden und werden im
 Modul gesondert aufgeführt.
 

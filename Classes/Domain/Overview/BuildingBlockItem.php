@@ -24,7 +24,7 @@ final readonly class BuildingBlockItem
 {
     /**
      * @param list<GroupItem> $roles roles containing this building block
-     * @param list<GroupItem> $otherGroups other groups containing this building block (classic groups, legacy kinds)
+     * @param list<GroupItem> $otherGroups other groups containing this building block (classic groups, unknown kinds)
      * @param list<UserItem> $directUsers users assigned this building block directly
      * @param bool $hasSubgroups whether the building block itself has subgroups (not allowed for building blocks)
      */

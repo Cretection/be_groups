@@ -20,9 +20,9 @@ use TYPO3\CMS\Core\Schema\TcaSchemaFactory;
 /**
  * The kinds that may be used, as configured in the items of be_groups.tx_begroups_kind.
  *
- * Only configured kinds are valid. A stored value that is no item (e.g. a numeric kind of
- * the former extension, or the kind of an uninstalled extension) is neither a role nor a
- * building block, so it can never slip into the role model.
+ * Only configured kinds are valid. A stored value that is no item (e.g. the kind of an
+ * uninstalled extension, or a value written by SQL) is neither a role nor a building block,
+ * so it can never slip into the role model.
  *
  * @internal
  */

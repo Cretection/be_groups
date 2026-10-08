@@ -105,8 +105,8 @@ flag.
 
 Only the configured kinds are valid: the items of the field
 :sql:`tx_begroups_kind` that have a form of their own. A stored value that is
-no such item – for example a numeric kind of the former extension before the
-upgrade wizard has run, or the kind of an uninstalled extension – is neither
+no such item – for example the kind of an uninstalled extension, or a value
+written by SQL – is neither
 a role nor a building block. Such groups are not changed, cannot be added to
 roles and are listed separately in the module.
 

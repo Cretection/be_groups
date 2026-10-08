@@ -18,8 +18,8 @@ registry – you use the TCA API you already know.
 
 A kind is valid if it is an item of the field :sql:`tx_begroups_kind` and has
 a type of its own. Everything except ``role`` and ``classic`` is a building
-block. Values that are no item – numeric kinds of the former extension, kinds
-of an uninstalled extension – are neither roles nor building blocks.
+block. Values that are no item – kinds of an uninstalled extension, values
+written by SQL – are neither roles nor building blocks.
 
 ..  _developer-fields:
 
@@ -97,8 +97,7 @@ Add your own kind
     ];
 
 Use a prefixed, non-numeric identifier for your kind (``my_news``, not
-``news``) to avoid collisions with future kinds of this extension and with
-the numeric kinds of the former extension.
+``news``) to avoid collisions with future kinds of this extension.
 
 Optionally give your kind a label in the lists of the role and user forms,
 which are grouped by kind (otherwise the identifier is shown):

@@ -57,10 +57,9 @@ Nach der Installation
 
 *   Alle bestehenden Backend-Gruppen sind vom Typ „Klassisch“. Für Ihre
     Benutzer ändert sich nichts.
-*   Falls Sie eine frühere Version dieser Extension genutzt haben (0.0.x oder
-    die AOE-Version 1.x), führen Sie den Upgrade-Wizard aus, siehe
-    :ref:`migration`.
-*   Legen Sie die ersten Bausteine und Rollen an, siehe :ref:`concept`.
+*   Stellen Sie die bestehenden Gruppen mit den Assistenten um, siehe
+    :ref:`migration`, oder legen Sie die ersten Bausteine und Rollen selbst
+    an, siehe :ref:`concept`.
 
 ..  _installation-uninstall:
 

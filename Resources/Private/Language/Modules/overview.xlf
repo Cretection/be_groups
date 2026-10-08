@@ -127,7 +127,7 @@
         <source>Unknown kinds</source>
       </trans-unit>
       <trans-unit id="unknownKind.message">
-        <source>These groups have a kind that is not configured, for example a numeric kind of the former extension before the upgrade wizard has run, or the kind of an uninstalled extension. They are neither roles nor building blocks. Run the upgrade wizard or assign a kind.</source>
+        <source>These groups have a kind that is not configured, for example the kind of an uninstalled extension or a value written by SQL. They are neither roles nor building blocks. Assign a kind.</source>
       </trans-unit>
       <trans-unit id="unknownKind.badge">
         <source>kind "%1$s"</source>

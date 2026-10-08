@@ -18,9 +18,8 @@ Sie verwenden die TCA-API, die Sie schon kennen.
 
 Ein Typ ist gültig, wenn er ein Eintrag des Felds :sql:`tx_begroups_kind`
 ist und einen eigenen Typ hat. Alles außer ``role`` und ``classic`` ist ein
-Baustein. Werte, die kein Eintrag sind – numerische Typen der früheren
-Extension, Typen einer deinstallierten Extension –, sind weder Rolle noch
-Baustein.
+Baustein. Werte, die kein Eintrag sind – Typen einer deinstallierten
+Extension, per SQL geschriebene Werte –, sind weder Rolle noch Baustein.
 
 ..  _developer-fields:
 
@@ -99,8 +98,7 @@ Einen eigenen Typ ergänzen
     ];
 
 Verwenden Sie eine nicht numerische Kennung mit Präfix (``my_news``, nicht
-``news``), damit sie weder mit künftigen Typen dieser Extension noch mit den
-numerischen Typen der früheren Extension kollidiert.
+``news``), damit sie nicht mit künftigen Typen dieser Extension kollidiert.
 
 Optional geben Sie Ihrem Typ eine Bezeichnung in den nach Typ gruppierten
 Listen der Rollen- und Benutzerformulare (sonst wird die Kennung angezeigt):

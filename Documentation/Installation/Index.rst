@@ -55,9 +55,9 @@ After the installation
 
 *   All existing backend groups are of kind "Classic". Nothing changes for
     your users.
-*   If you used an earlier version of this extension (0.0.x or the AOE
-    version 1.x), run the upgrade wizard, see :ref:`migration`.
-*   Create the first building blocks and roles, see :ref:`concept`.
+*   Convert the existing groups with the assistants, see :ref:`migration`,
+    or create the first building blocks and roles yourself, see
+    :ref:`concept`.
 
 ..  _installation-uninstall:
 

@@ -67,8 +67,8 @@ dem Modul *Benutzer*. Es ändert nichts, sondern zeigt:
 *   jeden Baustein mit den Rollen und anderen Gruppen, die ihn verwenden, und
     den Benutzern, denen er direkt zugewiesen ist,
 *   die verbliebenen klassischen Gruppen,
-*   Gruppen mit unbekanntem Typ, zum Beispiel einem numerischen Typ der
-    früheren Extension, bevor der Upgrade-Wizard gelaufen ist, mit Warnung.
+*   Gruppen mit unbekanntem Typ, zum Beispiel dem Typ einer deinstallierten
+    Extension, mit Warnung.
 
 Rollen lassen sich nach Titel oder Anzahl der Benutzer sortieren, Bausteine
 nach Titel oder Verwendung. Bausteine lassen sich nach Typ filtern; die
@@ -102,8 +102,8 @@ Gruppen und Benutzer prüfen
 ===========================
 
 Die Regeln greifen bei jedem Speichervorgang. Daten, die am DataHandler
-vorbei geschrieben wurden – per SQL, durch Synchronisations-Werkzeuge oder
-die frühere Extension – und Zuordnungen von vor der Installation findet die
+vorbei geschrieben wurden – per SQL oder durch Synchronisations-Werkzeuge –
+und Zuordnungen von vor der Installation findet die
 Konsistenzprüfung. Sie liest alle Gruppen und Benutzer und ändert nichts:
 
 ..  code-block:: bash
@@ -119,9 +119,8 @@ Konsistenzprüfung. Sie liest alle Gruppen und Benutzer und ändert nichts:
         - Befund
     *   - ``unknown-kind``
         - Fehler
-        - Der Typ der Gruppe ist nicht konfiguriert, zum Beispiel ein
-          numerischer Typ der früheren Extension. Führen Sie den
-          Upgrade-Wizard aus oder wählen Sie einen Typ.
+        - Der Typ der Gruppe ist nicht konfiguriert, zum Beispiel der Typ
+          einer deinstallierten Extension. Wählen Sie einen Typ.
     *   - ``classic-group``
         - Warnung
         - Eine klassische Gruppe. Teilen Sie sie in Bausteine und eine Rolle

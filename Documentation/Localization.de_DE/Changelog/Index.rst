@@ -22,8 +22,8 @@ Relaunch für TYPO3 14.3 LTS.
     Dateifreigaben, Dateioperationen, Kategorie-Freigaben, Sprachen,
     TSconfig, Workspace und Klassisch.
 *   Rollen werden im Core-Feld :sql:`subgroup` zusammengesetzt. Die
-    zusätzlichen Spalten :sql:`subgroup_*` früherer Versionen entfallen; der
-    Upgrade-Wizard ``beGroups_kindMigration`` überträgt sie.
+    zusätzlichen Spalten :sql:`subgroup_*` früherer Versionen entfallen.
+    Daten früherer Versionen werden nicht übernommen, siehe :ref:`migration`.
 *   Die Regeln R1 – R4 werden bei jedem Speichern durchgesetzt, siehe
     :ref:`concept-rules`.
 *   Die Konsistenzprüfung ``begroups:audit`` findet alles, was nicht dem

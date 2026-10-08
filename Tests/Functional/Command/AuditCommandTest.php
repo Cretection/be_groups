@@ -51,7 +51,7 @@ final class AuditCommandTest extends FunctionalTestCase
 
         self::assertSame(Command::FAILURE, $commandTester->execute([]));
         $display = $commandTester->getDisplay();
-        self::assertStringContainsString('be_groups:5 Legacy META', $display);
+        self::assertStringContainsString('be_groups:5 Unknown kind', $display);
         self::assertStringContainsString('unknown-kind', $display);
         self::assertStringContainsString('9 error(s), 7 warning(s).', $display);
     }

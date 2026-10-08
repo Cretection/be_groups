@@ -22,8 +22,8 @@ Relaunch for TYPO3 14.3 LTS.
     mounts, file operations, category mounts, languages, TSconfig,
     workspace and classic.
 *   Roles are composed in the core field :sql:`subgroup`. The additional
-    columns :sql:`subgroup_*` of earlier versions are gone; the upgrade
-    wizard ``beGroups_kindMigration`` migrates them.
+    columns :sql:`subgroup_*` of earlier versions are gone. Data of earlier
+    versions is not migrated, see :ref:`migration`.
 *   The rules R1 – R4 are enforced on every save operation, see
     :ref:`concept-rules`.
 *   The consistency check ``begroups:audit`` finds everything that does

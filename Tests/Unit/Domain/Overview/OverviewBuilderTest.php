@@ -66,7 +66,7 @@ final class OverviewBuilderTest extends UnitTestCase
     {
         $broken = $this->findRole($this->build(), 'R broken');
 
-        self::assertSame(['Classic', 'Legacy META'], array_map(static fn(GroupItem $group): string => $group->title, $broken->invalidMembers));
+        self::assertSame(['Classic', 'Unknown kind'], array_map(static fn(GroupItem $group): string => $group->title, $broken->invalidMembers));
         self::assertSame([99], $broken->missingMemberUids);
         self::assertTrue($broken->hasIssues());
     }
@@ -84,7 +84,7 @@ final class OverviewBuilderTest extends UnitTestCase
 
         $aclA = $this->findBuildingBlock($overview, 'ACL a');
         self::assertSame(['R broken', 'R editor'], array_map(static fn(GroupItem $group): string => $group->title, $aclA->roles));
-        self::assertSame(['Classic', 'Legacy META'], array_map(static fn(GroupItem $group): string => $group->title, $aclA->otherGroups));
+        self::assertSame(['Classic', 'Unknown kind'], array_map(static fn(GroupItem $group): string => $group->title, $aclA->otherGroups));
         self::assertSame(['carol'], array_map(static fn(UserItem $user): string => $user->username, $aclA->directUsers));
         self::assertFalse($aclA->isUnused());
         self::assertTrue($this->findBuildingBlock($overview, 'TS unused')->isUnused());
@@ -104,8 +104,8 @@ final class OverviewBuilderTest extends UnitTestCase
     {
         $overview = $this->build();
 
-        self::assertSame(['Legacy META', 'Orphaned workspace'], array_map(static fn(GroupItem $group): string => $group->title, $overview->unknownKindGroups));
-        self::assertSame('3', $overview->unknownKindGroups[0]->kind);
+        self::assertSame(['Orphaned workspace', 'Unknown kind'], array_map(static fn(GroupItem $group): string => $group->title, $overview->unknownKindGroups));
+        self::assertSame('3', $overview->unknownKindGroups[1]->kind);
     }
 
     #[Test]
@@ -168,7 +168,7 @@ final class OverviewBuilderTest extends UnitTestCase
             $this->group(7, 'R editor', 'role', '4,3,2,1'),
             $this->group(8, 'R broken', 'role', '2,6,10,99'),
             $this->group(9, 'DBM with subgroups', 'db_mount', '4'),
-            $this->group(10, 'Legacy META', '3', '2'),
+            $this->group(10, 'Unknown kind', '3', '2'),
             $this->group(11, 'Orphaned workspace', 'workspace'),
             $this->group(12, 'News categories', 'my_kind'),
         ];

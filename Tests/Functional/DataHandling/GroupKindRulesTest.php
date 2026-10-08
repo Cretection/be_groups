@@ -239,7 +239,7 @@ final class GroupKindRulesTest extends FunctionalTestCase
     }
 
     #[Test]
-    public function numericLegacyKindIsNeverAccepted(): void
+    public function numericKindIsNeverAccepted(): void
     {
         $this->writeGroup(2, ['tx_begroups_kind' => '0', 'groupMods' => 'web_layout']);
 
@@ -249,7 +249,7 @@ final class GroupKindRulesTest extends FunctionalTestCase
     }
 
     #[Test]
-    public function groupWithNumericLegacyKindCannotBeAddedToRole(): void
+    public function groupWithNumericKindCannotBeAddedToRole(): void
     {
         $this->get(ConnectionPool::class)->getConnectionForTable('be_groups')
             ->update('be_groups', ['tx_begroups_kind' => '0'], ['uid' => 3]);

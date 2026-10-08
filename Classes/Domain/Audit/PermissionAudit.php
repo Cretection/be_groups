@@ -32,7 +32,7 @@ use TYPO3\CMS\Core\Utility\GeneralUtility;
  * Checks all backend groups and users against the role model.
  *
  * The DataHandler rules prevent new violations, but data written around the DataHandler
- * (SQL, synchronisation tools, the former extension) and relations that were stored before
+ * (SQL, synchronisation tools) and relations that were stored before
  * the rules applied are only found by this check.
  *
  * @internal
@@ -108,7 +108,7 @@ final readonly class PermissionAudit
             return [$finding(
                 AuditSeverity::Error,
                 'unknown-kind',
-                sprintf('The kind "%s" is not configured (a kind of the former extension or of an uninstalled extension). The group is neither a role nor a building block; run the upgrade wizard or assign a kind.', $kind),
+                sprintf('The kind "%s" is not configured (e.g. the kind of an uninstalled extension, or written by SQL). The group is neither a role nor a building block; assign a kind.', $kind),
             )];
         }
         if ($kind === GroupKind::Classic->value) {

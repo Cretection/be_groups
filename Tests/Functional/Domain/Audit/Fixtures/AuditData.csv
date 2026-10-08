@@ -4,7 +4,7 @@
 ,2,0,"DBM ok",0,0,"db_mount","","","1","",""
 ,3,0,"Role ok",0,0,"role","1,2","","","",""
 ,4,0,"Classic",0,0,"classic","","web_layout","1","",""
-,5,0,"Legacy META",0,0,"3","1","","","",""
+,5,0,"Unknown kind",0,0,"3","1","","","",""
 ,6,0,"DBM with subgroups",0,0,"db_mount","1","","1","",""
 ,7,0,"ACL with TSconfig",0,0,"acl","","web_layout","","options.clearCache.all = 1",""
 ,8,0,"Role invalid",0,0,"role","4,99,3","","","",""

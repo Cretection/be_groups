@@ -72,19 +72,6 @@ Relaunch for TYPO3 14.3 LTS (version 1.0.0).
 - Extension setting `allowClassicGroups` (default: enabled). It takes effect
   immediately: when disabled, the form no longer offers "classic" (except for
   groups that already are classic) and new groups start as "role".
-- Upgrade wizard `beGroups_kindMigration` for data of be_groups 0.0.x and
-  the AOE version 1.x. It never changes effective permissions:
-  - It refuses to run until the database structure has been updated.
-  - Members of META groups that were only listed in the former `subgroup_*`
-    fields are reported, not added.
-  - File permissions of building blocks move into "file operations" building
-    blocks per permission set and hidden state; groups with other foreign
-    settings, and groups whose referencing lists have no room left, become
-    "classic".
-  - Soft-deleted groups and users are migrated as well; the wizard is
-    repeatable.
-  - It prints a hint if the former setting `onlyShowMetaGroup` is still
-    enabled; its successor is `allowClassicGroups`.
 - Icons in the style of TYPO3 14 for the light and the dark backend theme:
   the kinds use monochrome icons of the core, the module has its own
   monochrome icon with the accent color of the theme.
@@ -105,8 +92,9 @@ Relaunch for TYPO3 14.3 LTS (version 1.0.0).
 ### Removed
 
 - The columns `subgroup_r`, `subgroup_l`, `subgroup_pa`, `subgroup_fm`,
-  `subgroup_pm`, `subgroup_ts`, `subgroup_ws` and `subgroup_cat` (read by the
-  upgrade wizard, removed by the database analyzer afterwards).
+  `subgroup_pm`, `subgroup_ts`, `subgroup_ws` and `subgroup_cat`. Data of
+  earlier versions (0.0.x, AOE 1.x) is not migrated; the extension is meant
+  for TYPO3 14 installations without it.
 - The synchronisation hook between `subgroup_*` and `subgroup`, which could
   empty `subgroup` on programmatic saves.
 - `ext_emconf.php`, `ext_icon.png` and the legacy update wizard.

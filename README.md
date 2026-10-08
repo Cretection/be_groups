@@ -32,7 +32,8 @@ kinds with a guided user interface instead of naming conventions.
 - **One form per kind** – every group only shows the fields of its kind.
 - **Roles** are composed in the core field `subgroup`, with the building
   blocks grouped by kind.
-- **Backend users only get roles** (configurable during migration).
+- **Backend users only get roles** (classic groups can stay allowed while
+  converting).
 - **What is not visible does not apply:** permission fields that do not
   belong to a kind are cleared on every save – in the backend, via the
   DataHandler API and by import or sync tools. Stored assignments are never
@@ -48,8 +49,6 @@ kinds with a guided user interface instead of naming conventions.
   if any effective permission would change.
 - **Consistency check** `begroups:audit` with exit codes and JSON output for
   deployments and monitoring, extensible through a PSR-14 event.
-- **Upgrade wizard** for data of be_groups 0.0.x and the AOE version 1.x –
-  without changing any effective permission.
 
 ### Requirements
 
@@ -136,8 +135,6 @@ Gruppentypen mit geführter Oberfläche statt Namenskonventionen.
   zurückgerollt, falls sich ein wirksames Recht ändern würde.
 - **Konsistenzprüfung** `begroups:audit` mit Exit-Codes und JSON-Ausgabe für
   Deployments und Monitoring, erweiterbar über ein PSR-14-Event.
-- **Upgrade-Wizard** für Daten von be_groups 0.0.x und der AOE-Version 1.x –
-  ohne wirksame Rechte zu verändern.
 
 ### Voraussetzungen
 
