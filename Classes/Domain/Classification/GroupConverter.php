@@ -223,13 +223,16 @@ final readonly class GroupConverter
     private function findChange(int $uid, ConversionSnapshot $before, array $createdUids, ?int $ownerPageGroupUid): ?string
     {
         $after = $this->takeSnapshot();
-        foreach ($before->users as $userUid => $user) {
-            if (($after->users[$userUid] ?? null) !== $user) {
+        // Users and groups that are new or no longer exist count as changed as well.
+        foreach (array_keys($before->users + $after->users) as $userUid) {
+            if (($before->users[$userUid] ?? null) !== ($after->users[$userUid] ?? null)) {
                 return sprintf('The user %d would change while saving; nothing was changed.', $userUid);
             }
         }
-        foreach ($after->groups as $groupUid => $group) {
-            if ($groupUid !== $uid && !in_array($groupUid, $createdUids, true) && ($before->groups[$groupUid] ?? null)?->values !== $group->values) {
+        foreach (array_keys($before->groups + $after->groups) as $groupUid) {
+            if ($groupUid !== $uid && !in_array($groupUid, $createdUids, true)
+                && ($before->groups[$groupUid] ?? null)?->values !== ($after->groups[$groupUid] ?? null)?->values
+            ) {
                 return sprintf('The group %d would change while saving; nothing was changed.', $groupUid);
             }
         }

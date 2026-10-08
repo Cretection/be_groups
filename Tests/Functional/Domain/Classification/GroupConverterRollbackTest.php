@@ -143,6 +143,29 @@ final class GroupConverterRollbackTest extends FunctionalTestCase
     }
 
     #[Test]
+    public function rollsBackIfAnotherGroupWouldBeRemoved(): void
+    {
+        $this->updateGroup(6, ['description' => 'rewrite:delete-other-group']);
+
+        $result = $this->get(GroupConverter::class)->split(6);
+
+        self::assertSame(ConversionStatus::Failed, $result->status);
+        self::assertSame('The group 12 would change while saving; nothing was changed.', $result->message);
+        self::assertSame('web_list', $this->getGroup(12, ['groupMods'])['groupMods']);
+    }
+
+    #[Test]
+    public function rollsBackIfAUserWouldBeCreated(): void
+    {
+        $this->updateGroup(6, ['description' => 'rewrite:create-user']);
+
+        $result = $this->get(GroupConverter::class)->split(6);
+
+        self::assertSame(ConversionStatus::Failed, $result->status);
+        self::assertSame('The user 100 would change while saving; nothing was changed.', $result->message);
+    }
+
+    #[Test]
     public function rollsBackIfAUserWouldChange(): void
     {
         $this->updateGroup(6, ['description' => 'rewrite:add-group-to-user']);

@@ -29,7 +29,9 @@ use TYPO3\CMS\Core\DataHandling\DataHandler;
  * - "rewrite:page-mount": page 2 is added to the page mounts when the kind changes,
  * - "rewrite:add-subgroup": group 12 is added to the subgroups of the new role,
  * - "rewrite:widen-other-group": group 12 gets another module,
+ * - "rewrite:delete-other-group": group 12 is removed from the database,
  * - "rewrite:add-group-to-user": user 2 gets group 12,
+ * - "rewrite:create-user": user 100 is created with group 12,
  * - "rewrite:show-group": the group is no longer hidden,
  * - "rewrite:move-first-subgroup-last": the first subgroup of the new role becomes the last one.
  */
@@ -73,7 +75,9 @@ final readonly class RewritePermissions
             'rewrite:page-mount' => $fieldArray['db_mountpoints'] = '1,2',
             'rewrite:add-subgroup' => $fieldArray['subgroup'] = (is_string($fieldArray['subgroup'] ?? null) ? $fieldArray['subgroup'] : '') . ',12',
             'rewrite:widen-other-group' => $connection->update('be_groups', ['groupMods' => 'web_list,web_info'], ['uid' => 12]),
+            'rewrite:delete-other-group' => $connection->delete('be_groups', ['uid' => 12]),
             'rewrite:add-group-to-user' => $this->connectionPool->getConnectionForTable('be_users')->update('be_users', ['usergroup' => '2,12'], ['uid' => 2]),
+            'rewrite:create-user' => $this->connectionPool->getConnectionForTable('be_users')->insert('be_users', ['uid' => 100, 'pid' => 0, 'username' => 'created', 'usergroup' => '12']),
             'rewrite:show-group' => $fieldArray['hidden'] = 0,
             'rewrite:move-first-subgroup-last' => $fieldArray['subgroup'] = $this->moveFirstEntryLast($fieldArray['subgroup'] ?? ''),
             default => null,
