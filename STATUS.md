@@ -213,7 +213,7 @@ Beim Ändern von Typ oder Rollenzusammensetzung fragt TYPO3 nach dem Passwort. D
    - **Präfixe** in Listen: Entscheidung (g) in Abschnitt 6.
 5. **M4:**
    - Security-Review (`CODING_GUIDELINES.de.md` §15), Performance-Benchmark (1.000 Gruppen und 5.000 Benutzer), Prüfung der Barrierefreiheit. Bekannt: Jede Umstellung klassifiziert neu und liest dafür alle Gruppen und Benutzer; die Nachprüfung löst jede vorkommende Gruppen-Kombination zweimal auf. Bei sehr vielen Gruppen wächst der Aufwand von `begroups:split --all` quadratisch.
-   - Starter-Set mit dem echten Core-Befehl prüfen (DDEV-Schritt 11). Automatisch geht das nicht: `setup:begroups:default` lässt sich in Functional Tests nicht instanziieren, weil seine Abhängigkeiten den Failsafe-Modus des Install-Tools verlangen (am 2026-10-08 ausprobiert). `SplitCoreDefaultGroupsTest` bildet deshalb die Inserts des Core nach (Stand 14.3.7, ohne `file_permissions` und TSconfig).
+   - Starter-Set: am 2026-10-08 mit dem echten Core-Befehl in `begroups-test` geprüft (siehe Abschnitt 1). Automatisch geht das nicht: `setup:begroups:default` lässt sich in Functional Tests nicht instanziieren, weil seine Abhängigkeiten den Failsafe-Modus des Install-Tools verlangen. `SplitCoreDefaultGroupsTest` bildet deshalb die Inserts des Core nach (Stand 14.3.7); bei neuen Core-Versionen den Live-Test wiederholen.
    - Vor dem Wechsel auf TYPO3 15: Tests an das typisierungsfreie `get()` des Testing-Frameworks anpassen (siehe Abschnitt 3).
    - Screenshots pro Theme, Übersetzungen, Credits mit Michael Klapper abstimmen.
    - Release-Workflow (`.github/workflows/publish.yml` mit tailor 2.x, TER-Upload ohne `ext_emconf.php` testen), Tag `1.0.0`.
