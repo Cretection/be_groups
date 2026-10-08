@@ -147,6 +147,10 @@
         <source>not a building block</source>
         <target>kein Baustein</target>
       </trans-unit>
+      <trans-unit id="issue.invalidMember.description" approved="yes">
+        <source>Roles may only contain building blocks. TYPO3 still grants the permissions of this group; replace it with building blocks that grant the same.</source>
+        <target>Rollen dürfen nur Bausteine enthalten. TYPO3 gewährt die Rechte dieser Gruppe weiterhin; ersetzen Sie sie durch Bausteine, die dasselbe gewähren.</target>
+      </trans-unit>
       <trans-unit id="issue.missingMember" approved="yes">
         <source>Group %1$s does not exist</source>
         <target>Gruppe %1$s existiert nicht</target>

@@ -111,6 +111,9 @@
       <trans-unit id="issue.invalidMember">
         <source>not a building block</source>
       </trans-unit>
+      <trans-unit id="issue.invalidMember.description">
+        <source>Roles may only contain building blocks. TYPO3 still grants the permissions of this group; replace it with building blocks that grant the same.</source>
+      </trans-unit>
       <trans-unit id="issue.missingMember">
         <source>Group %1$s does not exist</source>
       </trans-unit>

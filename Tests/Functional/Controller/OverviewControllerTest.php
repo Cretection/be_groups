@@ -18,7 +18,9 @@ namespace Cretection\BeGroups\Tests\Functional\Controller;
 use Cretection\BeGroups\Configuration\ExtensionSettings;
 use Cretection\BeGroups\Controller\OverviewController;
 use Cretection\BeGroups\DataHandling\RelationList;
+use Cretection\BeGroups\Domain\Kind\GroupKindLookup;
 use Cretection\BeGroups\Domain\Kind\KindDefinition;
+use Cretection\BeGroups\Domain\Kind\KindPrefix;
 use Cretection\BeGroups\Domain\Kind\KindRegistry;
 use Cretection\BeGroups\Domain\Overview\BuildingBlockItem;
 use Cretection\BeGroups\Domain\Overview\BuildingBlockSection;
@@ -31,6 +33,7 @@ use Cretection\BeGroups\Domain\Overview\UserItem;
 use Cretection\BeGroups\Domain\Repository\BackendGroupRepository;
 use Cretection\BeGroups\Domain\Repository\BackendUserRepository;
 use Cretection\BeGroups\Domain\Repository\DatabaseRow;
+use Cretection\BeGroups\ViewHelpers\GroupTitleViewHelper;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use Psr\Http\Message\ServerRequestFactoryInterface;
@@ -60,6 +63,9 @@ use TYPO3\TestingFramework\Core\Functional\FunctionalTestCase;
 #[CoversClass(RelationList::class)]
 #[CoversClass(KindRegistry::class)]
 #[CoversClass(KindDefinition::class)]
+#[CoversClass(GroupTitleViewHelper::class)]
+#[CoversClass(GroupKindLookup::class)]
+#[CoversClass(KindPrefix::class)]
 final class OverviewControllerTest extends FunctionalTestCase
 {
     /**
@@ -88,6 +94,21 @@ final class OverviewControllerTest extends FunctionalTestCase
         self::assertStringContainsString('R editor', $html);
         self::assertStringContainsString('ACL editing', $html);
         self::assertStringContainsString('Classic all-in-one', $html);
+    }
+
+    #[Test]
+    public function showsTheKindOfMembersThatAreNoBuildingBlocks(): void
+    {
+        $this->setUpBackendUserWithLanguage(1);
+        $this->get(ConnectionPool::class)->getConnectionForTable('be_groups')
+            ->update('be_groups', ['subgroup' => '6,1'], ['uid' => 7]);
+
+        $html = (string)$this->get(OverviewController::class)->indexAction($this->createModuleRequest())->getBody();
+
+        self::assertMatchesRegularExpression(
+            '#<span class="badge badge-danger" title="Roles may only contain building blocks\.[^"]*">not a building block</span>(?:(?!</div>).)*>META: R editor</a>#s',
+            $html,
+        );
     }
 
     #[Test]

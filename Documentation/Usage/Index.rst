@@ -96,8 +96,10 @@ extensions use their label.
 
 The prefix appears in the group and user forms, in the record lists, in the
 permissions module, in the owners and members of workspaces, in the element
-browser and in the core module :guilabel:`Users` (lists of users and groups,
-group filter, details and comparison).
+browser, in the core module :guilabel:`Users` (lists of users and groups,
+group filter, details and comparison) and in the module
+:ref:`Roles & Building Blocks <usage-module>` wherever the section does not
+already name the kind.
 
 ..  note::
 
@@ -138,6 +140,12 @@ have subgroups, building blocks assigned to users directly and groups with an
 unknown kind. The number of these entries is shown at the top and does not
 depend on the kind filter. Building blocks that no group and no user uses
 are marked as unused.
+
+A member of a role that is no building block is marked "not a building
+block" and shown with its kind, for example ``META: Editors`` for a role
+within a role. TYPO3 still grants its permissions; replace it with building
+blocks that grant the same. Converting groups with the assistants often
+leaves such roles, see :ref:`migration-vanilla`.
 
 Kinds added by other extensions are shown with their own label and icon.
 

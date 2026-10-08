@@ -98,8 +98,10 @@ anderer Extensions verwenden ihre Bezeichnung.
 
 Das Präfix erscheint in den Gruppen- und Benutzerformularen, in den
 Datensatzlisten, im Rechte-Modul, bei Eigentümern und Mitgliedern von
-Workspaces, im Element-Browser und im Core-Modul :guilabel:`Benutzer`
-(Benutzer- und Gruppenlisten, Gruppenfilter, Details und Vergleich).
+Workspaces, im Element-Browser, im Core-Modul :guilabel:`Benutzer`
+(Benutzer- und Gruppenlisten, Gruppenfilter, Details und Vergleich) und im
+Modul :ref:`Rollen & Bausteine <usage-module>` überall dort, wo der
+Abschnitt den Typ nicht schon nennt.
 
 ..  note::
 
@@ -141,6 +143,12 @@ Untergruppen, Bausteine, die Benutzern direkt zugewiesen sind, und Gruppen
 mit unbekanntem Typ. Die Anzahl dieser Einträge steht oben und hängt nicht
 vom Typ-Filter ab. Bausteine, die keine Gruppe und kein Benutzer verwendet,
 sind als unbenutzt markiert.
+
+Ein Mitglied einer Rolle, das kein Baustein ist, ist mit „kein Baustein“
+markiert und wird mit seinem Typ angezeigt, zum Beispiel ``META: Redakteure``
+für eine Rolle in einer Rolle. TYPO3 gewährt seine Rechte weiterhin; ersetzen
+Sie es durch Bausteine, die dasselbe gewähren. Solche Rollen bleiben nach dem
+Umstellen mit den Assistenten häufig übrig, siehe :ref:`migration-vanilla`.
 
 Typen anderer Extensions werden mit ihrer eigenen Bezeichnung und ihrem
 eigenen Icon angezeigt.

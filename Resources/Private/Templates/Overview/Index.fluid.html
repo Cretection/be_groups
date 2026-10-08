@@ -2,6 +2,7 @@
     xmlns:f="http://typo3.org/ns/TYPO3/CMS/Fluid/ViewHelpers"
     xmlns:be="http://typo3.org/ns/TYPO3/CMS/Backend/ViewHelpers"
     xmlns:core="http://typo3.org/ns/TYPO3/CMS/Core/ViewHelpers"
+    xmlns:begroups="http://typo3.org/ns/Cretection/BeGroups/ViewHelpers"
     data-namespace-typo3-fluid="true"
 >
 <f:layout name="Module" />
@@ -89,8 +90,8 @@
                                     </f:for>
                                     <f:for each="{role.invalidMembers}" as="invalidMember">
                                         <div class="mb-1">
-                                            <span class="badge badge-danger"><f:translate key="issue.invalidMember" domain="be_groups.modules.overview" /></span>
-                                            <f:render section="GroupLink" arguments="{group: invalidMember, returnUrl: returnUrl}" />
+                                            <span class="badge badge-danger" title="{f:translate(key: 'issue.invalidMember.description', domain: 'be_groups.modules.overview')}"><f:translate key="issue.invalidMember" domain="be_groups.modules.overview" /></span>
+                                            <f:render section="GroupLink" arguments="{group: invalidMember, returnUrl: returnUrl, withKind: 1}" />
                                         </div>
                                     </f:for>
                                     <f:for each="{role.missingMemberUids}" as="missingUid">
@@ -147,11 +148,11 @@
                             </th>
                             <td>
                                 <f:for each="{buildingBlock.roles}" as="usingGroup" iteration="iterator">
-                                    <f:render section="GroupLink" arguments="{group: usingGroup, returnUrl: returnUrl, withIcon: 1}" /><f:if condition="!{iterator.isLast}">, </f:if>
+                                    <f:render section="GroupLink" arguments="{group: usingGroup, returnUrl: returnUrl, withKind: 1}" /><f:if condition="!{iterator.isLast}">, </f:if>
                                 </f:for>
                                 <f:if condition="{buildingBlock.roles} && {buildingBlock.otherGroups}">, </f:if>
                                 <f:for each="{buildingBlock.otherGroups}" as="usingGroup" iteration="iterator">
-                                    <f:render section="GroupLink" arguments="{group: usingGroup, returnUrl: returnUrl, withIcon: 1}" /><f:if condition="!{iterator.isLast}">, </f:if>
+                                    <f:render section="GroupLink" arguments="{group: usingGroup, returnUrl: returnUrl, withKind: 1}" /><f:if condition="!{iterator.isLast}">, </f:if>
                                 </f:for>
                                 <f:if condition="!{buildingBlock.roles} && !{buildingBlock.otherGroups}">
                                     <span class="text-body-secondary"><f:translate key="label.none" domain="be_groups.modules.overview" /></span>
@@ -232,13 +233,13 @@
 </f:section>
 
 <f:section name="GroupLink">
-    <f:if condition="{withIcon}"><core:icon identifier="{group.iconIdentifier}" size="small" /></f:if>
+    <f:if condition="{withKind}"><core:icon identifier="{group.iconIdentifier}" size="small" /></f:if>
     <be:link.editRecord
         uid="{group.uid}"
         table="be_groups"
         returnUrl="{returnUrl}"
         title="{f:translate(key: 'label.edit', domain: 'be_groups.modules.overview', arguments: {0: group.title})}"
-    >{group.title}</be:link.editRecord>
+    ><f:if condition="{withKind}"><f:then><begroups:groupTitle uid="{group.uid}" title="{group.title}" /></f:then><f:else>{group.title}</f:else></f:if></be:link.editRecord>
 </f:section>
 
 <f:section name="UserList">
