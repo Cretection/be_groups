@@ -199,7 +199,11 @@ Beim Ändern von Typ oder Rollenzusammensetzung fragt TYPO3 nach dem Passwort. D
    - Die Pipeline beobachten, besonders den Runner `ubuntu-26.04`, die Container-Images und den Job `typo3-next`.
    - Danach den Branch-Schutz einrichten.
    - Offen: Die Testabdeckung zusammenführen (TODO in `ci.yml`, braucht `phpunit/phpcov`).
-3. **Sichtprüfung im Backend** der Testumgebung `begroups-test`: Formulare je Typ, Modul „Rollen & Bausteine“, Redakteur vor und nach der Umstellung. Die CLI-Prüfung ist erledigt (siehe Abschnitt 1).
+3. **Sichtprüfung im Backend** der Testumgebung `begroups-test`.
+   - Am 2026-10-08 im Browser geprüft und in Ordnung: das Modul „Rollen & Bausteine“ nach `begroups:split`, das Rollenformular (zweispaltige Liste in gespeicherter Reihenfolge, Auswahl nach Typ gruppiert), das Formular eines Zugriffsrechte-Bausteins mit Herkunftshinweis und das Backend des Redakteurs nach der Umstellung (genau seine Module, Seitenbaum aus `DBM_Editor`).
+   - Noch offen: die Formulare aller übrigen Typen, die abgelehnten Zuweisungen im Formular (Rolle in Rolle, Baustein am Benutzer) mit ihren Hinweisen, die Markierungen im Modul und die Typ-Auswahl bei abgeschalteten klassischen Gruppen.
+   - Vorschlag: Das Modul zeigt die Bausteine einer Rolle nach Typ gruppiert, nicht in der gespeicherten Reihenfolge, die den TSconfig-Vorrang bestimmt. Die Reihenfolge zusätzlich anzeigen (**Entscheidung offen**).
+   - Hinweis zur Testumgebung: `backend:user:create` legt Benutzer ohne `workspace_perms` an. Mit EXT:workspaces sehen sie dann kein Modul; das Backend-Formular setzt den Standardwert 1. Für den Testbenutzer `editor` ist der Wert gesetzt.
 4. **M2 vervollständigen:**
    - **Weitere PSR-14-Events** nur bei einem konkreten Anwendungsfall (vorhanden: `AfterAuditFindingsCollectedEvent`, `ModifyKindOfNewGroupEvent`). Typen und Felder bleiben TCA (keine eigene Registry).
    - **Frontend-Tooling** aufsetzen, bevor JavaScript entsteht: `package.json`, TypeScript strict, ESLint (Konfiguration des Core), Stylelint 17 (Konfiguration von tea), rollup ohne Bündelung, web-test-runner, Playwright mit axe (WCAG 2.2 AA).
