@@ -222,8 +222,10 @@ Options:
               forward compatibility. Works on a throwaway copy of the manifest. Use with -p 8.5.
             - composerUpdateMin: "composer update --prefer-lowest", with platform.php set to the
               selected PHP version x.x.0. "composer.json" stays untouched, see composerUpdateMax.
-            - coverageMerge: Merges the coverage collected with -m into one clover report
-              (needs "phpunit/phpcov").
+            - coverageCheck: Fails if less than 90 % of the lines in "Classes/" are covered,
+              based on the report of coverageMerge (CODING_GUIDELINES.md, §13).
+            - coverageMerge: Merges the coverage collected with -m into one clover report and
+              one text report (needs "phpunit/phpcov").
             - docs: Renders the documentation and fails on rendering warnings and errors.
             - fix: Runs all automatic fixes (composer normalize, Rector, PHP-CS-Fixer, XLIFF).
               All steps run; the suite fails if any of them fails.
@@ -316,7 +318,8 @@ Options:
         Collect code coverage while the tests run. The report is written to
         ".Build/coverage/", under a name unique for the PHP version and the DBMS, so that
         the runs of a test matrix do not overwrite each other. Merge all collected reports
-        into ".Build/logs/clover.xml" with "-s coverageMerge" afterwards.
+        into ".Build/logs/clover.xml" and ".Build/logs/coverage.txt" with "-s coverageMerge"
+        afterwards, and check the minimum with "-s coverageCheck".
         Cannot be combined with -x, as both need a different Xdebug mode.
 
     -u
@@ -351,6 +354,7 @@ Examples:
     ./Build/Scripts/runTests.sh -p 8.2 -s unit -m
     ./Build/Scripts/runTests.sh -p 8.2 -s functional -m
     ./Build/Scripts/runTests.sh -p 8.2 -s coverageMerge
+    ./Build/Scripts/runTests.sh -p 8.2 -s coverageCheck
 EOF
 }
 
@@ -696,7 +700,7 @@ case ${TEST_SUITE} in
     composerUpdateDev)
         # The TYPO3 extension for PHPStan and the TYPO3 Rector rules only support released core versions.
         DEV_PACKAGES="typo3/cms-core:dev-main typo3/cms-backend:dev-main"
-        DEV_DEV_PACKAGES="typo3/cms-beuser:dev-main typo3/cms-dashboard:dev-main typo3/cms-workspaces:dev-main typo3/testing-framework:dev-main phpunit/phpunit:^12.5"
+        DEV_DEV_PACKAGES="typo3/cms-beuser:dev-main typo3/cms-dashboard:dev-main typo3/cms-workspaces:dev-main typo3/testing-framework:dev-main phpunit/phpunit:^12.5 phpunit/phpcov:^11.0"
         COMMAND="cp composer.json ${COMPOSER_BUILD_FILE} && (composer config --unset platform.php && composer config minimum-stability dev && composer config prefer-stable true && composer remove --dev --no-update saschaegerer/phpstan-typo3 ssch/typo3-rector && composer require --no-update ${DEV_PACKAGES} && composer require --dev --no-update ${DEV_DEV_PACKAGES} && composer update --no-progress --no-interaction && composer show typo3/cms-core); COMPOSER_EXIT_CODE=\$?; rm -f ${COMPOSER_BUILD_FILE}; exit \$COMPOSER_EXIT_CODE"
         ${CONTAINER_BIN} run ${CONTAINER_COMMON_PARAMS} --name composer-update-dev-${SUFFIX} -e COMPOSER=${COMPOSER_BUILD_FILE} ${COMPOSER_PARAMS} ${IMAGE_PHP} /bin/sh -c "${COMMAND}"
         SUITE_EXIT_CODE=$?
@@ -704,6 +708,10 @@ case ${TEST_SUITE} in
     composerUpdateMin)
         COMMAND="cp composer.json ${COMPOSER_BUILD_FILE} && (composer config platform.php ${PHP_VERSION}.0 && composer require --no-ansi --no-interaction --no-progress --no-install typo3/minimal:^${CORE_VERSION} && composer update --prefer-lowest --no-progress --no-interaction && composer show); COMPOSER_EXIT_CODE=\$?; rm -f ${COMPOSER_BUILD_FILE}; exit \$COMPOSER_EXIT_CODE"
         ${CONTAINER_BIN} run ${CONTAINER_COMMON_PARAMS} --name composer-update-min-${SUFFIX} -e COMPOSER=${COMPOSER_BUILD_FILE} ${COMPOSER_PARAMS} ${IMAGE_PHP} /bin/sh -c "${COMMAND}"
+        SUITE_EXIT_CODE=$?
+        ;;
+    coverageCheck)
+        ${CONTAINER_BIN} run ${CONTAINER_COMMON_PARAMS} --name coverage-check-${SUFFIX} ${IMAGE_PHP} php -dxdebug.mode=off Build/Scripts/checkCoverage.php
         SUITE_EXIT_CODE=$?
         ;;
     coverageMerge)
@@ -731,7 +739,7 @@ case ${TEST_SUITE} in
                 SUITE_EXIT_CODE=1
             else
                 mkdir -p "${ROOT_DIR}/.Build/logs"
-                COMMAND=(.Build/bin/phpcov merge --clover=.Build/logs/clover.xml .Build/coverage/)
+                COMMAND=(.Build/bin/phpcov merge --clover=.Build/logs/clover.xml --text=.Build/logs/coverage.txt .Build/coverage/)
                 ${CONTAINER_BIN} run ${CONTAINER_COMMON_PARAMS} --name coverage-merge-${SUFFIX} ${IMAGE_PHP} "${COMMAND[@]}"
                 SUITE_EXIT_CODE=$?
             fi

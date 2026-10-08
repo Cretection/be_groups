@@ -21,6 +21,9 @@ updates:
       - dependency-name: "typo3/cms-*"
       - dependency-name: "phpunit/phpunit"
         versions: [">= 12.0"]
+      # phpcov 11 needs PHPUnit 12
+      - dependency-name: "phpunit/phpcov"
+        versions: [">= 11.0"]
     versioning-strategy: "increase"
     commit-message:
       prefix: "[TASK] "
