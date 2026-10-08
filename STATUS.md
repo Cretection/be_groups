@@ -18,7 +18,8 @@ Dieses Dokument ist der Einstiegspunkt, um die Arbeit fortzusetzen. Das Konzept 
 - **Reviews:**
   - Das erste strenge Review (2026-10-07) fand 15 echte Fehler. Alle sind behoben, jeder mit einem Test, der den alten Fehler nachweislich erkennt.
   - Ein unabhängiges Review der Teile vom 2026-10-08 fand 12 Punkte, darunter einen kritischen: Die Wiederverwendung bestehender Bausteine konnte Benutzern Rechte geben. Alle sind behoben (`c04fa92`, Details in Abschnitt 9).
-  - Ein zweites Review dieses Fixes ist angestoßen; das Ergebnis steht in Abschnitt 7.
+  - Ein zweites unabhängiges Review dieses Fixes fand keinen Weg mehr, wirksame Rechte ohne fremde Hooks zu ändern, aber 8 weitere Punkte (u. a. Eigentümergruppe neuer Seiten, Hook-Änderungen außerhalb der Gruppe, überlebende Mutanten, kaputte deutsche Tabelle). Alle sind behoben (Abschnitt 9); 11 gezielte Mutanten werden von den Tests erkannt.
+  - **Live-Test in DDEV** (2026-10-08, eigenes Projekt `begroups-test`, Abschnitt 5): `setup:begroups:default` + `begroups:split --all` mit den echten Core-Presets. Die wirksamen Rechte eines Redakteurs, über den Core wie beim Login ermittelt, sind vorher und nachher in 16 von 18 Aspekten identisch. Die zwei Unterschiede sind beabsichtigt: zusätzliche Bausteine in der Gruppenliste und `PG_Editor` als Eigentümergruppe neuer Seiten.
 - **Testbasis:** Alle Prüfungen sind grün, auf allen Datenbanken, mit PHP 8.2 und 8.5, auf TYPO3 14.3 und 15-dev.
 - **Nächster Schritt:** Test im DDEV-Projekt (Abschnitt 5), danach Push und erster CI-Lauf auf GitHub (Abschnitt 7).
 
@@ -66,9 +67,10 @@ Dieses Dokument ist der Einstiegspunkt, um die Arbeit fortzusetzen. Das Konzept 
 | Prüfung | Ergebnis |
 |---|---|
 | Unit-Tests | 31 Tests grün |
-| Functional Tests | 98 Tests grün auf SQLite, MariaDB 10.11, MySQL 8.0 und PostgreSQL 14 |
-| PHP-Versionen | 8.2 (niedrigste Abhängigkeiten) und 8.5, beide mit allen 98 Functional Tests |
-| TYPO3-Versionen | 14.3.7 und 15.0-dev (Core `main`, PHPUnit 12), beide mit allen Tests |
+| Functional Tests | 119 Tests grün auf SQLite, MariaDB 10.11, MySQL 8.0 und PostgreSQL 14 |
+| PHP-Versionen | 8.2 (niedrigste Abhängigkeiten) und 8.5 (zuletzt mit 98 Tests geprüft, vor dem zweiten Review-Fix) |
+| TYPO3-Versionen | 14.3.7 und 15.0-dev (Core `main`, PHPUnit 12) (zuletzt mit 98 Tests geprüft, vor dem zweiten Review-Fix) |
+| Mutationsproben | 11 gezielte Mutanten in Prüfung und Modell, alle von Tests erkannt |
 | PHPStan | Level max, ohne Baseline, mit Prüfung auf `@internal`: 0 Fehler. Gegen 15-dev: `Classes/` ohne Befund; die Tests melden dort `mixed` aus `get()`, weil das Testing-Framework für v15 die Typisierung geändert hat (vor dem Wechsel auf v15 zu lösen). |
 | Weitere Prüfungen | php-cs-fixer, Lizenzköpfe, Rector, Lint, PSR-4, Integrität (Exception-Codes, Testkonventionen), XLIFF, YAML, JSON, `composer normalize`: alle grün |
 | Doku | `render-guides` (EN und DE) ohne Warnungen |
@@ -122,7 +124,13 @@ vendor/bin/typo3 extension:setup && vendor/bin/typo3 cache:flush
 
 ## 5. Testen im DDEV-Projekt
 
-Das DDEV-Projekt gehört zu einem **anderen Projekt**. Deshalb zuerst einen Snapshot anlegen und die Extension nur als Kopie einbinden. Voraussetzung ist TYPO3 14.3 im Composer-Modus.
+**Eigene Testumgebung (seit 2026-10-08):** DDEV-Projekt `begroups-test` in `~/Developer/Local/begroups-test`.
+- TYPO3 14.3 mit PHP 8.4 und MariaDB 10.11, erreichbar unter https://begroups-test.ddev.site/typo3. Die Zugangsdaten (admin, editor) stehen in `ADMIN-LOGIN.txt` im Projekt, nicht im Repo.
+- Das Repo ist **schreibgeschützt** eingebunden (`.ddev/docker-compose.be_groups.yaml`) und per Composer-Path-Repository verlinkt. Die Umgebung testet also immer den aktuellen Arbeitsstand.
+- `check-permissions.php <uid>` im Projekt gibt die wirksamen Rechte eines Benutzers als JSON aus, über den Core wie beim Login.
+- Starten mit `cd ~/Developer/Local/begroups-test && ddev start`. Die anderen DDEV-Projekte bleiben unberührt; nie `ddev poweroff` oder `ddev stop --all` verwenden.
+
+Das andere DDEV-Projekt gehört zu einem **anderen Projekt**. Deshalb zuerst einen Snapshot anlegen und die Extension nur als Kopie einbinden. Voraussetzung ist TYPO3 14.3 im Composer-Modus.
 
 ```bash
 ddev snapshot --name vor-be-groups                       # Zurück mit: ddev snapshot restore vor-be-groups
@@ -191,7 +199,7 @@ Beim Ändern von Typ oder Rollenzusammensetzung fragt TYPO3 nach dem Passwort. D
    - Die Pipeline beobachten, besonders den Runner `ubuntu-26.04`, die Container-Images und den Job `typo3-next`.
    - Danach den Branch-Schutz einrichten.
    - Offen: Die Testabdeckung zusammenführen (TODO in `ci.yml`, braucht `phpunit/phpcov`).
-3. **Unabhängiges strenges Review** der Teile vom 2026-10-08 (`begroups:audit`, `begroups:classify`, `begroups:split`), mit Fokus darauf, dass sich wirksame Rechte nie ändern (u. a. Auflösungsreihenfolge, `firstMainGroup`, TSconfig-Vorrang, Transaktionen).
+3. **Sichtprüfung im Backend** der Testumgebung `begroups-test`: Formulare je Typ, Modul „Rollen & Bausteine“, Redakteur vor und nach der Umstellung. Die CLI-Prüfung ist erledigt (siehe Abschnitt 1).
 4. **M2 vervollständigen:**
    - **Weitere PSR-14-Events** nur bei einem konkreten Anwendungsfall (vorhanden: `AfterAuditFindingsCollectedEvent`, `ModifyKindOfNewGroupEvent`). Typen und Felder bleiben TCA (keine eigene Registry).
    - **Frontend-Tooling** aufsetzen, bevor JavaScript entsteht: `package.json`, TypeScript strict, ESLint (Konfiguration des Core), Stylelint 17 (Konfiguration von tea), rollup ohne Bündelung, web-test-runner, Playwright mit axe (WCAG 2.2 AA).
@@ -199,7 +207,7 @@ Beim Ändern von Typ oder Rollenzusammensetzung fragt TYPO3 nach dem Passwort. D
    - **Präfixe** in Listen: Entscheidung (g) in Abschnitt 6.
 5. **M4:**
    - Security-Review (`CODING_GUIDELINES.de.md` §15), Performance-Benchmark (1.000 Gruppen und 5.000 Benutzer), Prüfung der Barrierefreiheit. Bekannt: Jede Umstellung klassifiziert neu und liest dafür alle Gruppen und Benutzer; die Nachprüfung löst jede vorkommende Gruppen-Kombination zweimal auf. Bei sehr vielen Gruppen wächst der Aufwand von `begroups:split --all` quadratisch.
-   - Den Test des Starter-Sets mit dem echten Core-Befehl ausführen: `typo3/cms-install` als Entwicklungsabhängigkeit aufnehmen. Bisher bildet `SplitCoreDefaultGroupsTest` die Inserts des Core nach (Stand 14.3.7, ohne `file_permissions` und TSconfig).
+   - Starter-Set mit dem echten Core-Befehl prüfen (DDEV-Schritt 11). Automatisch geht das nicht: `setup:begroups:default` lässt sich in Functional Tests nicht instanziieren, weil seine Abhängigkeiten den Failsafe-Modus des Install-Tools verlangen (am 2026-10-08 ausprobiert). `SplitCoreDefaultGroupsTest` bildet deshalb die Inserts des Core nach (Stand 14.3.7, ohne `file_permissions` und TSconfig).
    - Vor dem Wechsel auf TYPO3 15: Tests an das typisierungsfreie `get()` des Testing-Frameworks anpassen (siehe Abschnitt 3).
    - Screenshots pro Theme, Übersetzungen, Credits mit Michael Klapper abstimmen.
    - Release-Workflow (`.github/workflows/publish.yml` mit tailor 2.x, TER-Upload ohne `ext_emconf.php` testen), Tag `1.0.0`.
@@ -248,7 +256,10 @@ Sie sind wichtig, damit niemand die behobenen Fehler versehentlich wieder einbau
   - Felder liest das Modell wie der Core: Seitenfreigabe `0` ist die Wurzel und zählt; Datei- und Kategoriefreigabe `0` zählt nicht. Gruppen mit Seitenfreigabe `0` lassen sich nicht aufteilen, weil der DataHandler `0` nicht in einen neuen Baustein schreibt.
   - TYPO3 löst Untergruppen **vor** der Gruppe auf. Neue Bausteine kommen deshalb **hinter** die bisherigen Untergruppen (TSconfig-Vorrang).
   - Bausteine versteckter Gruppen sind sichtbar. Sie sind nur über die versteckte Rolle erreichbar, und Einblenden stellt die Rechte wie vorher her.
-  - Bei einem Fehlschlag nennt das Ergebnis die vom DataHandler protokollierten Datenbankfehler (`sys_log` Typ 1), weil das Protokoll mit zurückgerollt wird.
+  - Bei einem Fehlschlag nennt das Ergebnis die vom DataHandler protokollierten Datenbankfehler (`sys_log` Typ 1), weil das Protokoll mit zurückgerollt wird. Unter PostgreSQL bricht die Transaktion ab, dann nennt das Ergebnis nur das.
+  - **Eigentümergruppe neuer Seiten:** Hat die Gruppe keine aktiven Untergruppen, wäre sie für ihre Benutzer `firstMainGroup`. Dann wird eine neue, leere Seitenrechte-Gruppe `PG_<Titel>` erstes Mitglied. Sie gehört nur zur Rolle, hat also genau deren Mitglieder; die Prüfung erlaubt nur diesen Wechsel (zweites Review, Befund 1).
+  - **Rohdaten-Vergleich:** Vor dem Commit müssen alle anderen Gruppen und alle Benutzer byte-gleich sein, und an der Gruppe selbst dürfen sich nur `tstamp`, Typ, Untergruppen und die verwalteten Rechtefelder ändern. So fallen auch Hooks auf, die anderswo Daten ändern (zweites Review, Befund 2).
+  - Das Modell liest Seitenfreigaben wie `filterValidWebMounts()` (`05`, `+5`, `abc` fallen weg, `0` und negative Zahlen bleiben) und `hidden` wie die `HiddenRestriction` (nur `0` ist sichtbar).
 - **Ausgaben auf der Konsole** laufen durch `ConsoleText::escape()`: Titel sind Redakteursdaten und dürfen weder Konsolen-Formatierung noch Steuerzeichen (ANSI) ins Terminal tragen.
 - **Testdaten:** Der CSV-Import des Testing-Frameworks füllt fehlende Spalten mit TCA-Defaults (z. B. `file_permissions` = alle Dateioperationen). Rechtefelder in Fixtures daher immer ausdrücklich setzen.
 
