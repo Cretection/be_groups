@@ -104,6 +104,12 @@ Afterwards:
 
 #.  Check the result with ``begroups:audit`` (see :ref:`usage-audit`) and
     the module *Roles & Building Blocks*.
+#.  Resolve roles that contain roles (``role-invalid-member``). They occur
+    when a combining group contained mixed groups, which are roles after the
+    split. The permissions are unchanged; the assistants do not resolve this
+    themselves, because the inner role may own pages or be a member of a
+    workspace. Replace the inner role by its building blocks where that
+    suits you.
 #.  Decide on the groups the assistants could not convert.
 #.  Switch off classic groups, see :ref:`configuration`.
 

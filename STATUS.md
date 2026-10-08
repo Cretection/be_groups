@@ -51,6 +51,9 @@ Dieses Dokument ist der Einstiegspunkt, um die Arbeit fortzusetzen. Das Konzept 
 | `[BUGFIX] Verify conversions per user and never share building blocks` | Korrekturen aus dem unabhängigen Review (Abschnitt 9) |
 | `[BUGFIX] Keep the owner group of new pages and catch changes of other extensions` | Korrekturen aus dem zweiten Review (Abschnitt 9) |
 | `[TASK] Use icons in the style of TYPO3 14 for light and dark themes` | einfarbige Core-Icons für die Typen, eigenes Modul-Icon im Core-Stil, Extension-Icon als Kachel |
+| `[!!!][TASK] Remove the migration of earlier versions` | Upgrade-Wizard entfernt (E14) |
+| `[BUGFIX] Give groups on a cycle a page group as owner of new pages` | Befund aus dem Massentest mit generierten Daten |
+| `[FEATURE] Show the kind as prefix wherever TYPO3 shows a group` | „META: Redakteur“ überall, inklusive Core-Modul „Users“ |
 
 **Stand der Meilensteine** (Details in `RELAUNCH.md` §9):
 
@@ -69,7 +72,8 @@ Dieses Dokument ist der Einstiegspunkt, um die Arbeit fortzusetzen. Das Konzept 
 | Prüfung | Ergebnis |
 |---|---|
 | Unit-Tests | 31 Tests grün |
-| Functional Tests | 119 Tests grün auf SQLite, MariaDB 10.11, MySQL 8.0 und PostgreSQL 14 |
+| Functional Tests | 133 Tests grün auf SQLite (MariaDB, MySQL und PostgreSQL siehe Lauf vom 2026-10-08) |
+| Massentest | Generierte Installation (150 Gruppen, 403 Benutzer, alle Sonderfälle): `classify` + `split --all`, wirksame Rechte aller Benutzer vorher und nachher über den Core verglichen: 0 Abweichungen. Werkzeuge im Testprojekt: `generate-test-data.php`, `dump-permissions.php`. |
 | PHP-Versionen | 8.2 (niedrigste Abhängigkeiten) und 8.5 (zuletzt mit 98 Tests geprüft, vor dem zweiten Review-Fix) |
 | TYPO3-Versionen | 14.3.7 und 15.0-dev (Core `main`, PHPUnit 12) (zuletzt mit 98 Tests geprüft, vor dem zweiten Review-Fix) |
 | Mutationsproben | 11 gezielte Mutanten in Prüfung und Modell, alle von Tests erkannt |
@@ -179,7 +183,7 @@ Beim Ändern von Typ oder Rollenzusammensetzung fragt TYPO3 nach dem Passwort. D
 | e | Alte Branches und Crowdin-PR #3 | Nach dem Relaunch archivieren bzw. schließen (M4). |
 | – | E14 Keine Migration früherer Versionen | ✅ Entschieden von Jonathan (2026-10-08); Wizard entfernt. |
 | f | E12 Typ-Filter im Users-Modul verworfen, E13 Starter-Set über den Core-Befehl | Autonom entschieden am 2026-10-08, begründet in `RELAUNCH.md` §11. **Bestätigung offen.** |
-| g | Präfixe (R_, ACL_, …) in Listen anzeigen (M2) | Die Listen sind bereits nach Typ gruppiert, das Modul zeigt Typ-Icons, und `begroups:split` benennt neue Bausteine mit Präfix. Eine zusätzliche Präfix-Anzeige wäre doppelt. Vorschlag: streichen. **Entscheidung offen.** |
+| g | Präfixe in Listen | ✅ Entschieden von Jonathan (2026-10-08): Der Typ erscheint überall automatisch als Präfix vor dem Titel („META: Redakteur“), Titel enthalten keinen Typ. Umgesetzt (`f208342`), inklusive Core-Modul „Users“ per abgesichertem Template-Override. |
 | – | Mit Michael Klapper | Namensnennung (ohne/mit Firma), Link und E-Mail-Adresse, ob er die Credits-Seite gegenliest, optional ein Blick auf das Konzept. Bis zur Freigabe wird nur sein Name genannt. |
 
 **Zugänge, die Jonathan einrichtet:**
@@ -210,7 +214,7 @@ Beim Ändern von Typ oder Rollenzusammensetzung fragt TYPO3 nach dem Passwort. D
    - **Weitere PSR-14-Events** nur bei einem konkreten Anwendungsfall (vorhanden: `AfterAuditFindingsCollectedEvent`, `ModifyKindOfNewGroupEvent`). Typen und Felder bleiben TCA (keine eigene Registry).
    - **Frontend-Tooling** aufsetzen, bevor JavaScript entsteht: `package.json`, TypeScript strict, ESLint (Konfiguration des Core), Stylelint 17 (Konfiguration von tea), rollup ohne Bündelung, web-test-runner, Playwright mit axe (WCAG 2.2 AA).
    - **Matrix-Bearbeitung** im Modul: Rollen × Bausteine. Geschrieben wird ausschließlich über den DataHandler (AJAX-Route mit `methods: POST`), mit Sudo-Mode und Barrierefreiheit (Tastatur, ARIA-Grid). Alle Themes hell und dunkel.
-   - **Präfixe** in Listen: Entscheidung (g) in Abschnitt 6.
+   - **Idee von Jonathan:** Die Vorschläge der Assistenten (`classify`/`split --dry-run`) auch im Modul „Rollen & Bausteine“ anzeigen.
 5. **M4:**
    - Security-Review (`CODING_GUIDELINES.de.md` §15), Performance-Benchmark (1.000 Gruppen und 5.000 Benutzer), Prüfung der Barrierefreiheit. Bekannt: Jede Umstellung klassifiziert neu und liest dafür alle Gruppen und Benutzer; die Nachprüfung löst jede vorkommende Gruppen-Kombination zweimal auf. Bei sehr vielen Gruppen wächst der Aufwand von `begroups:split --all` quadratisch.
    - Starter-Set: am 2026-10-08 mit dem echten Core-Befehl in `begroups-test` geprüft (siehe Abschnitt 1). Automatisch geht das nicht: `setup:begroups:default` lässt sich in Functional Tests nicht instanziieren, weil seine Abhängigkeiten den Failsafe-Modus des Install-Tools verlangen. `SplitCoreDefaultGroupsTest` bildet deshalb die Inserts des Core nach (Stand 14.3.7); bei neuen Core-Versionen den Live-Test wiederholen.
@@ -262,6 +266,7 @@ Sie sind wichtig, damit niemand die behobenen Fehler versehentlich wieder einbau
   - **Eigentümergruppe neuer Seiten:** Hat die Gruppe keine aktiven Untergruppen, wäre sie für ihre Benutzer `firstMainGroup`. Dann wird eine neue, leere Seitenrechte-Gruppe `PG_<Titel>` erstes Mitglied. Sie gehört nur zur Rolle, hat also genau deren Mitglieder; die Prüfung erlaubt nur diesen Wechsel (zweites Review, Befund 1).
   - **Rohdaten-Vergleich:** Vor dem Commit müssen alle anderen Gruppen und alle Benutzer byte-gleich sein, und an der Gruppe selbst dürfen sich nur `tstamp`, Typ, Untergruppen und die verwalteten Rechtefelder ändern. So fallen auch Hooks auf, die anderswo Daten ändern (zweites Review, Befund 2).
   - Das Modell liest Seitenfreigaben wie `filterValidWebMounts()` (`05`, `+5`, `abc` fallen weg, `0` und negative Zahlen bleiben) und `hidden` wie die `HiddenRestriction` (nur `0` ist sichtbar).
+- **Präfix statt Typ im Titel:** `ctrl.label_userFunc` von be_groups (`GroupRecordTitle`, `KindPrefix`) setzt das Präfix überall, wo TYPO3 Datensatztitel zeigt. Das Core-Modul „Users“ gibt Titel aus seinem internen Extbase-Modell aus: Gruppenfilter über das öffentliche Event `AfterBackendGroupFilterListIsAssembledEvent`, sieben Templates per Page-TSconfig `templates."typo3/cms-beuser"` überschrieben (`Resources/Private/TemplateOverrides/`). Die Overrides werden nur aktiviert, wenn die Core-Templates exakt den hinterlegten SHA-256-Hashes entsprechen (`OverrideUserModuleTemplates::BASE_TEMPLATES`), damit nie eine alte Kopie eine Sicherheitskorrektur des Core verdeckt. **Bei jedem Core-Update** (der Test `UserModuleTest::theTemplatesOfTheCoreAreThoseTheOverridesAreBasedOn` schlägt fehl): Core-Template neu kopieren, Titel-Ausgaben wieder durch `begroups:groupTitle` ersetzen, Hash aktualisieren.
 - **Icons:** Typen nutzen einfarbige `actions-*`-Icons des Core, die dem hellen und dunklen Theme folgen. Das Modul-Icon (`module-begroups-roles`) ist im Stil der Core-Modul-Icons gezeichnet (`currentColor`, Rolle in `--icon-color-accent`). Bei einer Änderung eines Icons immer eine **neue Kennung** vergeben, denn das Backend puffert Icon-Markup im `localStorage` des Browsers unter der Kennung.
 - **Ausgaben auf der Konsole** laufen durch `ConsoleText::escape()`: Titel sind Redakteursdaten und dürfen weder Konsolen-Formatierung noch Steuerzeichen (ANSI) ins Terminal tragen.
 - **Testdaten:** Der CSV-Import des Testing-Frameworks füllt fehlende Spalten mit TCA-Defaults (z. B. `file_permissions` = alle Dateioperationen). Rechtefelder in Fixtures daher immer ausdrücklich setzen.

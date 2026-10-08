@@ -110,6 +110,12 @@ Danach:
 
 #.  Das Ergebnis mit ``begroups:audit`` (siehe :ref:`usage-audit`) und im
     Modul *Rollen & Bausteine* prüfen.
+#.  Rollen auflösen, die Rollen enthalten (``role-invalid-member``). Sie
+    entstehen, wenn eine zusammenfassende Gruppe gemischte Gruppen enthielt,
+    die nach dem Aufteilen Rollen sind. Die Rechte sind unverändert; die
+    Assistenten lösen das nicht selbst auf, weil die innere Rolle Seiten
+    besitzen oder Workspace-Mitglied sein kann. Ersetzen Sie die innere
+    Rolle durch ihre Bausteine, wo das passt.
 #.  Über die Gruppen entscheiden, die die Assistenten nicht umstellen
     konnten.
 #.  Klassische Gruppen abschalten, siehe :ref:`configuration`.
