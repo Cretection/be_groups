@@ -157,16 +157,8 @@ Geplant war ein Typ-Filter für die Gruppenliste über `AfterBackendGroupListCon
 
 ## 7. Migration
 
-### 7.1 Von be_groups 0.0.x bzw. AOE 1.x
-Ein Upgrade-Wizard (`beGroups_kindMigration`, Core-Attribut `TYPO3\CMS\Core\Attribute\UpgradeWizard`) ändert **nie wirksame Rechte**:
-- **Datenbankstruktur zuerst:** Ist `tx_begroups_kind` noch die alte Integer-Spalte, verweigert der Wizard die Ausführung mit Erklärung. Sonst würden alle neuen Typen als `0` gespeichert (Review-Befund, per Test nachgewiesen).
-- **Typen:** Die alten Typen 0–9 werden auf die Kennungen aus Abschnitt 2 abgebildet.
-- **Rollen werden nicht „repariert“:** Mitglieder, die nur in den alten `subgroup_*`-Feldern standen, werden gemeldet, aber nicht hinzugefügt, weil das heute nicht vorhandene Rechte vergeben würde.
-- **`file_permissions` herausziehen:** Gruppen mit Dateirechten, die ihr neuer Typ nicht anzeigt, bekommen einen `file_operations`-Baustein pro Rechte-Kombination **und** Zustand „deaktiviert“. Er wird überall direkt hinter der ursprünglichen Gruppe eingefügt (Rollen, andere Gruppen, Benutzer). Deaktivierte Gruppen bekommen einen deaktivierten Baustein.
-- **Kein Platz in einer Liste:** Die Gruppe behält ihre Dateirechte und wird `classic`.
-- **Andere fremde Einstellungen:** Die Gruppe wird `classic` und gemeldet. `0` in Relationsfeldern (z. B. `category_perms`) gilt als leer.
-- **Umfang:** Auch gelöschte Gruppen und Benutzer werden migriert. Alle Schreibvorgänge laufen in einer Transaktion. Der Wizard ist wiederholbar (`RepeatableInterface`).
-- **Danach:** Referenzindex aktualisieren, dann entfernt der DB-Compare die `subgroup_*`-Spalten. Ein Hinweis erscheint, wenn die frühere Option `onlyShowMetaGroup` noch aktiv ist (Nachfolger: `allowClassicGroups`).
+### 7.1 Von be_groups 0.0.x bzw. AOE 1.x: entfällt (E14)
+Keine Migration. Weder die AOE-Version noch die Version 0.0.x für TYPO3 11 ist Grundlage eines neuen TYPO3-14-Systems. Der zunächst gebaute Upgrade-Wizard `beGroups_kindMigration` wurde am 2026-10-08 wieder entfernt. Gruppen mit numerischen Alt-Typen erkennt das Modul weiterhin als „unbekannter Typ“, die Konsistenzprüfung meldet sie.
 
 ### 7.2 Von einem normalen TYPO3 (Hauptzielgruppe)
 - **Nach der Installation:** Alle Gruppen sind `classic`, nichts ändert sich.
@@ -208,7 +200,7 @@ Jedes Ziel wird in CI geprüft. Ein Pull Request ohne grüne Pipeline wird nicht
 | Performance | flüssig bei 1.000 Gruppen und 5.000 Benutzern, keine N+1-Abfragen, TCA-Ableitung zur Compile-Zeit | Benchmark-Fixture in CI, Query-Zählung in den Tests |
 | Übersetzung | keine fest eingebauten Texte; Englisch als Quelle, Deutsch mitgeliefert, weitere Sprachen über Crowdin | XLIFF-Lint, Integritätsprüfung wie im Core |
 | Dokumentation | offizielle Doku auf docs.typo3.org | render-guides (`guides.xml`) in CI mit Warnungen als Fehler |
-| Upgrade-Wizards | idempotent, Voraussetzungen deklariert, Probelauf mit Bericht | Functional Tests mit Fixtures aus 0.0.9 und AOE 1.2.2 |
+| Assistenten | Probelauf (`--dry-run`), Transaktion pro Gruppe, Nachprüfung mit Rollback | Functional Tests, Mutationsproben, Live-Test in DDEV |
 | Erweiterbarkeit | eigene PSR-14-Events an den Erweiterungspunkten (Typ-Zuordnung, Klassifizierung, Audit-Befunde), klar markierte öffentliche API | Tests und Entwickler-Doku pro Event |
 
 ### 8.2 Definition of Done (pro Feature bzw. Pull Request)
@@ -253,7 +245,6 @@ Classes/
   EventListener/            # eigene PSR-14-Listener (derzeit keine)
   Form/FormDataProvider/    # KindSelection: Typauswahl zur Laufzeit
   Exception/                # eigene Exceptions (Basis: \TYPO3\CMS\Core\Exception)
-  Upgrades/                 # Migration von 0.0.x und AOE 1.x
 Configuration/
   Backend/Modules.php (inkl. AJAX-Routen)  Icons.php  JavaScriptModules.php  Services.yaml
   TCA/Overrides/be_groups.php  TCA/Overrides/be_users.php
@@ -325,7 +316,7 @@ Der Qualitätsstandard aus Abschnitt 8 erhöht den Aufwand gegenüber der ersten
 | Meilenstein | Inhalt | Ergebnis | Aufwand (Schätzung) | Stand (2026-10-08) |
 |---|---|---|---|---|
 | M0 Fundament | Branch `relaunch`, Altlasten raus, komplette Qualitäts-Infrastruktur (8.1/8.3), Doku-Gerüst mit Credits-Seite (8.5) | alle Prüfungen grün auf leerem Gerüst | 2–3 PT | ✅ erledigt |
-| M1 Kern | Typen und TCA, gruppierte Rollen-Auswahl, Benutzerfilter, Regeln R1–R4, Upgrade-Wizard, Events | `1.0.0-alpha1` | 5–7 PT | ✅ erledigt (Events nach M2 verschoben) |
+| M1 Kern | Typen und TCA, gruppierte Rollen-Auswahl, Benutzerfilter, Regeln R1–R4, Events | `1.0.0-alpha1` | 5–7 PT | ✅ erledigt (Events nach M2 verschoben; der Upgrade-Wizard entfällt, E14) |
 | M2 Übersicht | Modul „Rollen & Bausteine“ (TypeScript/Lit, barrierefrei, Themes), `begroups:audit`, Typ-Filter, Präfixe | `1.0.0-beta1` | 6–9 PT | 🟡 Modul ohne Bearbeitung, `begroups:audit` mit Event, `ModifyKindOfNewGroupEvent` fertig; Typ-Filter im Core-Modul verworfen (E12); offen: Matrix-Bearbeitung, Präfixe (Entscheidung offen) |
 | M3 Umstieg | Klassifizierungs- und Aufteilungs-Assistent, Starter-Set | `1.0.0-beta2` | 4–6 PT | ✅ erledigt: `begroups:classify`, `begroups:split`; Starter-Set über den Core-Befehl (E13) |
 | M4 Härtung | Security-Review, Performance-Benchmark, Prüfung der Barrierefreiheit, Doku und Screenshots final, Credits mit dem Erfinder abgestimmt, Übersetzungen | `1.0.0-rc1` → **1.0.0** im TER | 2–3 PT | ⬜ offen |
@@ -362,6 +353,7 @@ Gesamt etwa 19–28 Personentage.
 | E11 | Kompatibilität und Support | ✅ Support pro TYPO3-Version bis zu deren offiziellem EOL der Community-Version (ELTS zählt nicht); zwei TYPO3-Hauptversionen pro be_groups-Hauptversion; TYPO3 14: 1.x bis 30.06.2029; keine absehbar wegfallenden APIs (Abschnitt 8.6, 2026-10-07) |
 | E12 | Typ-Filter im Core-Modul „Users“ | Verworfen: Das Filter-DTO des Core kennt nur den Titel, ein Filterfeld bräuchte überschriebene Core-Templates und bräche bei Core-Updates. Das eigene Modul filtert nach Typ (Abschnitt 4.6, 2026-10-08). **Bestätigung durch Jonathan offen.** |
 | E13 | Starter-Set | Kein eigener Befehl: `setup:begroups:default` des Core legt „Editor“ und „Advanced Editor“ an, `begroups:split --all` macht daraus Rollen mit gemeinsamen Bausteinen. Weniger Code, und Änderungen der Core-Presets kommen automatisch an (2026-10-08). **Bestätigung durch Jonathan offen.** |
+| E14 | Migration früherer Versionen | ✅ Entfällt (Vorgabe von Jonathan, 2026-10-08): Weder die AOE-Version 1.x noch 0.0.x ist Grundlage eines neuen TYPO3-14-Systems. Upgrade-Wizard, Tests und Doku-Kapitel sind entfernt; die Assistenten für Installationen ohne die Extension bleiben. |
 
 ---
 

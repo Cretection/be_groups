@@ -9,7 +9,7 @@ Dieses Dokument ist der Einstiegspunkt, um die Arbeit fortzusetzen. Das Konzept 
 ## 1. Kurzfassung
 
 - **Umgesetzt:**
-  - der Kern (M0 und M1): Gruppentypen, Regeln R1–R4, Upgrade-Wizard,
+  - der Kern (M0 und M1): Gruppentypen, Regeln R1–R4,
   - das Übersichtsmodul ohne Bearbeitung (Teil von M2),
   - die Konsistenzprüfung `begroups:audit` mit dem Event `AfterAuditFindingsCollectedEvent` (Teil von M2),
   - die Assistenten `begroups:classify` und `begroups:split` und das Starter-Set über den Core-Befehl (M3),
@@ -33,7 +33,7 @@ Dieses Dokument ist der Einstiegspunkt, um die Arbeit fortzusetzen. Das Konzept 
 | `[!!!][TASK] Remove the legacy implementation` | alter Code entfernt, Lizenz GPL-2.0-or-later |
 | `[TASK] Add quality tooling and continuous integration` | php-cs-fixer, PHPStan max, Rector, PHPUnit, `runTests.sh`, GitHub Actions |
 | `[FEATURE] Add group kinds with enforced permission rules` | 11 Typen, TCA pro Typ, DataHandler-Regeln R1–R4 |
-| `[FEATURE] Add upgrade wizard for groups of be_groups 0.0.x` | Migration der alten Daten |
+| `[FEATURE] Add upgrade wizard for groups of be_groups 0.0.x` | Migration der alten Daten (später entfernt, E14) |
 | `[FEATURE] Add read-only module "Roles & Building Blocks"` | Übersichtsmodul (Administration) |
 | `[DOCS] Add documentation and project files in English and German` | Handbuch EN/DE, README, CONTRIBUTING, SECURITY, CHANGELOG |
 | `[TASK] Harden the tooling and test against the next TYPO3 version` | Job `typo3-next` gegen TYPO3 15-dev, Tooling-Korrekturen aus dem Review |
@@ -158,10 +158,9 @@ Oder einfach `ddev snapshot restore vor-be-groups`.
 5. Den Typ eines Bausteins wechseln. Fremde Einstellungen werden geleert und im Protokoll vermerkt (*Administration > Protokoll*).
 6. Einstellungen > Extension-Konfiguration > be_groups: „Klassische Gruppen erlauben“ abschalten. „Klassisch“ verschwindet sofort aus der Auswahl, und neue Gruppen starten als Rolle.
 7. Das Modul *Administration > Rollen & Bausteine*: Sortierung, Typ-Filter, markierte Inkonsistenzen und Bearbeiten-Links.
-8. Mit Daten der alten Extension: zuerst *Analyze Database Structure*, dann den Wizard „Migrate be_groups kinds“ ausführen und seine Ausgabe lesen.
-9. Konsistenzprüfung: `ddev typo3 begroups:audit` (auch `--format=json`, `--fail-on-warnings`). Neue Benutzer erscheinen mit `user-permissions`, weil der Core ihnen alle Dateioperationen gibt.
-10. Assistenten, immer zuerst mit `--dry-run`: `ddev typo3 begroups:classify --dry-run`, dann ohne; `ddev typo3 begroups:split --all --dry-run`, dann ohne. Jede Umstellung wird intern pro Benutzer nachgeprüft und sonst zurückgerollt. Trotzdem mit „Benutzer wechseln“ prüfen, dass Benutzer genau dasselbe sehen und dürfen wie vorher (Seitenbaum, Module, Dateien, TSconfig-Wirkung), und `begroups:audit` erneut ausführen. Als „failed“ oder „manual“ gemeldete Gruppen mit Begründung notieren.
-11. Starter-Set in einer leeren Testumgebung: `ddev typo3 setup:begroups:default --groups=Both`, dann `ddev typo3 begroups:split --all`.
+8. Konsistenzprüfung: `ddev typo3 begroups:audit` (auch `--format=json`, `--fail-on-warnings`). Neue Benutzer erscheinen mit `user-permissions`, weil der Core ihnen alle Dateioperationen gibt.
+9. Assistenten, immer zuerst mit `--dry-run`: `ddev typo3 begroups:classify --dry-run`, dann ohne; `ddev typo3 begroups:split --all --dry-run`, dann ohne. Jede Umstellung wird intern pro Benutzer nachgeprüft und sonst zurückgerollt. Trotzdem mit „Benutzer wechseln“ prüfen, dass Benutzer genau dasselbe sehen und dürfen wie vorher (Seitenbaum, Module, Dateien, TSconfig-Wirkung), und `begroups:audit` erneut ausführen. Als „failed“ oder „manual“ gemeldete Gruppen mit Begründung notieren.
+10. Starter-Set in einer leeren Testumgebung: `ddev typo3 setup:begroups:default --groups=Both`, dann `ddev typo3 begroups:split --all`.
 
 Beim Ändern von Typ oder Rollenzusammensetzung fragt TYPO3 nach dem Passwort. Das ist der Sudo-Mode des Core und gewollt.
 
@@ -178,6 +177,7 @@ Beim Ändern von Typ oder Rollenzusammensetzung fragt TYPO3 nach dem Passwort. D
 | c | Übersetzungen | Offizielle TYPO3-Lokalisierung oder das eigene Crowdin-Projekt (`crowdin.yml` ist auf die neuen Dateien angepasst). **Offen, bis M4.** |
 | d | Versionsnummer | Empfehlung 1.0.0 (E5). `composer.json` steht auf `1.0.0-dev`. |
 | e | Alte Branches und Crowdin-PR #3 | Nach dem Relaunch archivieren bzw. schließen (M4). |
+| – | E14 Keine Migration früherer Versionen | ✅ Entschieden von Jonathan (2026-10-08); Wizard entfernt. |
 | f | E12 Typ-Filter im Users-Modul verworfen, E13 Starter-Set über den Core-Befehl | Autonom entschieden am 2026-10-08, begründet in `RELAUNCH.md` §11. **Bestätigung offen.** |
 | g | Präfixe (R_, ACL_, …) in Listen anzeigen (M2) | Die Listen sind bereits nach Typ gruppiert, das Modul zeigt Typ-Icons, und `begroups:split` benennt neue Bausteine mit Präfix. Eine zusätzliche Präfix-Anzeige wäre doppelt. Vorschlag: streichen. **Entscheidung offen.** |
 | – | Mit Michael Klapper | Namensnennung (ohne/mit Firma), Link und E-Mail-Adresse, ob er die Credits-Seite gegenliest, optional ein Blick auf das Konzept. Bis zur Freigabe wird nur sein Name genannt. |
@@ -246,11 +246,7 @@ Sie sind wichtig, damit niemand die behobenen Fehler versehentlich wieder einbau
 - **Kinds niemals als Array-Schlüssel** verwenden, denn PHP macht aus numerischen Strings Ganzzahlen.
 - **Neue Datensätze ohne Typ** bekommen den Typ, den auch der DataHandler setzen würde (TCA-Default, dann User-TSconfig, dann Page-TSconfig). Der Hook schreibt ihn ausdrücklich ins Datamap.
 - **Meldungen erst in `processDatamap_afterAllOperations`:** Bei einem abgebrochenen Speichern, etwa im Sudo-Mode, wird nichts protokolliert. Der Hook ist deshalb `shared: false`.
-- **Der Upgrade-Wizard ändert keine wirksamen Rechte:**
-  - Er bricht ab, solange die Spalte noch vom Typ Integer ist.
-  - Deaktivierte Gruppen bekommen deaktivierte Bausteine.
-  - Er ergänzt keine Mitglieder aus den alten `subgroup_*`-Spalten, sondern meldet sie nur.
-  - Er bezieht auch gelöschte Datensätze ein und lässt sich wiederholen.
+- **Keine Migration früherer Versionen** (E14): Der Upgrade-Wizard für 0.0.x und AOE 1.x ist entfernt.
 - **`be_groups.subgroup` ist auf 2048 Zeichen erweitert**, weil Rollen viele Bausteine bündeln.
 - **Nur öffentliche Core-API**, geprüft per PHPStan `internalTag`. Ausnahme: der Wert `2` für `applicationType` in Tests, weil die Core-Konstante intern ist.
 - **Assistenten ändern keine wirksamen Rechte** (nach dem unabhängigen Review vom 2026-10-08 neu gefasst):
@@ -280,12 +276,11 @@ Sie sind wichtig, damit niemand die behobenen Fehler versehentlich wieder einbau
 | Regeln | `Classes/DataHandling/GroupKindRules.php`, `RelationList.php`, `RuleViolationReporter.php`, registriert in `ext_localconf.php` |
 | Formular | `Configuration/TCA/Overrides/be_groups.php` und `be_users.php`, `Classes/Form/FormDataProvider/KindSelection.php` |
 | Modul | `Configuration/Backend/Modules.php`, `Classes/Controller/OverviewController.php`, `Classes/Domain/Overview/`, `Resources/Private/Templates/Overview/Index.fluid.html` |
-| Migration | `Classes/Upgrades/` (`KindMigration`, `ColumnInspector`, `ColumnInfo`) |
 | Befehle | `Classes/Command/` (`AuditCommand`, `ClassifyCommand`, `SplitCommand`), Konsolenausgabe `Classes/Utility/ConsoleTextUtility.php` |
 | Konsistenzprüfung | `Classes/Domain/Audit/` (`PermissionAudit`; öffentliche API: `AuditFinding`, `AuditSeverity`), `Classes/Event/AfterAuditFindingsCollectedEvent.php` (öffentliche API) |
 | Assistenten | `Classes/Domain/Classification/`: `GroupClassifier` schlägt vor, `GroupConverter` setzt um und prüft nach, `GroupPermissionResolver` modelliert die Core-Auflösung |
 | Events (öffentliche API) | `Classes/Event/` (`AfterAuditFindingsCollectedEvent`, `ModifyKindOfNewGroupEvent`) |
-| Datenzugriff | `Classes/Domain/Repository/` (nur lesend; geschrieben wird über den DataHandler bzw. im Wizard per SQL) |
+| Datenzugriff | `Classes/Domain/Repository/` (nur lesend; geschrieben wird ausschließlich über den DataHandler) |
 | Labels | `Resources/Private/Language/` (`db.xlf`, `messages.xlf`, `Modules/overview.xlf`, jeweils mit `de.`) |
 | Tests | `Tests/Unit/`, `Tests/Functional/` (Fixtures in `Fixtures/`, Test-Extensions in `Fixtures/Extensions/`) |
 | Tooling | `Build/` (runTests.sh, PHPStan, php-cs-fixer, Rector, PHPUnit, Integritätsprüfungen), `.github/workflows/ci.yml` |
