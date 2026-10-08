@@ -24,6 +24,7 @@ use Cretection\BeGroups\Domain\Repository\BackendUserRepository;
 use Cretection\BeGroups\Domain\Repository\DatabaseRow;
 use Cretection\BeGroups\Domain\Repository\SystemLogRepository;
 use Doctrine\DBAL\Exception as DatabaseException;
+use TYPO3\CMS\Core\Authentication\BackendUserAuthentication;
 use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\CMS\Core\DataHandling\DataHandler;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
@@ -120,7 +121,7 @@ final readonly class GroupConverter
                 );
             }
 
-            $subgroups = RelationList::fromValue($group->get('subgroup'));
+            $subgroups = RelationList::fromStoredValue($group->get('subgroup'));
             foreach ($blockUids as $blockUid) {
                 // Appended after the existing subgroups: TYPO3 applies subgroups before the group
                 // itself, so the TSconfig of the group keeps its precedence.
@@ -334,6 +335,10 @@ final readonly class GroupConverter
      */
     private function transactional(int $uid, \Closure $conversion): ConversionResult
     {
+        $backendUser = $GLOBALS['BE_USER'] ?? null;
+        if (!$backendUser instanceof BackendUserAuthentication || !$backendUser->isAdmin()) {
+            return new ConversionResult($uid, ConversionStatus::Failed, 'Only administrators can convert groups; nothing was changed.');
+        }
         $connection = $this->connectionPool->getConnectionForTable(self::TABLE);
         $connection->beginTransaction();
         $this->cacheCommandDeferral->start();

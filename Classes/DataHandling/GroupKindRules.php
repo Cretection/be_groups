@@ -28,6 +28,7 @@ use Psr\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\DependencyInjection\Attribute\Autoconfigure;
 use TYPO3\CMS\Backend\Utility\BackendUtility;
 use TYPO3\CMS\Core\DataHandling\DataHandler;
+use TYPO3\CMS\Core\Schema\TcaSchemaFactory;
 use TYPO3\CMS\Core\Utility\MathUtility;
 
 /**
@@ -76,6 +77,7 @@ final class GroupKindRules
         private readonly RuleViolationReporter $reporter,
         private readonly EventDispatcherInterface $eventDispatcher,
         private readonly KindPrefix $kindPrefix,
+        private readonly TcaSchemaFactory $tcaSchemaFactory,
     ) {}
 
     /**
@@ -146,6 +148,7 @@ final class GroupKindRules
                 $id,
                 'rules.subgroupsRejected',
                 'Only building blocks can be added to a role. Rejected groups: {groups}',
+                $kind,
             );
         }
         return true;
@@ -239,13 +242,10 @@ final class GroupKindRules
      */
     private function getDefaultKind(array $fieldArray, DataHandler $dataHandler): string
     {
-        // A negative pid means "after record", so only a positive pid is a page.
-        $pageUid = filter_var($fieldArray['pid'] ?? 0, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]);
-        $pageUid = is_int($pageUid) ? $pageUid : 0;
         $candidates = [
             $this->kindRegistry->getDefaultKind(),
             $this->getKindFromTcaDefaults($dataHandler->BE_USER->getTSConfig()),
-            $this->getKindFromTcaDefaults(BackendUtility::getPagesTSconfig($pageUid)),
+            $this->getKindFromTcaDefaults(BackendUtility::getPagesTSconfig($this->getPageUid($fieldArray))),
         ];
         $kind = GroupKind::Classic->value;
         foreach ($candidates as $candidate) {
@@ -331,6 +331,7 @@ final class GroupKindRules
             $id,
             'rules.usergroupsRejected',
             'Only roles can be assigned to users. Rejected groups: {groups}',
+            $this->getRecordType(self::USERS_TABLE, $incomingFieldArray),
         );
     }
 
@@ -341,6 +342,7 @@ final class GroupKindRules
      * @param array<string, mixed> $incomingFieldArray
      * @param \Closure(?string): bool $isAcceptedKind
      * @param list<int|string|null> $selfReferences entries that would reference the record itself
+     * @param string|null $recordType the type of the record, for type-specific defaults
      */
     private function rejectAddedRelations(
         array &$incomingFieldArray,
@@ -353,12 +355,19 @@ final class GroupKindRules
         string|int $id,
         string $labelKey,
         string $logMessage,
+        ?string $recordType,
     ): void {
         if (!array_key_exists($fieldName, $incomingFieldArray)) {
-            return;
+            // A new record gets the default of TCA and TSconfig (TCAdefaults) only after this hook, so the
+            // default is written explicitly and checked like any other value.
+            $defaultValue = $this->getUid($id) === null ? $this->findDefaultValue($table, $fieldName, $incomingFieldArray, $recordType, $dataHandler) : '';
+            if ($defaultValue === '') {
+                return;
+            }
+            $incomingFieldArray[$fieldName] = $defaultValue;
         }
         $incoming = RelationList::fromValue($incomingFieldArray[$fieldName]);
-        $addedEntries = $incoming->getEntriesMissingIn(RelationList::fromValue($storedValue));
+        $addedEntries = $incoming->getEntriesMissingIn(RelationList::fromStoredValue($storedValue));
         $kinds = $this->resolveKinds($addedEntries, $dataHandler);
 
         $rejectedEntries = [];
@@ -381,17 +390,90 @@ final class GroupKindRules
     }
 
     /**
+     * The value the DataHandler gives a field of a new record that does not set it: the default of
+     * TCA, overruled by TCAdefaults of user TSconfig, of page TSconfig and type-specific TCAdefaults
+     * ("TCAdefaults.be_users.usergroup.types.0").
+     *
+     * @param array<string, mixed> $fieldArray
+     */
+    private function findDefaultValue(string $table, string $fieldName, array $fieldArray, ?string $recordType, DataHandler $dataHandler): string
+    {
+        $value = null;
+        if ($this->tcaSchemaFactory->has($table)) {
+            $schema = $this->tcaSchemaFactory->get($table);
+            if ($recordType !== null && $schema->hasSubSchema($recordType)) {
+                $schema = $schema->getSubSchema($recordType);
+            }
+            $value = $schema->hasField($fieldName) ? $schema->getField($fieldName)->getDefaultValue() : null;
+        }
+        $tsConfigs = [$dataHandler->BE_USER->getTSConfig(), BackendUtility::getPagesTSconfig($this->getPageUid($fieldArray))];
+        $paths = [[$fieldName]];
+        if ($recordType !== null) {
+            $paths[] = [$fieldName . '.', 'types.', $recordType];
+        }
+        foreach ($paths as $path) {
+            foreach ($tsConfigs as $tsConfig) {
+                $candidate = $this->readTsConfig($tsConfig, ['TCAdefaults.', $table . '.', ...$path]);
+                $value = is_scalar($candidate) ? $candidate : $value;
+            }
+        }
+        return is_scalar($value) ? (string)$value : '';
+    }
+
+    /**
+     * @param array<mixed> $tsConfig
+     * @param list<string> $path
+     */
+    private function readTsConfig(array $tsConfig, array $path): mixed
+    {
+        $value = $tsConfig;
+        foreach ($path as $key) {
+            if (!is_array($value) || !array_key_exists($key, $value)) {
+                return null;
+            }
+            $value = $value[$key];
+        }
+        return $value;
+    }
+
+    /**
+     * @param array<string, mixed> $fieldArray
+     */
+    private function getRecordType(string $table, array $fieldArray): ?string
+    {
+        if (!$this->tcaSchemaFactory->has($table) || !$this->tcaSchemaFactory->get($table)->supportsSubSchema()) {
+            return null;
+        }
+        $schema = $this->tcaSchemaFactory->get($table);
+        $typeField = $schema->getSubSchemaTypeInformation()->getFieldName();
+        $type = $fieldArray[$typeField] ?? ($schema->hasField($typeField) ? $schema->getField($typeField)->getDefaultValue() : null);
+        return is_scalar($type) ? (string)$type : null;
+    }
+
+    /**
+     * A negative pid means "after record", so only a positive pid is a page.
+     *
+     * @param array<array-key, mixed> $fieldArray
+     */
+    private function getPageUid(array $fieldArray): int
+    {
+        $pageUid = filter_var($fieldArray['pid'] ?? 0, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]);
+        return is_int($pageUid) ? $pageUid : 0;
+    }
+
+    /**
      * Describes a referenced group for messages the way TYPO3 shows it, e.g. "META: Editors [12]".
+     * Only stored titles are used; a group that is not stored is named by its placeholder, which
+     * RelationList has validated.
      */
     private function describeGroup(int|string $entry, string $kind, DataHandler $dataHandler): string
     {
         $uid = is_int($entry) ? $entry : ($dataHandler->substNEWwithIDs[$entry] ?? null);
-        if (is_int($uid)) {
-            $title = $this->backendGroupRepository->findFieldsByUid($uid, ['title'])?->get('title') ?? '';
-            return $title === '' ? (string)$uid : sprintf('%s [%d]', $this->kindPrefix->prefixTitle($kind, $title), $uid);
+        if (!is_int($uid)) {
+            return mb_strimwidth($entry, 0, 64, '…');
         }
-        $title = $dataHandler->datamap[self::GROUPS_TABLE][$entry]['title'] ?? null;
-        return is_string($title) && $title !== '' ? $this->kindPrefix->prefixTitle($kind, $title) : $entry;
+        $title = $this->backendGroupRepository->findFieldsByUid($uid, ['title'])?->get('title') ?? '';
+        return $title === '' ? (string)$uid : sprintf('%s [%d]', mb_strimwidth($this->kindPrefix->prefixTitle($kind, $title), 0, 100, '…'), $uid);
     }
 
     /**
@@ -408,6 +490,9 @@ final class GroupKindRules
         foreach ($entries as $entry) {
             if (is_int($entry)) {
                 $uidsByEntry[$entry] = $entry;
+                continue;
+            }
+            if (!$this->isPlaceholderOfGroupOnly($entry, $dataHandler)) {
                 continue;
             }
             $substitutedUid = $dataHandler->substNEWwithIDs[$entry] ?? null;
@@ -431,6 +516,22 @@ final class GroupKindRules
             }
         }
         return $kinds;
+    }
+
+    /**
+     * Whether a NEW placeholder stands for a group of the datamap and nothing else. The DataHandler
+     * maps placeholders to uids regardless of the table, and the last record created wins: a
+     * placeholder that is also used in another table can point to a different record when the
+     * relation is checked than when it is finally stored.
+     */
+    private function isPlaceholderOfGroupOnly(string $placeholder, DataHandler $dataHandler): bool
+    {
+        foreach ($dataHandler->datamap as $table => $records) {
+            if ($table !== self::GROUPS_TABLE && array_key_exists($placeholder, $records)) {
+                return false;
+            }
+        }
+        return is_array($dataHandler->datamap[self::GROUPS_TABLE] ?? null) && array_key_exists($placeholder, $dataHandler->datamap[self::GROUPS_TABLE]);
     }
 
     /**

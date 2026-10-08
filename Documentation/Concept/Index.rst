@@ -145,14 +145,22 @@ Details of the rules:
 *   **Stored relations are kept.** R2 and R4 only reject relations that are
     *added*. A role that already contains a classic group, or a user who
     already has a building block, keeps it – switching off classic groups or
-    migrating never takes away access. The module marks such entries.
+    migrating never takes away access. The module marks such entries. A
+    relation counts as stored only if TYPO3 reads it: a stored
+    ``be_groups_12`` is no relation for TYPO3, so adding group 12 is checked.
 *   **The order is kept.** The order of the members of a role and of the
     groups of a user matters for the TSconfig inheritance; rejected entries
     are removed, the others keep their position.
 *   **Every notation is understood.** Relations are checked whether they are
     given as uid, as ``uid|label``, URL-encoded, with table prefix
     (``be_groups_12``) or as ``NEW…`` placeholder of a group that is created
-    in the same DataHandler call.
+    in the same DataHandler call. A placeholder that is also used for a
+    record of another table is rejected: it could stand for another record
+    when the relation is stored.
+*   **Default relations are checked.** New users and roles that do not set
+    their groups get the default of the TCA and of ``TCAdefaults`` (including
+    type-specific defaults). The rules check this default like any other
+    value and store the result explicitly.
 *   **New records without kind** get the kind the DataHandler would set: the
     default of the TCA, overridden by ``TCAdefaults`` in user TSconfig,
     overridden by ``TCAdefaults`` in page TSconfig. The rules are checked for

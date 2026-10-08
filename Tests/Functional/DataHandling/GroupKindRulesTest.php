@@ -208,6 +208,47 @@ final class GroupKindRulesTest extends FunctionalTestCase
         self::assertMatchesRegularExpression('/^ACL: ACL new \\[\\d+\\]$/', $this->getRejectedGroupsOfLastLogEntry());
     }
 
+    #[Test]
+    public function theDefaultGroupsOfNewUsersFollowTheRules(): void
+    {
+        $this->setTsConfigOfUser3('TCAdefaults.be_users.usergroup = 1,6');
+
+        $dataHandler = $this->processDatamap(['be_users' => ['NEW1' => ['pid' => 0, 'username' => 'new', 'password' => 'Secret-Password-1234']]]);
+
+        $uid = $dataHandler->substNEWwithIDs['NEW1'] ?? null;
+        self::assertIsInt($uid);
+        self::assertSame('6', $this->getRecord('be_users', $uid)['usergroup']);
+    }
+
+    #[Test]
+    public function theTypeSpecificDefaultSubgroupsOfNewRolesFollowTheRules(): void
+    {
+        $this->setTsConfigOfUser3("TCAdefaults.be_groups.subgroup = 1\nTCAdefaults.be_groups.subgroup.types.role = 2,7");
+
+        $dataHandler = $this->processDatamap(['be_groups' => ['NEW1' => ['pid' => 0, 'title' => 'New role', 'tx_begroups_kind' => 'role']]]);
+
+        $uid = $dataHandler->substNEWwithIDs['NEW1'] ?? null;
+        self::assertIsInt($uid);
+        self::assertSame('2', $this->getRecord('be_groups', $uid)['subgroup']);
+    }
+
+    #[Test]
+    public function placeholdersUsedForRecordsOfOtherTablesAreRejected(): void
+    {
+        // The new page gets uid 6, the uid of the role "R editor"; the placeholder finally stands for the new building block.
+        for ($page = 1; $page <= 5; $page++) {
+            $this->get(ConnectionPool::class)->getConnectionForTable('pages')->insert('pages', ['pid' => 0, 'title' => 'Page ' . $page]);
+        }
+
+        $this->processDatamap([
+            'pages' => ['NEW1' => ['pid' => 0, 'title' => 'New page']],
+            'be_users' => [2 => ['usergroup' => '5,NEW1']],
+            'be_groups' => ['NEW1' => ['pid' => 0, 'title' => 'ACL new', 'tx_begroups_kind' => 'acl']],
+        ]);
+
+        self::assertSame('5', $this->getRecord('be_users', 2)['usergroup']);
+    }
+
     /**
      * @return array<string, array{string}>
      */
@@ -357,6 +398,18 @@ final class GroupKindRulesTest extends FunctionalTestCase
     }
 
     #[Test]
+    public function storedEntriesThatTypo3IgnoresDoNotCountAsStored(): void
+    {
+        // TYPO3 reads "be_groups_7" as no group, so adding group 7 is checked like any other addition.
+        $this->get(ConnectionPool::class)->getConnectionForTable('be_groups')
+            ->update('be_groups', ['subgroup' => '1,2,be_groups_7'], ['uid' => 6]);
+
+        $this->writeGroup(6, ['subgroup' => '1,2,7']);
+
+        self::assertSame('1,2', $this->getRecord('be_groups', 6)['subgroup']);
+    }
+
+    #[Test]
     public function rejectedSubgroupsOfARoleAreNamedWithTheirKind(): void
     {
         $this->writeGroup(6, ['subgroup' => '1,2,7,99']);
@@ -389,6 +442,15 @@ final class GroupKindRulesTest extends FunctionalTestCase
             ->fetchOne();
         $arguments = json_decode(is_string($logData) ? $logData : '', true);
         return is_array($arguments) && is_string($arguments['groups'] ?? null) ? $arguments['groups'] : '';
+    }
+
+    /**
+     * Logs in the administrator "defaults" (uid 3) with the given user TSconfig.
+     */
+    private function setTsConfigOfUser3(string $tsConfig): void
+    {
+        $this->get(ConnectionPool::class)->getConnectionForTable('be_users')->update('be_users', ['TSconfig' => $tsConfig], ['uid' => 3]);
+        $this->setUpBackendUserWithLanguage(3);
     }
 
     private function setUpBackendUserWithLanguage(int $uid): void

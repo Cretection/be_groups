@@ -62,13 +62,13 @@ final readonly class OverviewBuilder
                 $row->get('hidden') === '1',
                 isset($definitions['kind:' . $kind]) ? $definitions['kind:' . $kind]->iconIdentifier : self::FALLBACK_ICON,
             );
-            $members[$row->getUid()] = RelationList::fromValue($row->get('subgroup'))->getUids();
+            $members[$row->getUid()] = RelationList::fromStoredValue($row->get('subgroup'))->getUids();
         }
 
         $usersByGroup = [];
         foreach ($userRows as $row) {
             $user = new UserItem($row->getUid(), $row->get('username'), $row->get('realName'), $row->get('disable') === '1');
-            foreach (RelationList::fromValue($row->get('usergroup'))->getUids() as $groupUid) {
+            foreach (RelationList::fromStoredValue($row->get('usergroup'))->getUids() as $groupUid) {
                 $usersByGroup[$groupUid][] = $user;
             }
         }

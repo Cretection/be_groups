@@ -151,6 +151,23 @@ final class OverviewBuilderTest extends UnitTestCase
     }
 
     #[Test]
+    public function readsTheMembersOfARoleLikeTypo3(): void
+    {
+        // TYPO3 reads "1abc" as group 1 and "be_groups_9" as no group.
+        $overview = $this->subject->build(
+            [$this->group(1, 'ACL a', 'acl'), $this->group(2, 'R notation', 'role', '1abc,be_groups_9')],
+            [],
+            [new KindDefinition('role', 'Role', 'status-user-group-backend'), new KindDefinition('acl', 'Access rights', 'actions-shield')],
+            OverviewBuilder::SORT_TITLE,
+            '',
+        );
+        $role = $this->findRole($overview, 'R notation');
+
+        self::assertSame(['acl'], array_map(static fn(KindGroups $group): string => $group->kind, $role->buildingBlocks));
+        self::assertSame([], $role->missingMemberUids);
+    }
+
+    #[Test]
     public function classicGroupsAreListedSeparately(): void
     {
         self::assertSame(['Classic'], array_map(static fn(GroupItem $group): string => $group->title, $this->build()->classicGroups));

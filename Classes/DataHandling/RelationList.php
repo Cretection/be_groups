@@ -15,6 +15,8 @@ declare(strict_types=1);
 
 namespace Cretection\BeGroups\DataHandling;
 
+use TYPO3\CMS\Core\Utility\GeneralUtility;
+
 /**
  * A list of be_groups relations as it arrives in a DataHandler datamap or is stored in the database.
  *
@@ -56,6 +58,22 @@ final readonly class RelationList
             }
         }
         return count(array_unique($entries)) === count($entries);
+    }
+
+    /**
+     * Reads a stored list the way TYPO3 resolves groups (GeneralUtility::intExplode()): every entry is
+     * cast to a number, so "be_groups_5", "%35" and "NEW…" match no group, while "05" and "5abc" are
+     * group 5. Only these entries are in effect; anything else counts as not stored.
+     */
+    public static function fromStoredValue(string $storedList): self
+    {
+        $entries = [];
+        foreach (GeneralUtility::intExplode(',', $storedList, true) as $uid) {
+            if ($uid > 0 && !in_array($uid, $entries, true)) {
+                $entries[] = $uid;
+            }
+        }
+        return new self($entries);
     }
 
     public static function fromValue(mixed $value): self

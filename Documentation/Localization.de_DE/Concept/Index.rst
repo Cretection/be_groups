@@ -150,7 +150,10 @@ Einzelheiten der Regeln:
     Verknüpfungen ab, die *hinzukommen*. Eine Rolle, die bereits eine
     klassische Gruppe enthält, oder ein Benutzer, der bereits einen Baustein
     hat, behält ihn – das Abschalten klassischer Gruppen oder die Migration
-    nimmt nie Zugriff weg. Das Modul markiert solche Einträge.
+    nimmt nie Zugriff weg. Das Modul markiert solche Einträge. Als
+    gespeichert zählt eine Verknüpfung nur, wenn TYPO3 sie liest: Ein
+    gespeichertes ``be_groups_12`` ist für TYPO3 keine Verknüpfung, das
+    Hinzufügen von Gruppe 12 wird also geprüft.
 *   **Die Reihenfolge bleibt erhalten.** Die Reihenfolge der Mitglieder einer
     Rolle und der Gruppen eines Benutzers ist für die TSconfig-Vererbung
     wichtig; abgelehnte Einträge werden entfernt, die übrigen behalten ihre
@@ -158,7 +161,15 @@ Einzelheiten der Regeln:
 *   **Jede Schreibweise wird verstanden.** Verknüpfungen werden geprüft, ob
     sie als uid, als ``uid|Bezeichnung``, URL-kodiert, mit Tabellenpräfix
     (``be_groups_12``) oder als ``NEW…``-Platzhalter einer Gruppe angegeben
-    sind, die im selben DataHandler-Aufruf angelegt wird.
+    sind, die im selben DataHandler-Aufruf angelegt wird. Ein Platzhalter,
+    der auch für einen Datensatz einer anderen Tabelle steht, wird
+    abgelehnt: Er könnte beim Speichern der Verknüpfung einen anderen
+    Datensatz meinen.
+*   **Standardwerte werden geprüft.** Neue Benutzer und Rollen, die ihre
+    Gruppen nicht angeben, bekommen den Standardwert aus TCA und
+    ``TCAdefaults`` (auch typspezifisch). Die Regeln prüfen diesen
+    Standardwert wie jeden anderen Wert und speichern das Ergebnis
+    ausdrücklich.
 *   **Neue Datensätze ohne Typ** bekommen den Typ, den der DataHandler setzen
     würde: den Standardwert aus TCA, überschrieben durch ``TCAdefaults`` im
     User-TSconfig, überschrieben durch ``TCAdefaults`` im Page-TSconfig. Die

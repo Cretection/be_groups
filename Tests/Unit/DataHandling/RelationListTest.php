@@ -58,6 +58,12 @@ final class RelationListTest extends UnitTestCase
     }
 
     #[Test]
+    public function fromStoredValueReadsTheListLikeTypo3(): void
+    {
+        self::assertSame([7, 8, 9], RelationList::fromStoredValue('be_groups_7,%37,NEW1,07,7abc,+8, 9,0,-3,9')->entries);
+    }
+
+    #[Test]
     public function getUidsSkipsPlaceholders(): void
     {
         self::assertSame([3, 5], RelationList::fromValue('3,NEW1,5')->getUids());

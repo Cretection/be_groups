@@ -101,6 +101,17 @@ final class GroupConverterTest extends FunctionalTestCase
     }
 
     #[Test]
+    public function onlyAdministratorsCanConvertGroups(): void
+    {
+        $this->setUpBackendUser(2);
+
+        $result = $this->get(GroupConverter::class)->split(6);
+
+        self::assertSame(ConversionStatus::Failed, $result->status);
+        self::assertSame('classic', $this->getGroup(6, ['tx_begroups_kind'])['tx_begroups_kind']);
+    }
+
+    #[Test]
     public function writesNoErrorsToTheSystemLog(): void
     {
         $converter = $this->get(GroupConverter::class);
