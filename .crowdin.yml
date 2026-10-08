@@ -1,0 +1,9 @@
+# Translations through the Crowdin project of TYPO3 (https://docs.typo3.org/permalink/t3coreapi:crowdin-extension-integration).
+# English is the source; German is maintained in this repository and has precedence over the language
+# pack, as TYPO3 reads translations next to the source file first. The module labels are in "Modules/".
+preserve_hierarchy: 1
+files:
+  - source: /Resources/Private/Language/**/*.xlf
+    translation: /%original_path%/%two_letters_code%.%original_file_name%
+    ignore:
+      - /**/%two_letters_code%.%original_file_name%

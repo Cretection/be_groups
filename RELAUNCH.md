@@ -198,7 +198,7 @@ Jedes Ziel wird in CI geprüft. Ein Pull Request ohne grüne Pipeline wird nicht
 | Barrierefreiheit | WCAG 2.2 AA für die eigene Oberfläche: Matrix komplett per Tastatur bedienbar, ARIA-Grid, Fokusführung, Kontraste | axe in Playwright und manueller Screenreader-Test vor jedem Release |
 | Sicherheit | Schreiben nur über den DataHandler (Rechte, Sudo-Mode, Historie, Log); AJAX-Routen mit CSRF-Token; QueryBuilder mit Parametern; Modulzugriff über `Modules.php` | Security-Checkliste pro Release, Tests für Rechte und Sudo-Mode |
 | Performance | flüssig bei 1.000 Gruppen und 5.000 Benutzern, keine N+1-Abfragen, TCA-Ableitung zur Compile-Zeit | Benchmark-Fixture in CI, Query-Zählung in den Tests |
-| Übersetzung | keine fest eingebauten Texte; Englisch als Quelle, Deutsch mitgeliefert, weitere Sprachen über Crowdin | XLIFF-Lint, Integritätsprüfung wie im Core |
+| Übersetzung | keine fest eingebauten Texte; Englisch als Quelle, Deutsch mitgeliefert, weitere Sprachen über das Crowdin-Projekt von TYPO3 (E15) | XLIFF-Lint, Integritätsprüfung wie im Core |
 | Dokumentation | offizielle Doku auf docs.typo3.org | render-guides (`guides.xml`) in CI mit Warnungen als Fehler |
 | Assistenten | Probelauf (`--dry-run`), Transaktion pro Gruppe, Nachprüfung mit Rollback | Functional Tests, Mutationsproben, Live-Test in DDEV |
 | Erweiterbarkeit | eigene PSR-14-Events an den Erweiterungspunkten (Typ-Zuordnung, Klassifizierung, Audit-Befunde), klar markierte öffentliche API | Tests und Entwickler-Doku pro Event |
@@ -351,9 +351,11 @@ Gesamt etwa 19–28 Personentage.
 | E9 | Coding-Leitlinien | ✅ verbindlich laut `CODING_GUIDELINES.md` (Englisch) und `CODING_GUIDELINES.de.md` (Deutsch) (2026-10-06) |
 | E10 | Sprachen | ✅ Deutsch und Englisch für alles, was Menschen lesen: README, Leitlinien, `CONTRIBUTING`, Doku und Labels. Bei Widersprüchen gilt die englische Fassung, Code und Commits sind Englisch (2026-10-07). |
 | E11 | Kompatibilität und Support | ✅ Support pro TYPO3-Version bis zu deren offiziellem EOL der Community-Version (ELTS zählt nicht); zwei TYPO3-Hauptversionen pro be_groups-Hauptversion; TYPO3 14: 1.x bis 30.06.2029; keine absehbar wegfallenden APIs (Abschnitt 8.6, 2026-10-07) |
-| E12 | Typ-Filter im Core-Modul „Users“ | Verworfen: Das Filter-DTO des Core kennt nur den Titel, ein Filterfeld bräuchte überschriebene Core-Templates und bräche bei Core-Updates. Das eigene Modul filtert nach Typ (Abschnitt 4.6, 2026-10-08). **Bestätigung durch Jonathan offen.** |
-| E13 | Starter-Set | Kein eigener Befehl: `setup:begroups:default` des Core legt „Editor“ und „Advanced Editor“ an, `begroups:split --all` macht daraus Rollen mit gemeinsamen Bausteinen. Weniger Code, und Änderungen der Core-Presets kommen automatisch an (2026-10-08). **Bestätigung durch Jonathan offen.** |
+| E12 | Typ-Filter im Core-Modul „Users“ | Verworfen: Das Filter-DTO des Core kennt nur den Titel, ein Filterfeld bräuchte überschriebene Core-Templates und bräche bei Core-Updates. Das eigene Modul filtert nach Typ (Abschnitt 4.6, 2026-10-08). ✅ Bestätigt von Jonathan (2026-10-08). |
+| E13 | Starter-Set | Kein eigener Befehl: `setup:begroups:default` des Core legt „Editor“ und „Advanced Editor“ an, `begroups:split --all` macht daraus Rollen mit gemeinsamen Bausteinen. Weniger Code, und Änderungen der Core-Presets kommen automatisch an (2026-10-08). ✅ Bestätigt von Jonathan (2026-10-08). |
 | E14 | Migration früherer Versionen | ✅ Entfällt (Vorgabe von Jonathan, 2026-10-08): Weder die AOE-Version 1.x noch 0.0.x ist Grundlage eines neuen TYPO3-14-Systems. Upgrade-Wizard, Tests und Doku-Kapitel sind entfernt; die Assistenten für Installationen ohne die Extension bleiben. |
+| E15 | Übersetzungen | ✅ Über das Crowdin-Projekt von TYPO3 (Entscheidung von Jonathan, 2026-10-08): Die englischen Labels gehen per Workflow `Crowdin` hoch, weitere Sprachen kommen als Sprachpakete. Deutsch bleibt im Repository (E10) und hat Vorrang vor dem Sprachpaket, weil TYPO3 14 zuerst die Datei neben der Quelle liest (`LabelFileResolver`). Das eigene Crowdin-Projekt von 2022 (Branch `l10n_main`, PR #3) entfällt. |
+| E16 | Review-Ablauf | ✅ Jeder Pull Request durchläuft die komplette Pipeline und ein strenges Code-Review, Jonathan gibt frei; kein zusätzliches Review aus der Community bei Meilensteinen (Entscheidung von Jonathan, 2026-10-08). |
 
 ---
 

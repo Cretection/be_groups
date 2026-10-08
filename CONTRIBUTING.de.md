@@ -133,6 +133,14 @@ Labels liegen in `Resources/Private/Language/` (XLIFF 1.2). Englisch ist die
 Quellsprache; die deutschen Dateien (`de.*.xlf`) werden in diesem Repository
 gepflegt. Bitte beide im selben Pull Request aktuell halten.
 
+Alle anderen Sprachen werden im
+[Crowdin-Projekt von TYPO3](https://docs.typo3.org/permalink/t3coreapi:crowdin-extension-integration)
+übersetzt und kommen als Sprachpakete in TYPO3-Installationen (Admin Tools >
+Maintenance > Manage Languages). Der Workflow `Crowdin` lädt die englischen
+Labels nach jeder Änderung auf `main` hoch (`.crowdin.yml`). Die deutschen
+Übersetzungen in diesem Repository haben Vorrang vor dem Sprachpaket, weil
+TYPO3 zuerst die Datei neben der Quelle liest.
+
 ## Dokumentation
 
 Das Handbuch ist in reStructuredText geschrieben, in `Documentation/`

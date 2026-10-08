@@ -130,6 +130,14 @@ Labels live in `Resources/Private/Language/` (XLIFF 1.2). English is the
 source language; the German files (`de.*.xlf`) are maintained in this
 repository. Please keep both in sync in the same pull request.
 
+All other languages are translated in the
+[Crowdin project of TYPO3](https://docs.typo3.org/permalink/t3coreapi:crowdin-extension-integration)
+and reach TYPO3 installations as language packs (Admin Tools > Maintenance >
+Manage Languages). The workflow `Crowdin` uploads the English labels after
+every change on `main` (`.crowdin.yml`). German translations in this
+repository have precedence over the language pack, as TYPO3 reads the file
+next to the source first.
+
 ## Documentation
 
 The manual is written in reStructuredText in `Documentation/` (English) and

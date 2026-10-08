@@ -1,6 +1,0 @@
-files:
-  - source: /Resources/Private/Language/**/*.xlf
-    # Translations are named "<language>.<file>.xlf" and must not be uploaded as sources.
-    ignore:
-      - /Resources/Private/Language/**/*.*.xlf
-    translation: /Resources/Private/Language/**/%two_letters_code%.%original_file_name%
