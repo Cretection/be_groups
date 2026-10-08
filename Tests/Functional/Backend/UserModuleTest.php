@@ -77,6 +77,22 @@ final class UserModuleTest extends FunctionalTestCase
     }
 
     #[Test]
+    public function theOverridesOnlyDifferFromTheTemplatesOfTheCoreInTheGroupTitles(): void
+    {
+        // Fails when the hashes were updated without copying the changed templates of the core again.
+        $corePath = $this->get(PackageManager::class)->getPackage('beuser')->getPackagePath() . 'Resources/Private/';
+        $overridePath = $this->get(PackageManager::class)->getPackage('be_groups')->getPackagePath() . 'Resources/Private/TemplateOverrides/typo3/cms-beuser/';
+        foreach (array_keys(OverrideUserModuleTemplates::BASE_TEMPLATES) as $file) {
+            $override = preg_replace(
+                ['#^    xmlns:begroups="http://typo3\\.org/ns/Cretection/BeGroups/ViewHelpers"\\n#m', '#\\{begroups:groupTitle\\(uid: [\\w.]+, title: ([\\w.]+)\\)\\}#'],
+                ['', '{$1}'],
+                (string)file_get_contents($overridePath . $file),
+            );
+            self::assertSame((string)file_get_contents($corePath . $file), $override, $file);
+        }
+    }
+
+    #[Test]
     public function detectsChangedTemplatesOfTheCore(): void
     {
         $listener = $this->get(OverrideUserModuleTemplates::class);

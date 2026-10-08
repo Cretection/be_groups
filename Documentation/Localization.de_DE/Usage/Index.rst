@@ -112,7 +112,9 @@ Abschnitt den Typ nicht schon nennt.
     solange die Templates des Core unverändert sind: Ändert ein TYPO3-Update
     eines davon, verwendet das Modul wieder die Templates des Core und zeigt
     die Titel ohne Präfix, bis eine neue Version dieser Extension die Kopien
-    aktualisiert.
+    aktualisiert. TYPO3 prüft das beim Aufbau des Page-TSconfig; leeren Sie
+    nach einem Patch an Templates des Core ohne neue TYPO3-Version die
+    Caches.
 
 Für andere Präfixe überschreiben Sie die Labels ``kind.prefix.<kind>`` aus
 :file:`EXT:be_groups/Resources/Private/Language/db.xlf` per

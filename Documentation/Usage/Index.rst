@@ -109,7 +109,9 @@ already name the kind.
     The copies are only used while the templates of the core are unchanged:
     if a TYPO3 update changes one of them, the module uses the templates of
     the core again and shows the titles without prefix until a new version
-    of this extension updates the copies.
+    of this extension updates the copies. TYPO3 checks this when it builds
+    the page TSconfig; after patching templates of the core without a new
+    TYPO3 version, flush the caches.
 
 To use other prefixes, override the labels ``kind.prefix.<kind>`` of
 :file:`EXT:be_groups/Resources/Private/Language/db.xlf` with

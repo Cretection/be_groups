@@ -98,7 +98,7 @@ final class AuditCommandTest extends FunctionalTestCase
     {
         $this->importCSVDataSet(self::FIXTURES . 'CleanData.csv');
         $this->getConnectionPool()->getConnectionForTable('be_groups')
-            ->update('be_groups', ['title' => "<fg=red>Red</>\e[2J\u{9B}2J", 'tx_begroups_kind' => 'classic'], ['uid' => 1]);
+            ->update('be_groups', ['title' => "<fg=red>Red</>\e[2J\u{9B}2J\u{202E}desrever\u{2028}", 'tx_begroups_kind' => 'classic'], ['uid' => 1]);
         $commandTester = $this->createCommandTester();
 
         $commandTester->execute([], ['decorated' => true]);
@@ -107,6 +107,8 @@ final class AuditCommandTest extends FunctionalTestCase
         self::assertStringContainsString('<fg=red>Red</>', $display);
         self::assertStringNotContainsString("\e[2J", $display);
         self::assertStringNotContainsString("\u{9B}", $display);
+        self::assertStringNotContainsString("\u{202E}", $display);
+        self::assertStringNotContainsString("\u{2028}", $display);
     }
 
     #[Test]
