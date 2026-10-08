@@ -49,6 +49,8 @@ Dieses Dokument ist der Einstiegspunkt, um die Arbeit fortzusetzen. Das Konzept 
 | `[BUGFIX] Keep hidden groups restorable and report database errors` | sichtbare Bausteine für versteckte Gruppen, Datenbankfehler als Ergebnis statt Abbruch |
 | `[FEATURE] Let listeners choose the kind of new groups` | Event `ModifyKindOfNewGroupEvent` |
 | `[BUGFIX] Verify conversions per user and never share building blocks` | Korrekturen aus dem unabhängigen Review (Abschnitt 9) |
+| `[BUGFIX] Keep the owner group of new pages and catch changes of other extensions` | Korrekturen aus dem zweiten Review (Abschnitt 9) |
+| `[TASK] Use icons in the style of TYPO3 14 for light and dark themes` | einfarbige Core-Icons für die Typen, eigenes Modul-Icon im Core-Stil, Extension-Icon als Kachel |
 
 **Stand der Meilensteine** (Details in `RELAUNCH.md` §9):
 
@@ -264,6 +266,7 @@ Sie sind wichtig, damit niemand die behobenen Fehler versehentlich wieder einbau
   - **Eigentümergruppe neuer Seiten:** Hat die Gruppe keine aktiven Untergruppen, wäre sie für ihre Benutzer `firstMainGroup`. Dann wird eine neue, leere Seitenrechte-Gruppe `PG_<Titel>` erstes Mitglied. Sie gehört nur zur Rolle, hat also genau deren Mitglieder; die Prüfung erlaubt nur diesen Wechsel (zweites Review, Befund 1).
   - **Rohdaten-Vergleich:** Vor dem Commit müssen alle anderen Gruppen und alle Benutzer byte-gleich sein, und an der Gruppe selbst dürfen sich nur `tstamp`, Typ, Untergruppen und die verwalteten Rechtefelder ändern. So fallen auch Hooks auf, die anderswo Daten ändern (zweites Review, Befund 2).
   - Das Modell liest Seitenfreigaben wie `filterValidWebMounts()` (`05`, `+5`, `abc` fallen weg, `0` und negative Zahlen bleiben) und `hidden` wie die `HiddenRestriction` (nur `0` ist sichtbar).
+- **Icons:** Typen nutzen einfarbige `actions-*`-Icons des Core, die dem hellen und dunklen Theme folgen. Das Modul-Icon (`module-begroups-roles`) ist im Stil der Core-Modul-Icons gezeichnet (`currentColor`, Rolle in `--icon-color-accent`). Bei einer Änderung eines Icons immer eine **neue Kennung** vergeben, denn das Backend puffert Icon-Markup im `localStorage` des Browsers unter der Kennung.
 - **Ausgaben auf der Konsole** laufen durch `ConsoleText::escape()`: Titel sind Redakteursdaten und dürfen weder Konsolen-Formatierung noch Steuerzeichen (ANSI) ins Terminal tragen.
 - **Testdaten:** Der CSV-Import des Testing-Frameworks füllt fehlende Spalten mit TCA-Defaults (z. B. `file_permissions` = alle Dateioperationen). Rechtefelder in Fixtures daher immer ausdrücklich setzen.
 
