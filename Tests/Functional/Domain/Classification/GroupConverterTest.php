@@ -118,6 +118,22 @@ final class GroupConverterTest extends FunctionalTestCase
     }
 
     #[Test]
+    public function aGroupOnACycleGetsAPageGroupAsOwnerOfNewPages(): void
+    {
+        // Entered through group 3, TYPO3 skips the subgroup 3 of group 2, so group 2 is resolved first.
+        $connection = $this->getConnectionPool()->getConnectionForTable('be_groups');
+        $connection->update('be_groups', ['subgroup' => '3'], ['uid' => 2]);
+        $connection->update('be_groups', ['subgroup' => '2'], ['uid' => 3]);
+        $this->getConnectionPool()->getConnectionForTable('be_users')->update('be_users', ['usergroup' => '3'], ['uid' => 2]);
+
+        $result = $this->get(GroupConverter::class)->split(2);
+
+        self::assertSame(ConversionStatus::Converted, $result->status, $result->message);
+        self::assertSame('page_group', $this->getGroup($result->createdBlockUids[0], ['tx_begroups_kind'])['tx_begroups_kind']);
+        self::assertSame(implode(',', [3, ...$result->createdBlockUids]), $this->getGroup(2, ['subgroup'])['subgroup']);
+    }
+
+    #[Test]
     public function appendsTheBuildingBlocksAfterTheSubgroupsAndKeepsTheGroupHidden(): void
     {
         $result = $this->get(GroupConverter::class)->split(9);

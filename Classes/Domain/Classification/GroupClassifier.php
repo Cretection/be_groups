@@ -139,10 +139,13 @@ final readonly class GroupClassifier
             $reason = sprintf('Is assigned to %d user(s) directly, so it stays their role.', $directUsers);
         }
         // TYPO3 makes the first group a user resolves the owner group of the pages the user creates. If that
-        // is the group itself (no active subgroups), a new page group takes its place as first member: it
-        // belongs to this role only, so the owner group keeps exactly its users.
+        // can be the group itself, a new page group takes its place as first new member: it belongs to this
+        // role only, so the owner group keeps exactly its users. Where the group is not resolved first,
+        // its former subgroups stay in front of the page group, so nothing changes there.
         $groups[$group->getUid()] = $group->with(['hidden' => '0']);
-        if ($this->groupPermissionResolver->resolve((string)$group->getUid(), $groups)->firstGroupUid === $group->getUid()) {
+        if ($this->groupPermissionResolver->resolve((string)$group->getUid(), $groups)->firstGroupUid === $group->getUid()
+            || $this->isOnCycle($group->getUid(), $groups)
+        ) {
             $concerns = [new Concern(GroupKind::PageGroup->value, []), ...$concerns];
         }
         return new Classification($group->getUid(), $group->get('title'), $group->get('hidden') === '1', ClassificationAction::Split, GroupKind::Role->value, $concerns, $reason);
@@ -182,6 +185,31 @@ final readonly class GroupClassifier
             }
         }
         return [$concerns, array_keys(array_diff_key($values, $assigned))];
+    }
+
+    /**
+     * Whether the group can be reached through its own subgroups. Entered through such a cycle, TYPO3
+     * skips the subgroups that are already being resolved, so the group may be resolved first.
+     *
+     * @param array<int, DatabaseRow> $groups
+     */
+    private function isOnCycle(int $uid, array $groups): bool
+    {
+        $pending = GeneralUtility::intExplode(',', $groups[$uid]->get('subgroup'), true);
+        $visited = [];
+        while ($pending !== []) {
+            $current = array_shift($pending);
+            if ($current === $uid) {
+                return true;
+            }
+            $group = $groups[$current] ?? null;
+            if ($group === null || isset($visited[$current]) || $group->get('hidden') !== '0') {
+                continue;
+            }
+            $visited[$current] = true;
+            $pending = [...$pending, ...GeneralUtility::intExplode(',', $group->get('subgroup'), true)];
+        }
+        return false;
     }
 
     /**
