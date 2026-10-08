@@ -86,6 +86,56 @@ final class GroupKindRulesWithClassicGroupsDisabledTest extends FunctionalTestCa
     }
 
     #[Test]
+    public function aRejectedChangeToClassicKeepsTheRulesOfTheCurrentKind(): void
+    {
+        $this->writeGroup(2, ['tx_begroups_kind' => 'classic', 'groupMods' => 'web_layout']);
+
+        $record = $this->getRecord('be_groups', 2);
+        self::assertSame('db_mount', $record['tx_begroups_kind']);
+        self::assertSame('', $record['groupMods']);
+        self::assertSame(
+            [
+                ['error' => 1, 'details' => 'Changing groups to kind "classic" is disabled. The group keeps its kind.'],
+                ['error' => 0, 'details' => 'Fields not belonging to kind "{kind}" have been emptied: {fields}'],
+            ],
+            $this->getExtensionLogEntries(),
+        );
+    }
+
+    #[Test]
+    public function creatingAClassicGroupIsLoggedAsUserErrorWhileDisabled(): void
+    {
+        $this->processDatamap(['be_groups' => ['NEW1' => ['pid' => 0, 'title' => 'Classic', 'tx_begroups_kind' => 'classic']]]);
+
+        self::assertSame(
+            [['error' => 1, 'details' => 'Creating groups of kind "classic" is disabled. The group has not been created.']],
+            $this->getExtensionLogEntries(),
+        );
+    }
+
+    #[Test]
+    public function otherKindsCanStillBeChangedWhileDisabled(): void
+    {
+        $this->writeGroup(1, ['tx_begroups_kind' => 'db_mount', 'db_mountpoints' => '1']);
+
+        $record = $this->getRecord('be_groups', 1);
+        self::assertSame('db_mount', $record['tx_begroups_kind']);
+        self::assertSame('1', $record['db_mountpoints']);
+    }
+
+    #[Test]
+    public function existingClassicGroupsCanStillBeSavedWhileDisabled(): void
+    {
+        $this->writeGroup(5, ['title' => 'Classic all-in-one (saved)']);
+
+        $record = $this->getRecord('be_groups', 5);
+        self::assertSame('Classic all-in-one (saved)', $record['title']);
+        self::assertSame('classic', $record['tx_begroups_kind']);
+        self::assertSame('web_layout', $record['groupMods']);
+        self::assertSame([], $this->getExtensionLogEntries());
+    }
+
+    #[Test]
     public function existingClassicAssignmentsAreKeptWhileDisabled(): void
     {
         $this->writeUser(2, ['realName' => 'Editor', 'usergroup' => '5,6']);
@@ -126,6 +176,20 @@ final class GroupKindRulesWithClassicGroupsDisabledTest extends FunctionalTestCa
         $dataHandler->start($datamap, []);
         $dataHandler->process_datamap();
         return $dataHandler;
+    }
+
+    /**
+     * @return list<array{error: int, details: string}> the entries the extension wrote to the system log
+     */
+    private function getExtensionLogEntries(): array
+    {
+        $rows = $this->get(ConnectionPool::class)->getConnectionForTable('sys_log')
+            ->select(['error', 'details'], 'sys_log', ['type' => 4], [], ['uid' => 'ASC'])
+            ->fetchAllAssociative();
+        return array_map(
+            static fn(array $row): array => ['error' => is_numeric($row['error']) ? (int)$row['error'] : -1, 'details' => is_string($row['details']) ? $row['details'] : ''],
+            $rows,
+        );
     }
 
     /**

@@ -148,6 +148,20 @@ final class GroupKindRulesTest extends FunctionalTestCase
             ->fetchOne();
         self::assertIsString($logData);
         self::assertStringNotContainsString('<script>', $logData);
+        // A value that cannot be a kind is not repeated in the log
+        self::assertStringContainsString('"kind":"(invalid value)"', $logData);
+    }
+
+    #[Test]
+    public function kindWithSurroundingWhitespaceIsStoredAsTheKindTheRulesApplied(): void
+    {
+        $this->writeGroup(1, ['tx_begroups_kind' => ' db_mount ', 'db_mountpoints' => '1']);
+
+        // The rules emptied the access rights for the kind "db_mount", so exactly this kind is stored
+        $record = $this->getRecord('be_groups', 1);
+        self::assertSame('db_mount', $record['tx_begroups_kind']);
+        self::assertSame('', $record['groupMods']);
+        self::assertSame('1', $record['db_mountpoints']);
     }
 
     #[Test]
@@ -247,6 +261,74 @@ final class GroupKindRulesTest extends FunctionalTestCase
         ]);
 
         self::assertSame('5', $this->getRecord('be_users', 2)['usergroup']);
+    }
+
+    #[Test]
+    public function buildingBlocksCreatedLaterInTheSameDatamapCanBeAddedToARole(): void
+    {
+        // The role is processed first, so the kind of the building block comes from the datamap
+        $dataHandler = $this->processDatamap(['be_groups' => [
+            'NEW2' => ['pid' => 0, 'title' => 'R site B', 'tx_begroups_kind' => 'role', 'subgroup' => 'NEW1'],
+            'NEW1' => ['pid' => 0, 'title' => 'DBM site B', 'tx_begroups_kind' => 'db_mount'],
+        ]]);
+
+        $roleUid = $dataHandler->substNEWwithIDs['NEW2'] ?? null;
+        self::assertIsInt($roleUid);
+        self::assertSame((string)$dataHandler->substNEWwithIDs['NEW1'], $this->getRecord('be_groups', $roleUid)['subgroup']);
+    }
+
+    #[Test]
+    public function rolesCreatedLaterInTheSameDatamapCanBeAssignedToUsers(): void
+    {
+        $dataHandler = $this->processDatamap([
+            'be_users' => [1 => ['usergroup' => 'NEW1,NEW2']],
+            'be_groups' => [
+                'NEW1' => ['pid' => 0, 'title' => 'R new', 'tx_begroups_kind' => 'role'],
+                'NEW2' => ['pid' => 0, 'title' => 'ACL new', 'tx_begroups_kind' => 'acl'],
+            ],
+        ]);
+
+        self::assertSame((string)$dataHandler->substNEWwithIDs['NEW1'], $this->getRecord('be_users', 1)['usergroup']);
+    }
+
+    #[Test]
+    public function entriesAfterARejectedPlaceholderAreStillChecked(): void
+    {
+        $this->processDatamap([
+            'pages' => ['NEW1' => ['pid' => 0, 'title' => 'New page']],
+            'be_users' => [1 => ['usergroup' => 'NEW1,6']],
+            'be_groups' => ['NEW1' => ['pid' => 0, 'title' => 'ACL new', 'tx_begroups_kind' => 'acl']],
+        ]);
+
+        self::assertSame('6', $this->getRecord('be_users', 1)['usergroup']);
+    }
+
+    /**
+     * @return array<string, array{string, string}>
+     */
+    public static function untrustedKindDataProvider(): array
+    {
+        return [
+            'identifier of an unknown kind' => ['my_unknown-kind', 'my_unknown-kind'],
+            'markup before an identifier' => ['<b>role', '(invalid value)'],
+            'markup after an identifier' => ['role<b>', '(invalid value)'],
+            'space' => ['my kind', '(invalid value)'],
+            'longer than 64 characters' => [str_repeat('k', 65), '(invalid value)'],
+        ];
+    }
+
+    #[Test]
+    #[DataProvider('untrustedKindDataProvider')]
+    public function unknownKindsAreOnlyRepeatedInTheLogIfTheyLookLikeAnIdentifier(string $kind, string $logged): void
+    {
+        $this->writeGroup(2, ['tx_begroups_kind' => $kind]);
+
+        $logData = $this->get(ConnectionPool::class)->getConnectionForTable('sys_log')
+            ->select(['log_data'], 'sys_log', ['type' => 4])
+            ->fetchOne();
+        $arguments = json_decode(is_string($logData) ? $logData : '', true);
+        self::assertIsArray($arguments);
+        self::assertSame($logged, $arguments['kind'] ?? null);
     }
 
     /**
