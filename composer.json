@@ -108,7 +108,7 @@
 		"check:php:integrity": "php Build/Scripts/phpIntegrityChecker.php",
 		"check:php:lint": "parallel-lint *.php Build Classes Configuration Tests",
 		"check:php:rector": "rector process --dry-run --config=./Build/rector/config.php",
-		"check:php:stan": "phpstan analyse --configuration=Build/phpstan/phpstan.neon --no-progress",
+		"check:php:stan": "phpstan analyse --configuration=Build/phpstan/phpstan.neon --no-progress --memory-limit=4G",
 		"check:static": [
 			"@check:composer:normalize",
 			"@check:json:lint",
