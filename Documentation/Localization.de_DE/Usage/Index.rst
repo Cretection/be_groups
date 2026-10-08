@@ -21,6 +21,12 @@ Auswahl zeigt das Formular nur die Einstellungen dieses Typs:
 *   Eine Rolle hat keine eigenen Einstellungen. Sie listet ihre Bausteine und
     wird Backend-Benutzern zugewiesen.
 
+..  figure:: /Images/BuildingBlockForm.png
+    :alt: Formular des Bausteins „ACL: Content editing“ mit dem Feld Typ und einer Reihe von Icons, eines pro Typ
+
+    Ein Baustein vom Typ „Zugriffsrechte“: Seine Rechte stehen in den Reitern
+    „Record Permissions“ und „Module Permissions“.
+
 Beim Speichern einer Gruppe werden alle Rechte-Einstellungen entfernt, die
 nicht zu ihrem Typ gehören, auch Standardwerte. Das Systemprotokoll
 (*Administration > Protokoll*) hält das als Information fest, siehe
@@ -37,6 +43,12 @@ klassische Gruppen stehen in eigenen Gruppen und sind als nicht zulässig
 gekennzeichnet. Wird eine davon hinzugefügt, wird das beim Speichern der
 Rolle abgelehnt. Die Reihenfolge der gewählten Bausteine bleibt erhalten –
 sie bestimmt den Vorrang ihres TSconfig.
+
+..  figure:: /Images/RoleForm.png
+    :alt: Formular der Rolle „META: Content manager“ mit ihren Bausteinen links und den verfügbaren Gruppen rechts, nach Typ gruppiert
+
+    Eine Rolle listet ihre Bausteine; die verfügbaren Gruppen sind nach Typ
+    gruppiert.
 
 Eine Rolle kann viele Bausteine kombinieren: Die Extension vergrößert das
 Feld :sql:`subgroup` auf 2048 Zeichen.
@@ -96,6 +108,11 @@ Seitenbaum-Einstiegspunkt als ``DBM: Redakteure``.
 Klassische Gruppen und Gruppen mit unbekanntem Typ haben kein Präfix. Typen
 anderer Extensions verwenden ihre Bezeichnung.
 
+..  figure:: /Images/UsersModuleGroups.png
+    :alt: Liste der Backend-Benutzergruppen im Core-Modul Benutzer, jeder Titel mit dem Präfix seines Typs
+
+    Das Core-Modul :guilabel:`Benutzer` zeigt den Typ vor jeder Gruppe.
+
 Das Präfix erscheint in den Gruppen- und Benutzerformularen, in den
 Datensatzlisten, im Rechte-Modul, bei Eigentümern und Mitgliedern von
 Workspaces, im Element-Browser, im Core-Modul :guilabel:`Benutzer`
@@ -134,6 +151,16 @@ dem Modul *Benutzer*. Es ändert nichts, sondern zeigt:
 *   die verbliebenen klassischen Gruppen,
 *   Gruppen mit unbekanntem Typ, zum Beispiel dem Typ einer deinstallierten
     Extension, mit Warnung.
+
+..  figure:: /Images/RolesAndBuildingBlocksModule.png
+    :alt: Das Modul Rollen & Bausteine: eine Tabelle der Rollen mit ihren Bausteinen, nach Typ gruppiert, und ihren Benutzern
+
+    Das Modul listet jede Rolle mit ihren Bausteinen und Benutzern.
+
+..  figure:: /Images/RolesAndBuildingBlocksModuleDark.png
+    :alt: Dasselbe Modul im dunklen Theme des Backends
+
+    Das Modul folgt dem hellen und dem dunklen Theme des Backends.
 
 Rollen lassen sich nach Titel oder Anzahl der Benutzer sortieren, Bausteine
 nach Titel oder Verwendung. Bausteine lassen sich nach Typ filtern; die

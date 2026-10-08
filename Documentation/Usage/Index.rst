@@ -21,6 +21,12 @@ shows the settings of that kind:
 *   A role has no settings of its own. It lists its building blocks and is
     assigned to backend users.
 
+..  figure:: /Images/BuildingBlockForm.png
+    :alt: Form of the building block "ACL: Content editing" with the field Kind and a row of icons, one per kind
+
+    A building block of kind "Access rights": its permissions are in the tabs
+    "Record Permissions" and "Module Permissions".
+
 When a group is saved, all permission settings that do not belong to its
 kind are removed, including default values. The system log
 (*Administration > Log*) records this as information, see
@@ -36,6 +42,11 @@ the core. The available groups are grouped by kind; roles and classic groups
 appear in groups of their own, marked as not allowed. Adding one of them is
 rejected when the role is saved. The order of the selected building blocks
 is kept – it decides the precedence of their TSconfig.
+
+..  figure:: /Images/RoleForm.png
+    :alt: Form of the role "META: Content manager" with its building blocks on the left and the available groups, grouped by kind, on the right
+
+    A role lists its building blocks; the available groups are grouped by kind.
 
 A role can combine many building blocks: the extension enlarges the field
 :sql:`subgroup` to 2048 characters.
@@ -94,6 +105,11 @@ called "Editors" appears as ``META: Editors``, its page tree entry point as
 Classic groups and groups with an unknown kind have no prefix. Kinds of other
 extensions use their label.
 
+..  figure:: /Images/UsersModuleGroups.png
+    :alt: List of backend user groups in the core module Users, each title with the prefix of its kind
+
+    The core module :guilabel:`Users` shows the kind in front of every group.
+
 The prefix appears in the group and user forms, in the record lists, in the
 permissions module, in the owners and members of workspaces, in the element
 browser, in the core module :guilabel:`Users` (lists of users and groups,
@@ -131,6 +147,16 @@ next to the *Users* module. It is read-only and shows:
 *   the remaining classic groups,
 *   groups with an unknown kind, for example the kind of an uninstalled
     extension, with a warning.
+
+..  figure:: /Images/RolesAndBuildingBlocksModule.png
+    :alt: The module Roles & Building Blocks: a table of roles with their building blocks, grouped by kind, and their users
+
+    The module lists every role with its building blocks and users.
+
+..  figure:: /Images/RolesAndBuildingBlocksModuleDark.png
+    :alt: The same module in the dark theme of the backend
+
+    The module follows the light and the dark theme of the backend.
 
 Roles can be sorted by title or by number of users, building blocks by title
 or by usage. Building blocks can be filtered by kind; the selection is kept
