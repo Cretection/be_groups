@@ -205,6 +205,7 @@ final class GroupKindRulesTest extends FunctionalTestCase
         ]);
 
         self::assertSame('5,6', $this->getRecord('be_users', 2)['usergroup']);
+        self::assertMatchesRegularExpression('/^ACL: ACL new \\[\\d+\\]$/', $this->getRejectedGroupsOfLastLogEntry());
     }
 
     /**
@@ -349,9 +350,19 @@ final class GroupKindRulesTest extends FunctionalTestCase
         $this->writeUser(2, ['usergroup' => '5,1']);
 
         self::assertSame(
-            [['error' => 1, 'details' => 'Only roles can be assigned to users. Rejected groups: {uids}']],
+            [['error' => 1, 'details' => 'Only roles can be assigned to users. Rejected groups: {groups}']],
             $this->getExtensionLogEntries(),
         );
+        self::assertSame('ACL: ACL editing [1]', $this->getRejectedGroupsOfLastLogEntry());
+    }
+
+    #[Test]
+    public function rejectedSubgroupsOfARoleAreNamedWithTheirKind(): void
+    {
+        $this->writeGroup(6, ['subgroup' => '1,2,7,99']);
+
+        self::assertSame('1,2', $this->getRecord('be_groups', 6)['subgroup']);
+        self::assertSame('META: R other [7], 99', $this->getRejectedGroupsOfLastLogEntry());
     }
 
     /**
@@ -366,6 +377,18 @@ final class GroupKindRulesTest extends FunctionalTestCase
             static fn(array $row): array => ['error' => is_numeric($row['error']) ? (int)$row['error'] : -1, 'details' => is_string($row['details']) ? $row['details'] : ''],
             $rows,
         );
+    }
+
+    /**
+     * @return string the rejected groups as the message names them
+     */
+    private function getRejectedGroupsOfLastLogEntry(): string
+    {
+        $logData = $this->get(ConnectionPool::class)->getConnectionForTable('sys_log')
+            ->select(['log_data'], 'sys_log', ['type' => 4], [], ['uid' => 'DESC'], 1)
+            ->fetchOne();
+        $arguments = json_decode(is_string($logData) ? $logData : '', true);
+        return is_array($arguments) && is_string($arguments['groups'] ?? null) ? $arguments['groups'] : '';
     }
 
     private function setUpBackendUserWithLanguage(int $uid): void

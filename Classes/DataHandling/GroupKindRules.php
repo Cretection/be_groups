@@ -18,6 +18,7 @@ namespace Cretection\BeGroups\DataHandling;
 use Cretection\BeGroups\Configuration\ExtensionSettings;
 use Cretection\BeGroups\Domain\Kind\GroupKind;
 use Cretection\BeGroups\Domain\Kind\KindFieldResolver;
+use Cretection\BeGroups\Domain\Kind\KindPrefix;
 use Cretection\BeGroups\Domain\Kind\KindRegistry;
 use Cretection\BeGroups\Domain\Repository\BackendGroupRepository;
 use Cretection\BeGroups\Domain\Repository\BackendUserRepository;
@@ -74,6 +75,7 @@ final class GroupKindRules
         private readonly ExtensionSettings $extensionSettings,
         private readonly RuleViolationReporter $reporter,
         private readonly EventDispatcherInterface $eventDispatcher,
+        private readonly KindPrefix $kindPrefix,
     ) {}
 
     /**
@@ -143,7 +145,7 @@ final class GroupKindRules
                 self::GROUPS_TABLE,
                 $id,
                 'rules.subgroupsRejected',
-                'Only building blocks can be added to a role. Rejected groups: {uids}',
+                'Only building blocks can be added to a role. Rejected groups: {groups}',
             );
         }
         return true;
@@ -328,7 +330,7 @@ final class GroupKindRules
             self::USERS_TABLE,
             $id,
             'rules.usergroupsRejected',
-            'Only roles can be assigned to users. Rejected groups: {uids}',
+            'Only roles can be assigned to users. Rejected groups: {groups}',
         );
     }
 
@@ -368,8 +370,28 @@ final class GroupKindRules
         $incomingFieldArray[$fieldName] = $incoming->without($rejectedEntries)->toString();
 
         if ($rejectedEntries !== []) {
-            $this->addCorrection($table, $id, $labelKey, $logMessage, ['uids' => implode(', ', $rejectedEntries)]);
+            $this->addCorrection($table, $id, $labelKey, $logMessage, [
+                'uids' => implode(', ', $rejectedEntries),
+                'groups' => implode(', ', array_map(
+                    fn(int|string $entry): string => $this->describeGroup($entry, $kinds[$entry] ?? '', $dataHandler),
+                    $rejectedEntries,
+                )),
+            ]);
         }
+    }
+
+    /**
+     * Describes a referenced group for messages the way TYPO3 shows it, e.g. "META: Editors [12]".
+     */
+    private function describeGroup(int|string $entry, string $kind, DataHandler $dataHandler): string
+    {
+        $uid = is_int($entry) ? $entry : ($dataHandler->substNEWwithIDs[$entry] ?? null);
+        if (is_int($uid)) {
+            $title = $this->backendGroupRepository->findFieldsByUid($uid, ['title'])?->get('title') ?? '';
+            return $title === '' ? (string)$uid : sprintf('%s [%d]', $this->kindPrefix->prefixTitle($kind, $title), $uid);
+        }
+        $title = $dataHandler->datamap[self::GROUPS_TABLE][$entry]['title'] ?? null;
+        return is_string($title) && $title !== '' ? $this->kindPrefix->prefixTitle($kind, $title) : $entry;
     }
 
     /**

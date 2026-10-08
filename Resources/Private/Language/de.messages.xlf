@@ -32,16 +32,16 @@
         <target>Gruppen nicht hinzugefügt</target>
       </trans-unit>
       <trans-unit id="rules.subgroupsRejected.message" approved="yes">
-        <source>Only building blocks can be added to a role. These groups have not been added: %1$s</source>
-        <target>Einer Rolle können nur Bausteine hinzugefügt werden. Diese Gruppen wurden nicht hinzugefügt: %1$s</target>
+        <source>Only building blocks can be added to a role. These groups have not been added: %2$s</source>
+        <target>Einer Rolle können nur Bausteine hinzugefügt werden. Diese Gruppen wurden nicht hinzugefügt: %2$s</target>
       </trans-unit>
       <trans-unit id="rules.usergroupsRejected.title" approved="yes">
         <source>Groups not assigned</source>
         <target>Gruppen nicht zugewiesen</target>
       </trans-unit>
       <trans-unit id="rules.usergroupsRejected.message" approved="yes">
-        <source>Only roles can be assigned to users. These groups have not been assigned: %1$s</source>
-        <target>Benutzern können nur Rollen zugewiesen werden. Diese Gruppen wurden nicht zugewiesen: %1$s</target>
+        <source>Only roles can be assigned to users. These groups have not been assigned: %2$s</source>
+        <target>Benutzern können nur Rollen zugewiesen werden. Diese Gruppen wurden nicht zugewiesen: %2$s</target>
       </trans-unit>
     </body>
   </file>

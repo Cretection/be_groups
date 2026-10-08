@@ -25,13 +25,13 @@
         <source>Groups not added</source>
       </trans-unit>
       <trans-unit id="rules.subgroupsRejected.message">
-        <source>Only building blocks can be added to a role. These groups have not been added: %1$s</source>
+        <source>Only building blocks can be added to a role. These groups have not been added: %2$s</source>
       </trans-unit>
       <trans-unit id="rules.usergroupsRejected.title">
         <source>Groups not assigned</source>
       </trans-unit>
       <trans-unit id="rules.usergroupsRejected.message">
-        <source>Only roles can be assigned to users. These groups have not been assigned: %1$s</source>
+        <source>Only roles can be assigned to users. These groups have not been assigned: %2$s</source>
       </trans-unit>
     </body>
   </file>
