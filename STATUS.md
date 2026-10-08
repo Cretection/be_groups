@@ -1,6 +1,6 @@
 # Arbeitsstand be_groups-Relaunch
 
-Stand: **2026-10-08** · Branch **`relaunch`** (lokal, noch nicht gepusht) · Ziel: **1.0.0 für TYPO3 14.3 LTS**
+Stand: **2026-10-08** · Branch **`relaunch`** (gepusht, CI grün) · Ziel: **1.0.0 für TYPO3 14.3 LTS**
 
 Dieses Dokument ist der Einstiegspunkt, um die Arbeit fortzusetzen. Das Konzept steht in [`RELAUNCH.md`](RELAUNCH.md), die verbindlichen Regeln für den Code in [`CODING_GUIDELINES.de.md`](CODING_GUIDELINES.de.md) bzw. [`CODING_GUIDELINES.md`](CODING_GUIDELINES.md).
 
@@ -32,7 +32,7 @@ Dieses Dokument ist der Einstiegspunkt, um die Arbeit fortzusetzen. Das Konzept 
   - **Barrierefreiheit** (2026-10-08, M4): axe-core 4.13 nach WCAG 2.2 AA in hellem und dunklem Theme. Modul, Rollen- und Bausteinformular und die überschriebenen Templates des Users-Moduls haben 0 Verstöße; der einzige Fund (Zielgröße der Benutzer-Links) ist behoben (`9320b38`).
   - **Laufzeit** (2026-10-08, M4): bei 1.000 Gruppen und 5.000 Benutzern `classify` 24 s statt 199 s, `split --all` 100 s statt über 10 Minuten.
 - **Testbasis:** Alle Prüfungen sind grün, auf allen Datenbanken, mit PHP 8.2 und 8.5, auf TYPO3 14.3 und 15-dev (Stand je Zeile in Abschnitt 3).
-- **Nächster Schritt:** Push und erster CI-Lauf auf GitHub. Jonathan hat ihn freigegeben (2026-10-08); er scheitert noch daran, dass im GitHub-Konto `Cretection` kein SSH-Schlüssel hinterlegt ist (Abschnitt 7). Danach der Rest von M4: Credits, Übersetzungen, Release.
+- **Nächster Schritt:** Branch-Schutz für `main` und der erste Lauf des Jobs `mutation` auf GitHub (Abschnitt 7). Danach der Rest von M4: Klicktest, Credits, Crowdin, Release.
 
 ---
 
@@ -95,7 +95,7 @@ Dieses Dokument ist der Einstiegspunkt, um die Arbeit fortzusetzen. Das Konzept 
 
 | Meilenstein | Stand |
 |---|---|
-| M0 Fundament | ✅ erledigt. Der CI-Lauf auf GitHub steht noch aus, weil nichts gepusht ist. |
+| M0 Fundament | ✅ erledigt. Erster CI-Lauf auf GitHub grün (2026-10-08). |
 | M1 Kern | ✅ erledigt. Die eigenen PSR-14-Events sind nach M2 verschoben. |
 | M2 Übersicht | 🟡 teilweise. Fertig: Modul ohne Bearbeitung, `begroups:audit` mit Event, `ModifyKindOfNewGroupEvent`. Typ als Präfix überall (Entscheidung g). Verworfen: Typ-Filter im Users-Modul (E12). Die Matrix-Bearbeitung kommt mit 1.1 (E2, 2026-10-08). |
 | M3 Umstieg | ✅ erledigt: `begroups:classify`, `begroups:split`, Starter-Set über den Core-Befehl (E13). |
@@ -109,6 +109,7 @@ Dieses Dokument ist der Einstiegspunkt, um die Arbeit fortzusetzen. Das Konzept 
 |---|---|
 | Unit-Tests | 37 Tests grün |
 | Functional Tests | 170 Tests grün (2026-10-08, SQLite) |
+| CI auf GitHub | Erster Lauf nach dem Push (2026-10-08, Stand `589dc5c`, [Lauf 37818522748](https://github.com/Cretection/be_groups/actions/runs/37818522748)): alle 23 Jobs grün, inklusive `typo3-next`, `e2e` und `coverage`; `mutation` läuft nur wöchentlich und auf Abruf. |
 | Lokales CI-Raster | Alle Jobs von `ci.yml` lokal nachgestellt (2026-10-08, Stand `06795e9`): 40 von 40 grün. Statische Prüfungen mit PHP 8.2; Unit-Tests mit PHP 8.2, 8.3, 8.4 und 8.5, jeweils niedrigste und höchste Abhängigkeiten; Functional Tests mit PHP 8.2 (SQLite) und 8.5 auf SQLite, MariaDB 10.11 und 11.8 (mysqli und pdo_mysql), MySQL 8.0 und 8.4 (mysqli und pdo_mysql), PostgreSQL 14 und 18; TYPO3 15-dev (Core `784b432`) mit Unit- und Functional Tests; Doku. Der Folgestand `16e219e` zusätzlich auf SQLite, MariaDB 10.11, MySQL 8.0 und PostgreSQL 14 grün, ebenso der Stand `a4abc2d` (170 Functional Tests, PHP 8.5). Die neuen Jobs `coverage`, `e2e` und `mutation` liefen lokal (Abschnitt 3); `typo3-next` gegen den neuen Stand steht aus und läuft mit dem ersten CI-Lauf. Skript: `run-matrix.sh` im Scratchpad. |
 | Massentest | Generierte Installation (150 Gruppen, 403 Benutzer, alle Sonderfälle): `classify` + `split --all`, wirksame Rechte aller Benutzer vorher und nachher über den Core verglichen. Wiederholt am 2026-10-08 mit korrigiertem Dump, der auch deaktivierte Benutzer lädt und nichts schreibt: 44 + 101 Gruppen umgestellt, 0 fehlgeschlagen, 0 Abweichungen. Bei 387 Benutzern ist eine neue Seitenrechte-Gruppe Eigentümerin neuer Seiten (beabsichtigt). Danach meldet das Audit 143 × `role-invalid-member` (Rollen in Rollen), 1 × `role-missing-member` (gelöschte Gruppe aus den Testdaten) und 4 klassische Gruppen zur Entscheidung. Werkzeuge im Testprojekt: `generate-test-data.php`, `dump-permissions.php`. |
 | Lasttest | 1.000 Gruppen, 5.000 Benutzer (Seed 11), Endstand 2026-10-08: `classify` 24 s (240 umgestellt), `split --all` 100 s (739 umgestellt), 0 fehlgeschlagen; wirksame Rechte aller 5.007 Benutzer über den Core verglichen: 0 Abweichungen; 0 Fehler im Systemprotokoll. Vorher: `classify` 199 s, `split --all` über 10 Minuten. Werkzeuge im Testprojekt: `benchmark.sh`, Skript `e2e.sh` im Scratchpad (Erzeugen, Dump, Assistenten, Vergleich, Log). |
@@ -238,7 +239,7 @@ Beim Ändern von Typ oder Rollenzusammensetzung fragt TYPO3 nach dem Passwort. D
 | – | Mit Michael Klapper | Namensnennung (ohne/mit Firma), Link und E-Mail-Adresse, ob er die Credits-Seite gegenliest, optional ein Blick auf das Konzept. Bis zur Freigabe wird nur sein Name genannt. |
 
 **Zugänge, die Jonathan einrichtet:**
-- **GitHub, SSH-Schlüssel:** Gepusht wird nur als `Cretection`. Das Konto hat keinen SSH-Schlüssel (`github.com/cretection.keys` ist leer, 2026-10-08); der Secretive-Schlüssel `cretection@github.com` muss dort als „Authentication Key“ eingetragen werden. Die SSH-Konfiguration (`github.com-cretection`) ist richtig; `IdentitiesOnly yes` verhindert den Rückfall auf den 8devs-Schlüssel.
+- **GitHub, SSH-Schlüssel:** ✅ Gepusht wird nur als `Cretection` mit dem Secretive-Schlüssel `cretection@github.com` (Host `github.com-cretection`, eingetragen am 2026-10-08). `IdentitiesOnly yes` im Host-Eintrag verhindert den Rückfall auf den 8devs-Schlüssel.
 - **GitHub:** Branch-Schutz für `main` mit Pflichtprüfungen, sobald die Pipeline einmal gelaufen ist.
 - **TER:** einen Token (`tailor ter:token:create`) als Secret `TYPO3_API_TOKEN` in der GitHub-Environment `ter` für den Release-Workflow (M4). Der Extension-Key `be_groups` gehört bereits `cretection` (TER-API, geprüft am 2026-10-08; letzte Version 0.0.9 für TYPO3 11).
 - **docs.typo3.org:** den Webhook für das Rendering der Doku.
@@ -257,8 +258,8 @@ Beim Ändern von Typ oder Rollenzusammensetzung fragt TYPO3 nach dem Passwort. D
 
 ## 7. Nächste Aufgaben (Reihenfolge)
 
-1. **Push und erster CI-Lauf** (`git push -u origin relaunch`), freigegeben von Jonathan (2026-10-08), sobald der SSH-Schlüssel im Konto `Cretection` liegt (Abschnitt 6). Vor dem Push alle Commits auf Hinweise auf LLMs prüfen.
-   - Neu im ersten Lauf: die Jobs `e2e` und `coverage`. Den Job `mutation` einmal über „Run workflow“ starten.
+1. **Nach dem ersten CI-Lauf** (✅ grün am 2026-10-08; gepusht von Jonathan als `Cretection` per SSH mit dem Secretive-Schlüssel, Remote `git@github.com-cretection:Cretection/be_groups.git`). Vor jedem Push alle Commits auf Hinweise auf LLMs prüfen.
+   - Den Job `mutation` einmal über „Actions → CI → Run workflow“ auf `relaunch` starten.
    - Die Pipeline beobachten, besonders die Container-Images und den Job `typo3-next`. Der Runner `ubuntu-26.04` ist seit dem 2026-09-17 allgemein verfügbar; `actionlint` 1.7.12 kennt das Label noch nicht (falscher Alarm).
    - Danach den Branch-Schutz einrichten.
    - Die Testabdeckung wird zusammengeführt und geprüft (Job `coverage`, siehe Abschnitt 3).
