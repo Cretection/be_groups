@@ -14,14 +14,16 @@ Dieses Dokument ist der Einstiegspunkt, um die Arbeit fortzusetzen. Das Konzept 
   - die Konsistenzprüfung `begroups:audit` mit dem Event `AfterAuditFindingsCollectedEvent` (Teil von M2),
   - die Assistenten `begroups:classify` und `begroups:split` und das Starter-Set über den Core-Befehl (M3),
   - das Event `ModifyKindOfNewGroupEvent` für Import- und Sync-Werkzeuge (Teil von M2),
+  - der Typ als Präfix überall, wo TYPO3 Gruppen zeigt („META: Redakteur“), inklusive Core-Modul „Users“ und eigenem Modul,
   - die Doku auf Deutsch und Englisch.
 - **Reviews:**
   - Das erste strenge Review (2026-10-07) fand 15 echte Fehler. Alle sind behoben, jeder mit einem Test, der den alten Fehler nachweislich erkennt.
   - Ein unabhängiges Review der Teile vom 2026-10-08 fand 12 Punkte, darunter einen kritischen: Die Wiederverwendung bestehender Bausteine konnte Benutzern Rechte geben. Alle sind behoben (`c04fa92`, Details in Abschnitt 9).
   - Ein zweites unabhängiges Review dieses Fixes fand keinen Weg mehr, wirksame Rechte ohne fremde Hooks zu ändern, aber 8 weitere Punkte (u. a. Eigentümergruppe neuer Seiten, Hook-Änderungen außerhalb der Gruppe, überlebende Mutanten, kaputte deutsche Tabelle). Alle sind behoben (Abschnitt 9); 11 gezielte Mutanten werden von den Tests erkannt.
   - **Live-Test in DDEV** (2026-10-08, eigenes Projekt `begroups-test`, Abschnitt 5): `setup:begroups:default` + `begroups:split --all` mit den echten Core-Presets. Die wirksamen Rechte eines Redakteurs, über den Core wie beim Login ermittelt, sind vorher und nachher in 16 von 18 Aspekten identisch. Die zwei Unterschiede sind beabsichtigt: zusätzliche Bausteine in der Gruppenliste und `PG_Editor` als Eigentümergruppe neuer Seiten.
-- **Testbasis:** Alle Prüfungen sind grün, auf allen Datenbanken, mit PHP 8.2 und 8.5, auf TYPO3 14.3 und 15-dev.
-- **Nächster Schritt:** Test im DDEV-Projekt (Abschnitt 5), danach Push und erster CI-Lauf auf GitHub (Abschnitt 7).
+  - **Log-Test** (2026-10-08, nach `42071fe`): frische Testdaten, `classify`, `split --all`, `audit` und ein Rundgang durch die Backend-Bereiche (Users-Modul mit Listen, Details und Vergleich, Rechte-Modul, Status, Datensatzliste, Formulare, eigenes Modul). Ergebnis: 0 Fehler im Systemprotokoll, keine neuen Einträge im Datei-Log, keine Konsolenfehler.
+- **Testbasis:** Alle Prüfungen sind grün, auf allen Datenbanken, mit PHP 8.2 und 8.5, auf TYPO3 14.3 und 15-dev (Stand je Zeile in Abschnitt 3).
+- **Nächster Schritt:** Push und erster CI-Lauf auf GitHub, sobald Jonathan ihn freigibt (Abschnitt 7). Parallel: die Laufzeit von `begroups:split --all` bei großen Installationen verbessern (M4).
 
 ---
 
@@ -54,6 +56,10 @@ Dieses Dokument ist der Einstiegspunkt, um die Arbeit fortzusetzen. Das Konzept 
 | `[!!!][TASK] Remove the migration of earlier versions` | Upgrade-Wizard entfernt (E14) |
 | `[BUGFIX] Give groups on a cycle a page group as owner of new pages` | Befund aus dem Massentest mit generierten Daten |
 | `[FEATURE] Show the kind as prefix wherever TYPO3 shows a group` | „META: Redakteur“ überall, inklusive Core-Modul „Users“ |
+| `[DOCS] Explain roles in roles after splitting and record the prefix decision` | Doku: Rollen in Rollen nach dem Aufteilen, Entscheidung g |
+| `[BUGFIX] Log intended field clearing as information, not as error` | Leerungen nach R1 beim Typwechsel als Information, vom Aufrufer selbst geleerte Felder ohne Meldung |
+| `[TASK] Give PHPStan the same memory limit locally as in CI` | `check:php:stan` mit `--memory-limit=4G` |
+| `[TASK] Show the kind of role members that are no building blocks` | Modul: „kein Baustein“ mit Typ-Präfix und Erklärung, „Verwendet in“ mit Präfix |
 
 **Stand der Meilensteine** (Details in `RELAUNCH.md` §9):
 
@@ -61,7 +67,7 @@ Dieses Dokument ist der Einstiegspunkt, um die Arbeit fortzusetzen. Das Konzept 
 |---|---|
 | M0 Fundament | ✅ erledigt. Der CI-Lauf auf GitHub steht noch aus, weil nichts gepusht ist. |
 | M1 Kern | ✅ erledigt. Die eigenen PSR-14-Events sind nach M2 verschoben. |
-| M2 Übersicht | 🟡 teilweise. Fertig: Modul ohne Bearbeitung, `begroups:audit` mit Event, `ModifyKindOfNewGroupEvent`. Verworfen: Typ-Filter im Users-Modul (E12). Offen: Matrix-Bearbeitung, Präfixe (Entscheidung offen, siehe Abschnitt 6). |
+| M2 Übersicht | 🟡 teilweise. Fertig: Modul ohne Bearbeitung, `begroups:audit` mit Event, `ModifyKindOfNewGroupEvent`. Typ als Präfix überall (Entscheidung g). Verworfen: Typ-Filter im Users-Modul (E12). Offen: Matrix-Bearbeitung. |
 | M3 Umstieg | ✅ erledigt: `begroups:classify`, `begroups:split`, Starter-Set über den Core-Befehl (E13). |
 | M4 Härtung und Release | ⬜ offen |
 
@@ -72,8 +78,10 @@ Dieses Dokument ist der Einstiegspunkt, um die Arbeit fortzusetzen. Das Konzept 
 | Prüfung | Ergebnis |
 |---|---|
 | Unit-Tests | 31 Tests grün |
-| Functional Tests | 133 Tests grün auf SQLite (MariaDB, MySQL und PostgreSQL siehe Lauf vom 2026-10-08) |
-| Massentest | Generierte Installation (150 Gruppen, 403 Benutzer, alle Sonderfälle): `classify` + `split --all`, wirksame Rechte aller Benutzer vorher und nachher über den Core verglichen: 0 Abweichungen. Werkzeuge im Testprojekt: `generate-test-data.php`, `dump-permissions.php`. |
+| Functional Tests | 138 Tests grün auf SQLite. MariaDB, MySQL und PostgreSQL zuletzt mit 133 Tests (2026-10-08); vor dem Push erneut ausführen. |
+| Massentest | Generierte Installation (150 Gruppen, 403 Benutzer, alle Sonderfälle): `classify` + `split --all`, wirksame Rechte aller Benutzer vorher und nachher über den Core verglichen. Wiederholt am 2026-10-08 mit korrigiertem Dump, der auch deaktivierte Benutzer lädt und nichts schreibt: 44 + 101 Gruppen umgestellt, 0 fehlgeschlagen, 0 Abweichungen. Bei 387 Benutzern ist eine neue Seitenrechte-Gruppe Eigentümerin neuer Seiten (beabsichtigt). Danach meldet das Audit 143 × `role-invalid-member` (Rollen in Rollen), 1 × `role-missing-member` (gelöschte Gruppe aus den Testdaten) und 4 klassische Gruppen zur Entscheidung. Werkzeuge im Testprojekt: `generate-test-data.php`, `dump-permissions.php`. |
+| Lasttest | 1.000 Gruppen, 5.000 Benutzer (Seed 11), 2026-10-08: Erzeugen 2 s, Dump 17 s, `audit` 2 s, `classify` 195 s (240 umgestellt, 0 fehlgeschlagen). `split --all` nach über 10 Minuten abgebrochen. Der Aufwand wächst quadratisch (Abschnitt 7, M4). |
+| Log-Test | Nach Testdaten, Assistenten und Rundgang durch das Backend: 0 Fehler im Systemprotokoll (nur Einträge des DataHandler), keine neuen Einträge im Datei-Log, keine Konsolenfehler (2026-10-08). |
 | PHP-Versionen | 8.2 (niedrigste Abhängigkeiten) und 8.5 (zuletzt mit 98 Tests geprüft, vor dem zweiten Review-Fix) |
 | TYPO3-Versionen | 14.3.7 und 15.0-dev (Core `main`, PHPUnit 12) (zuletzt mit 98 Tests geprüft, vor dem zweiten Review-Fix) |
 | Mutationsproben | 11 gezielte Mutanten in Prüfung und Modell, alle von Tests erkannt |
@@ -133,7 +141,8 @@ vendor/bin/typo3 extension:setup && vendor/bin/typo3 cache:flush
 **Eigene Testumgebung (seit 2026-10-08):** DDEV-Projekt `begroups-test` in `~/Developer/Local/begroups-test`.
 - TYPO3 14.3 mit PHP 8.4 und MariaDB 10.11, erreichbar unter https://begroups-test.ddev.site/typo3. Die Zugangsdaten (admin, editor) stehen in `ADMIN-LOGIN.txt` im Projekt, nicht im Repo.
 - Das Repo ist **schreibgeschützt** eingebunden (`.ddev/docker-compose.be_groups.yaml`) und per Composer-Path-Repository verlinkt. Die Umgebung testet also immer den aktuellen Arbeitsstand.
-- `check-permissions.php <uid>` im Projekt gibt die wirksamen Rechte eines Benutzers als JSON aus, über den Core wie beim Login.
+- `check-permissions.php <uid>` im Projekt gibt die wirksamen Rechte eines Benutzers als JSON aus, über den Core wie beim Login. `dump-permissions.php` macht das für alle Benutzer. Beide rollen ihre Schreibzugriffe zurück: Beim Laden eines Benutzers korrigiert der Core sonst `workspace_id` und protokolliert das.
+- `generate-test-data.php <Gruppen> <Benutzer> [Seed]` erzeugt eine gewachsene Installation mit allen Sonderfällen und entfernt vorher den letzten Lauf.
 - Starten mit `cd ~/Developer/Local/begroups-test && ddev start`. Die anderen DDEV-Projekte bleiben unberührt; nie `ddev poweroff` oder `ddev stop --all` verwenden.
 
 Das andere DDEV-Projekt gehört zu einem **anderen Projekt**. Deshalb zuerst einen Snapshot anlegen und die Extension nur als Kopie einbinden. Voraussetzung ist TYPO3 14.3 im Composer-Modus.
@@ -182,6 +191,7 @@ Beim Ändern von Typ oder Rollenzusammensetzung fragt TYPO3 nach dem Passwort. D
 | d | Versionsnummer | Empfehlung 1.0.0 (E5). `composer.json` steht auf `1.0.0-dev`. |
 | e | Alte Branches und Crowdin-PR #3 | Nach dem Relaunch archivieren bzw. schließen (M4). |
 | – | E14 Keine Migration früherer Versionen | ✅ Entschieden von Jonathan (2026-10-08); Wizard entfernt. |
+| – | Keine Fehler im Log | ✅ Vorgabe von Jonathan (2026-10-08): Bei der Nutzung der Extension entstehen keine Fehler im Log, weil keine erzeugt werden, nicht weil sie unterdrückt werden. Umgesetzt in `42071fe` (siehe Abschnitt 9), geprüft im Log-Test (Abschnitt 3). |
 | f | E12 Typ-Filter im Users-Modul verworfen, E13 Starter-Set über den Core-Befehl | Autonom entschieden am 2026-10-08, begründet in `RELAUNCH.md` §11. **Bestätigung offen.** |
 | g | Präfixe in Listen | ✅ Entschieden von Jonathan (2026-10-08): Der Typ erscheint überall automatisch als Präfix vor dem Titel („META: Redakteur“), Titel enthalten keinen Typ. Umgesetzt (`f208342`), inklusive Core-Modul „Users“ per abgesichertem Template-Override. |
 | – | Mit Michael Klapper | Namensnennung (ohne/mit Firma), Link und E-Mail-Adresse, ob er die Credits-Seite gegenliest, optional ein Blick auf das Konzept. Bis zur Freigabe wird nur sein Name genannt. |
@@ -207,7 +217,8 @@ Beim Ändern von Typ oder Rollenzusammensetzung fragt TYPO3 nach dem Passwort. D
    - Offen: Die Testabdeckung zusammenführen (TODO in `ci.yml`, braucht `phpunit/phpcov`).
 3. **Sichtprüfung im Backend** der Testumgebung `begroups-test`.
    - Am 2026-10-08 im Browser geprüft und in Ordnung: das Modul „Rollen & Bausteine“ nach `begroups:split`, das Rollenformular (zweispaltige Liste in gespeicherter Reihenfolge, Auswahl nach Typ gruppiert), das Formular eines Zugriffsrechte-Bausteins mit Herkunftshinweis und das Backend des Redakteurs nach der Umstellung (genau seine Module, Seitenbaum aus `DBM_Editor`).
-   - Noch offen: die Formulare aller übrigen Typen, die abgelehnten Zuweisungen im Formular (Rolle in Rolle, Baustein am Benutzer) mit ihren Hinweisen, die Markierungen im Modul und die Typ-Auswahl bei abgeschalteten klassischen Gruppen.
+   - Am 2026-10-08 zusätzlich geprüft: die Präfixe in Formularen, Datensatzlisten, Rechte-Modul und Users-Modul (Listen, Filter, Details, Vergleich) sowie die Markierung „kein Baustein“ im Modul mit Typ und Erklärung.
+   - Noch offen: die Formulare aller übrigen Typen, die abgelehnten Zuweisungen im Formular (Rolle in Rolle, Baustein am Benutzer) mit ihren Hinweisen und die Typ-Auswahl bei abgeschalteten klassischen Gruppen.
    - Vorschlag: Das Modul zeigt die Bausteine einer Rolle nach Typ gruppiert, nicht in der gespeicherten Reihenfolge, die den TSconfig-Vorrang bestimmt. Die Reihenfolge zusätzlich anzeigen (**Entscheidung offen**).
    - Hinweis zur Testumgebung: `backend:user:create` legt Benutzer ohne `workspace_perms` an. Mit EXT:workspaces sehen sie dann kein Modul; das Backend-Formular setzt den Standardwert 1. Für den Testbenutzer `editor` ist der Wert gesetzt.
 4. **M2 vervollständigen:**
@@ -215,6 +226,7 @@ Beim Ändern von Typ oder Rollenzusammensetzung fragt TYPO3 nach dem Passwort. D
    - **Frontend-Tooling** aufsetzen, bevor JavaScript entsteht: `package.json`, TypeScript strict, ESLint (Konfiguration des Core), Stylelint 17 (Konfiguration von tea), rollup ohne Bündelung, web-test-runner, Playwright mit axe (WCAG 2.2 AA).
    - **Matrix-Bearbeitung** im Modul: Rollen × Bausteine. Geschrieben wird ausschließlich über den DataHandler (AJAX-Route mit `methods: POST`), mit Sudo-Mode und Barrierefreiheit (Tastatur, ARIA-Grid). Alle Themes hell und dunkel.
    - **Idee von Jonathan:** Die Vorschläge der Assistenten (`classify`/`split --dry-run`) auch im Modul „Rollen & Bausteine“ anzeigen.
+   - **Zu prüfen:** Nach dem Massentest blieben 143 Rollen in Rollen. Ein Assistent könnte sie durch ihre Bausteine ersetzen. Das ändert aber die Mitgliedschaft in der inneren Rolle, die Seiten besitzen, Workspace-Mitglied sein oder in TSconfig-Bedingungen stehen kann. Ob und mit welchen Vorbedingungen das geht, ist **offen**.
 5. **M4:**
    - Security-Review (`CODING_GUIDELINES.de.md` §15), Performance-Benchmark (1.000 Gruppen und 5.000 Benutzer), Prüfung der Barrierefreiheit. Bekannt: Jede Umstellung klassifiziert neu und liest dafür alle Gruppen und Benutzer; die Nachprüfung löst jede vorkommende Gruppen-Kombination zweimal auf. Bei sehr vielen Gruppen wächst der Aufwand von `begroups:split --all` quadratisch.
    - Starter-Set: am 2026-10-08 mit dem echten Core-Befehl in `begroups-test` geprüft (siehe Abschnitt 1). Automatisch geht das nicht: `setup:begroups:default` lässt sich in Functional Tests nicht instanziieren, weil seine Abhängigkeiten den Failsafe-Modus des Install-Tools verlangen. `SplitCoreDefaultGroupsTest` bildet deshalb die Inserts des Core nach (Stand 14.3.7); bei neuen Core-Versionen den Live-Test wiederholen.
@@ -268,6 +280,7 @@ Sie sind wichtig, damit niemand die behobenen Fehler versehentlich wieder einbau
   - Das Modell liest Seitenfreigaben wie `filterValidWebMounts()` (`05`, `+5`, `abc` fallen weg, `0` und negative Zahlen bleiben) und `hidden` wie die `HiddenRestriction` (nur `0` ist sichtbar).
 - **Präfix statt Typ im Titel:** `ctrl.label_userFunc` von be_groups (`GroupRecordTitle`, `KindPrefix`) setzt das Präfix überall, wo TYPO3 Datensatztitel zeigt. Das Core-Modul „Users“ gibt Titel aus seinem internen Extbase-Modell aus: Gruppenfilter über das öffentliche Event `AfterBackendGroupFilterListIsAssembledEvent`, sieben Templates per Page-TSconfig `templates."typo3/cms-beuser"` überschrieben (`Resources/Private/TemplateOverrides/`). Die Overrides werden nur aktiviert, wenn die Core-Templates exakt den hinterlegten SHA-256-Hashes entsprechen (`OverrideUserModuleTemplates::BASE_TEMPLATES`), damit nie eine alte Kopie eine Sicherheitskorrektur des Core verdeckt. **Bei jedem Core-Update** (der Test `UserModuleTest::theTemplatesOfTheCoreAreThoseTheOverridesAreBasedOn` schlägt fehl): Core-Template neu kopieren, Titel-Ausgaben wieder durch `begroups:groupTitle` ersetzen, Hash aktualisieren.
 - **Icons:** Typen nutzen einfarbige `actions-*`-Icons des Core, die dem hellen und dunklen Theme folgen. Das Modul-Icon (`module-begroups-roles`) ist im Stil der Core-Modul-Icons gezeichnet (`currentColor`, Rolle in `--icon-color-accent`). Bei einer Änderung eines Icons immer eine **neue Kennung** vergeben, denn das Backend puffert Icon-Markup im `localStorage` des Browsers unter der Kennung.
+- **Log-Stufen:** Beabsichtigte Leerungen nach R1 (Typwechsel) sind Informationen (Stufe 0). Abgelehnte Werte und Datensätze sind Benutzerfehler (Stufe 1), `SECURITY_NOTICE` wird nicht verwendet. Felder, die der Aufrufer selbst leert (etwa die Assistenten), werden nicht gemeldet.
 - **Ausgaben auf der Konsole** laufen durch `ConsoleText::escape()`: Titel sind Redakteursdaten und dürfen weder Konsolen-Formatierung noch Steuerzeichen (ANSI) ins Terminal tragen.
 - **Testdaten:** Der CSV-Import des Testing-Frameworks füllt fehlende Spalten mit TCA-Defaults (z. B. `file_permissions` = alle Dateioperationen). Rechtefelder in Fixtures daher immer ausdrücklich setzen.
 
