@@ -17,6 +17,7 @@ namespace Cretection\BeGroups\Tests\Functional\Domain\Classification;
 
 use Cretection\BeGroups\DataHandling\RelationList;
 use Cretection\BeGroups\Domain\Classification\Classification;
+use Cretection\BeGroups\Domain\Classification\ClassificationAction;
 use Cretection\BeGroups\Domain\Classification\Concern;
 use Cretection\BeGroups\Domain\Classification\GroupClassifier;
 use Cretection\BeGroups\Domain\Kind\KindFieldResolver;
@@ -88,60 +89,32 @@ final class GroupClassifierTest extends FunctionalTestCase
     }
 
     #[Test]
-    public function reusesBuildingBlocksThatGrantExactlyTheSameExceptForTsConfig(): void
+    public function leavesGroupsWhoseSubgroupsTypo3ReadsDifferentlyToAnAdministrator(): void
     {
-        $classifier = $this->get(GroupClassifier::class);
-
-        self::assertSame([null, null, 7, null], array_map(
-            static fn(Concern $concern): ?int => $concern->reusableBlockUid,
-            $classifier->classify(2)->concerns ?? [],
-        ));
-        // Group 9 grants other file operations.
-        self::assertSame([null, null], array_map(
-            static fn(Concern $concern): ?int => $concern->reusableBlockUid,
-            $classifier->classify(9)->concerns ?? [],
-        ));
-    }
-
-    #[Test]
-    public function neverSharesTheFirstBuildingBlockOfAGroupWithoutSubgroups(): void
-    {
-        // Group 6 grants the same page mount as group 1, which is a building block now and no first member.
         $connection = $this->getConnectionPool()->getConnectionForTable('be_groups');
-        $connection->update('be_groups', ['tx_begroups_kind' => 'db_mount'], ['uid' => 1]);
-        $connection->update('be_groups', ['subgroup' => '2,1'], ['uid' => 3]);
-
+        $connection->update('be_groups', ['subgroup' => '1,2,1'], ['uid' => 3]);
+        $connection->update('be_groups', ['subgroup' => 'be_groups_4'], ['uid' => 9]);
         $classifier = $this->get(GroupClassifier::class);
-        $classification = $classifier->classify(6);
+        $duplicates = $classifier->classify(3);
+        $ignoredEntry = $classifier->classify(9);
 
-        self::assertNotNull($classification);
-        self::assertSame('db_mount', $classification->concerns[0]->kind);
-        self::assertNull($classification->concerns[0]->reusableBlockUid);
-        // Not being the first building block, the page mount of group 2 reuses group 1.
-        self::assertSame(1, $classifier->classify(2)?->concerns[1]->reusableBlockUid);
+        self::assertNotNull($duplicates);
+        self::assertNotNull($ignoredEntry);
+        self::assertSame(ClassificationAction::Manual, $duplicates->action);
+        self::assertStringContainsString('duplicates or entries TYPO3 ignores', $duplicates->reason);
+        self::assertSame(ClassificationAction::Manual, $ignoredEntry->action);
     }
 
     #[Test]
-    public function neverReusesBuildingBlocksThatAreTheFirstMemberOfAGroup(): void
+    public function treatsTheRootPageMountAsPermission(): void
     {
-        $this->getConnectionPool()->getConnectionForTable('be_groups')->update('be_groups', ['subgroup' => '7,12'], ['uid' => 10]);
+        $this->getConnectionPool()->getConnectionForTable('be_groups')->update('be_groups', ['db_mountpoints' => '0'], ['uid' => 1]);
 
-        $classification = $this->get(GroupClassifier::class)->classify(2);
+        $classification = $this->get(GroupClassifier::class)->classify(1);
 
         self::assertNotNull($classification);
-        self::assertSame('file_operations', $classification->concerns[2]->kind);
-        self::assertNull($classification->concerns[2]->reusableBlockUid);
-    }
-
-    #[Test]
-    public function neverReusesHiddenBuildingBlocks(): void
-    {
-        $this->getConnectionPool()->getConnectionForTable('be_groups')->update('be_groups', ['hidden' => 1], ['uid' => 7]);
-
-        $classification = $this->get(GroupClassifier::class)->classify(2);
-
-        self::assertNotNull($classification);
-        self::assertNull($classification->concerns[2]->reusableBlockUid);
+        self::assertSame(ClassificationAction::ChangeKind, $classification->action);
+        self::assertSame('db_mount', $classification->targetKind);
     }
 
     #[Test]

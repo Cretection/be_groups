@@ -21,6 +21,7 @@ use Cretection\BeGroups\Domain\Classification\Concern;
 use Cretection\BeGroups\Domain\Classification\ConversionStatus;
 use Cretection\BeGroups\Domain\Classification\GroupClassifier;
 use Cretection\BeGroups\Domain\Classification\GroupConverter;
+use Cretection\BeGroups\Utility\ConsoleTextUtility;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
@@ -70,9 +71,9 @@ final class ClassifyCommand extends Command
         $io->table(
             ['Group', 'Proposal', 'Reason'],
             array_map(static fn(Classification $classification): array => [
-                ConsoleText::escape(sprintf('be_groups:%d %s%s', $classification->uid, $classification->title, $classification->hidden ? ' (disabled)' : '')),
-                ConsoleText::escape(self::describeProposal($classification)),
-                ConsoleText::escape($classification->reason),
+                ConsoleTextUtility::escape(sprintf('be_groups:%d %s%s', $classification->uid, $classification->title, $classification->hidden ? ' (disabled)' : '')),
+                ConsoleTextUtility::escape(self::describeProposal($classification)),
+                ConsoleTextUtility::escape($classification->reason),
             ], $classifications),
         );
 
@@ -89,7 +90,7 @@ final class ClassifyCommand extends Command
             foreach ($toChange as $classification) {
                 $result = $this->groupConverter->changeKind($classification->uid);
                 $failed = $failed || $result->status === ConversionStatus::Failed;
-                $io->writeln(ConsoleText::escape(sprintf('be_groups:%d %s: %s %s', $result->uid, $classification->title, $result->status->value, $result->message)));
+                $io->writeln(ConsoleTextUtility::escape(sprintf('be_groups:%d %s: %s %s', $result->uid, $classification->title, $result->status->value, $result->message)));
             }
         }
         if ($toSplit > 0) {

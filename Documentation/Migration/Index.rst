@@ -133,8 +133,10 @@ kind where nothing else changes:
     role.
 *   A group that grants nothing but owns pages becomes a page group.
 *   All other groups are listed: groups to split, and groups that need your
-    decision, with the reason – for example an empty group, or a permission
-    field that belongs to no kind.
+    decision, with the reason – for example an empty group, a permission
+    field that belongs to no kind, the root of the page tree as page mount,
+    or subgroups with duplicates or entries TYPO3 ignores (such as
+    ``be_groups_5``).
 
 ``begroups:split`` splits the groups you name by uid, or with ``--all`` every
 group that ``begroups:classify`` proposes to split:
@@ -147,19 +149,29 @@ group that ``begroups:classify`` proposes to split:
 *   **The group keeps its uid and becomes a role.** Users and other groups
     keep their assignments. The new building blocks follow the former
     subgroups, so the precedence of TSconfig stays the same.
-*   An existing building block that grants exactly the same is reused instead
-    of creating another one – except for TSconfig, whose order matters, and
-    except for the first building block of a group without subgroups: TYPO3
-    makes the first group of a user the owner group of the pages the user
-    creates, so this block must belong to the role alone.
+*   The building blocks are always new, even if an identical one exists. An
+    existing group may be referenced elsewhere – as owner group of pages, as
+    workspace member or in TSconfig conditions – so making more users members
+    of it could grant them more. Merge identical building blocks yourself
+    where that is intended.
 
 Both assistants write through the DataHandler: every change is in the system
-log and the history of the record. Each group is converted in a transaction
-and compared with its former state afterwards. If any permission would
-differ – for example because another extension changes values while saving
-– the transaction is rolled back and the group stays unchanged. This also
-applies to database errors; the result names the error, as the entries of
-the system log are rolled back as well.
+log and the history of the record. Each group is converted in a transaction.
+Before it is committed, the extension determines what TYPO3 grants every
+combination of groups a user has, and the group itself (also while it is
+hidden or not assigned yet), before and after the conversion: the merged
+permissions, the workspace permissions, the TSconfig in the order TYPO3
+applies it, the group memberships and the owner group of new pages. If
+anything differs – for example because another extension changes values
+while saving – the transaction is rolled back and the group stays unchanged.
+This also applies to database errors; the result names the error, as the
+entries of the system log are rolled back as well.
+
+TYPO3 resolves groups with internal API, so the extension uses a model of
+it; tests compare the model with TYPO3 itself. The transaction covers the
+database connection of :sql:`be_groups`: if :sql:`sys_log`,
+:sql:`sys_history` or :sql:`sys_refindex` are mapped to another connection,
+their entries of a rolled back conversion remain.
 
 Afterwards:
 
@@ -188,6 +200,5 @@ the command line. Split them afterwards to start with two roles:
     vendor/bin/typo3 begroups:split --all
 
 The result are the roles "Editor" and "Advanced Editor", each with its own
-access rights building block (``ACL_Editor``, ``ACL_Advanced Editor``), and
-the page tree entry point and file mount building blocks both roles share
-(``DBM_Editor``, ``FM_Editor``).
+building blocks for access rights, page tree entry point and file mount
+(for example ``ACL_Editor``, ``DBM_Editor`` and ``FM_Editor``).

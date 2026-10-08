@@ -26,6 +26,7 @@ use Cretection\BeGroups\Domain\Repository\DatabaseRow;
 use Cretection\BeGroups\Event\AfterAuditFindingsCollectedEvent;
 use Psr\EventDispatcher\EventDispatcherInterface;
 use TYPO3\CMS\Core\Type\Bitmask\BackendGroupMountOption;
+use TYPO3\CMS\Core\Utility\GeneralUtility;
 
 /**
  * Checks all backend groups and users against the role model.
@@ -71,10 +72,10 @@ final readonly class PermissionAudit
 
         $findings = [];
         foreach ($groups as $group) {
-            $findings = [...$findings, ...$this->checkGroup($group, $groups)];
+            $findings = [...$findings, ...$this->checkGroup($group, $groups), ...$this->checkList(self::GROUPS_TABLE, $group, 'subgroup', $group->get('title'))];
         }
         foreach ($this->backendUserRepository->findAllForAudit(self::USER_PERMISSION_FIELDS) as $user) {
-            $findings = [...$findings, ...$this->checkUser($user, $groups)];
+            $findings = [...$findings, ...$this->checkUser($user, $groups), ...$this->checkList(self::USERS_TABLE, $user, 'usergroup', $user->get('username'))];
         }
 
         $event = new AfterAuditFindingsCollectedEvent($findings);
@@ -113,7 +114,7 @@ final readonly class PermissionAudit
         }
 
         $findings = [];
-        $members = RelationList::fromValue($group->get('subgroup'))->getUids();
+        $members = self::readGroupList($group->get('subgroup'));
         $isBuildingBlock = $this->kindRegistry->isBuildingBlock($kind);
         if ($isBuildingBlock && $members !== []) {
             $findings[] = $finding(AuditSeverity::Error, 'building-block-with-subgroups', sprintf('Building blocks must not have subgroups, but it has: %s.', implode(', ', $members)));
@@ -166,7 +167,7 @@ final readonly class PermissionAudit
             => new AuditFinding($severity, $identifier, self::USERS_TABLE, $user->getUid(), $title, $message);
 
         $findings = [];
-        foreach (RelationList::fromValue($user->get('usergroup'))->getUids() as $groupUid) {
+        foreach (self::readGroupList($user->get('usergroup')) as $groupUid) {
             $group = $groups[$groupUid] ?? null;
             if ($group !== null && $this->kindRegistry->isBuildingBlock($group->get(GroupKind::FIELD_NAME))) {
                 $findings[] = $finding(
@@ -198,6 +199,41 @@ final readonly class PermissionAudit
             );
         }
         return $findings;
+    }
+
+    /**
+     * Reports lists of groups that TYPO3 and the DataHandler read differently.
+     *
+     * @return list<AuditFinding>
+     */
+    private function checkList(string $table, DatabaseRow $record, string $fieldName, string $title): array
+    {
+        if (RelationList::isCanonical($record->get($fieldName))) {
+            return [];
+        }
+        $disabledField = $table === self::USERS_TABLE ? 'disable' : 'hidden';
+        return [new AuditFinding(
+            AuditSeverity::Warning,
+            'unclean-group-list',
+            $table,
+            $record->getUid(),
+            $this->describe($title, $record->get($disabledField) === '1'),
+            sprintf(
+                'The field "%s" ("%s") contains duplicates or entries TYPO3 ignores. Saving the record in the backend makes every entry effective; check them first.',
+                $fieldName,
+                $record->get($fieldName),
+            ),
+        )];
+    }
+
+    /**
+     * Reads a stored list of groups like TYPO3 does: entries that are no number become 0 and match no group.
+     *
+     * @return list<int>
+     */
+    private static function readGroupList(string $list): array
+    {
+        return array_values(array_unique(array_filter(GeneralUtility::intExplode(',', $list, true), static fn(int $uid): bool => $uid > 0)));
     }
 
     private function describe(string $title, bool $disabled): string

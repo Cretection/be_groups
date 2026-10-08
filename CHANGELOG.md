@@ -59,12 +59,13 @@ Relaunch for TYPO3 14.3 LTS (version 1.0.0).
   classic group and changes the kind of groups that serve one purpose,
   combine other groups (role) or only own pages (page group).
 - Assistant `begroups:split` (uids or `--all`, `--dry-run`): moves the
-  permissions of a classic group into one building block per kind and makes
-  the group a role with the same uid, so assignments stay unchanged. Identical
-  building blocks are reused (not for TSconfig and not as first member, which
-  TYPO3 uses as owner group of new pages).
-- Both assistants write through the DataHandler in one transaction per group
-  and roll it back if any permission would differ afterwards.
+  permissions of a classic group into new building blocks, one per kind, and
+  makes the group a role with the same uid, so assignments stay unchanged.
+- Both assistants write through the DataHandler in one transaction per group.
+  They compare what TYPO3 grants every combination of groups of the users and
+  the group itself before and after, and roll back if anything differs.
+- `begroups:audit` reports lists of groups with duplicates or entries TYPO3
+  ignores (`unclean-group-list`).
 - Extension setting `allowClassicGroups` (default: enabled). It takes effect
   immediately: when disabled, the form no longer offers "classic" (except for
   groups that already are classic) and new groups start as "role".

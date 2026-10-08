@@ -68,6 +68,12 @@ final readonly class KindFieldResolver
      */
     private const ORDERED_FIELDS = ['subgroup', 'tsconfig_includes'];
 
+    /**
+     * Relation fields in which "0" is a value: page mount 0 is the root of the page tree,
+     * which TYPO3 keeps as mount point for every user.
+     */
+    private const ROOT_RELATION_FIELDS = ['db_mountpoints'];
+
     public function __construct(
         private TcaSchemaFactory $tcaSchemaFactory,
         private KindRegistry $kindRegistry,
@@ -158,7 +164,7 @@ final readonly class KindFieldResolver
         }
         $toSet = static function (string $list): array {
             $entries = array_unique(array_map(trim(...), explode(',', $list)));
-            sort($entries);
+            sort($entries, SORT_STRING);
             return $entries;
         };
         return $toSet($value) === $toSet($otherValue);
@@ -167,15 +173,16 @@ final readonly class KindFieldResolver
     /**
      * Whether a stored or incoming value of a field (of be_groups by default) grants nothing.
      *
-     * "0" is a real value in static selects (allowed_languages "0" is the default language),
-     * but means "no relation" in relation fields and "nothing" in checkboxes and numbers.
+     * "0" is a real value in static selects (allowed_languages "0" is the default language) and
+     * in page mounts (the root), but means "no relation" in other relation fields and "nothing"
+     * in checkboxes and numbers.
      */
     public function isEmptyValue(string $fieldName, mixed $value, string $table = self::TABLE): bool
     {
         if ($value === null || $value === '' || $value === []) {
             return true;
         }
-        if ($value !== '0' && $value !== 0) {
+        if (($value !== '0' && $value !== 0) || in_array($fieldName, self::ROOT_RELATION_FIELDS, true)) {
             return false;
         }
         if (!$this->tcaSchemaFactory->has($table)) {

@@ -15,10 +15,10 @@ declare(strict_types=1);
 
 namespace Cretection\BeGroups\Tests\Functional\Command;
 
-use Cretection\BeGroups\Command\ConsoleText;
 use Cretection\BeGroups\Command\SplitCommand;
 use Cretection\BeGroups\Domain\Classification\GroupClassifier;
 use Cretection\BeGroups\Domain\Classification\GroupConverter;
+use Cretection\BeGroups\Utility\ConsoleTextUtility;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use Symfony\Component\Console\Command\Command;
@@ -27,7 +27,7 @@ use TYPO3\CMS\Core\Localization\LanguageServiceFactory;
 use TYPO3\TestingFramework\Core\Functional\FunctionalTestCase;
 
 #[CoversClass(SplitCommand::class)]
-#[CoversClass(ConsoleText::class)]
+#[CoversClass(ConsoleTextUtility::class)]
 #[CoversClass(GroupClassifier::class)]
 #[CoversClass(GroupConverter::class)]
 final class SplitCommandTest extends FunctionalTestCase
@@ -51,7 +51,7 @@ final class SplitCommandTest extends FunctionalTestCase
         self::assertSame(Command::SUCCESS, $commandTester->execute(['--all' => true, '--dry-run' => true]));
         $display = $commandTester->getDisplay();
         self::assertStringContainsString('new ACL_Editors', $display);
-        self::assertStringContainsString('existing be_groups:7', $display);
+        self::assertStringContainsString('new FO_Editors', $display);
         self::assertStringContainsString('the group becomes a role', $display);
         self::assertStringContainsString('3 group(s) would be split.', $display);
         self::assertSame($groupCount, $this->countGroups());
@@ -64,10 +64,9 @@ final class SplitCommandTest extends FunctionalTestCase
         $commandTester = new CommandTester($this->get(SplitCommand::class));
 
         self::assertSame(Command::SUCCESS, $commandTester->execute(['uids' => ['2', '6']]));
-        // Group 6 does not reuse the page mount block of group 2: it is the first member of both roles.
-        self::assertSame($groupCount + 4, $this->countGroups());
-        self::assertStringContainsString('be_groups:2 Editors: converted The group is now a role with 3 new and 1 existing building block(s).', $commandTester->getDisplay());
-        self::assertStringContainsString('be_groups:6 Direct mounts: converted The group is now a role with 1 new and 0 existing building block(s).', $commandTester->getDisplay());
+        self::assertSame($groupCount + 5, $this->countGroups());
+        self::assertStringContainsString('be_groups:2 Editors: converted The group is now a role with 4 new building block(s).', $commandTester->getDisplay());
+        self::assertStringContainsString('be_groups:6 Direct mounts: converted The group is now a role with 1 new building block(s).', $commandTester->getDisplay());
         self::assertStringContainsString('2 group(s) split.', $commandTester->getDisplay());
     }
 

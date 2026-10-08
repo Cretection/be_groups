@@ -11,6 +11,8 @@
 ,9,0,"Role with own modules",0,0,"role","1","web_layout","","",""
 ,10,0,"ACL deleted",0,1,"acl","","","","options.clearCache.all = 1",""
 ,11,0,"ACL hidden",1,0,"acl","","","","options.clearCache.all = 1",""
+,12,0,"Role with duplicates",0,0,"role","1,2,1","","","",""
+,13,0,"Role with ignored entry",0,0,"role","be_groups_4,1","","","",""
 "be_users"
 ,"uid","pid","username","admin","deleted","usergroup","options","file_permissions","allowed_languages"
 ,1,0,"admin",1,0,"1",0,"readFile",""
@@ -20,3 +22,4 @@
 ,5,0,"no-mounts",0,0,"3",0,"",""
 ,6,0,"deleted",0,1,"1",0,"readFile",""
 ,7,0,"default-language",0,0,"3",3,"","0"
+,8,0,"ignored-entry",0,0,"be_groups_1,3",3,"",""

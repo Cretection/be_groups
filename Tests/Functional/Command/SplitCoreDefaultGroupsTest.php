@@ -29,7 +29,7 @@ use TYPO3\TestingFramework\Core\Functional\FunctionalTestCase;
 
 /**
  * "setup:begroups:default" of the core creates the groups "Editor" and "Advanced Editor" by SQL,
- * without a kind. Splitting them afterwards turns them into roles with shared building blocks.
+ * without a kind. Splitting them afterwards turns them into roles with their own building blocks.
  */
 #[CoversClass(SplitCommand::class)]
 #[CoversClass(GroupClassifier::class)]
@@ -71,7 +71,7 @@ final class SplitCoreDefaultGroupsTest extends FunctionalTestCase
     }
 
     #[Test]
-    public function turnsTheDefaultGroupsIntoRolesWithSharedBuildingBlocks(): void
+    public function turnsTheDefaultGroupsIntoRolesWithTheirOwnBuildingBlocks(): void
     {
         $commandTester = new CommandTester($this->get(SplitCommand::class));
 
@@ -91,11 +91,13 @@ final class SplitCoreDefaultGroupsTest extends FunctionalTestCase
         );
         self::assertSame([
             'Editor' => 'role [ACL_Editor, DBM_Editor, FM_Editor]',
-            'Advanced Editor' => 'role [ACL_Advanced Editor, DBM_Editor, FM_Editor]',
+            'Advanced Editor' => 'role [ACL_Advanced Editor, DBM_Advanced Editor, FM_Advanced Editor]',
             'ACL_Editor' => 'acl []',
             'DBM_Editor' => 'db_mount []',
             'FM_Editor' => 'file_mount []',
             'ACL_Advanced Editor' => 'acl []',
+            'DBM_Advanced Editor' => 'db_mount []',
+            'FM_Advanced Editor' => 'file_mount []',
         ], array_map($describe, $groups));
         self::assertSame($this->editorUid, $groups['Editor']->getUid());
         self::assertSame($this->advancedEditorUid, $groups['Advanced Editor']->getUid());

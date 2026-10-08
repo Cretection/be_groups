@@ -53,7 +53,7 @@ final class AuditCommandTest extends FunctionalTestCase
         $display = $commandTester->getDisplay();
         self::assertStringContainsString('be_groups:5 Legacy META', $display);
         self::assertStringContainsString('unknown-kind', $display);
-        self::assertStringContainsString('9 error(s), 4 warning(s).', $display);
+        self::assertStringContainsString('9 error(s), 7 warning(s).', $display);
     }
 
     #[Test]
@@ -107,6 +107,25 @@ final class AuditCommandTest extends FunctionalTestCase
         self::assertStringContainsString('<fg=red>Red</>', $display);
         self::assertStringNotContainsString("\e[2J", $display);
         self::assertStringNotContainsString("\u{9B}", $display);
+    }
+
+    #[Test]
+    public function printsValidJsonForAnyTitle(): void
+    {
+        $this->importCSVDataSet(self::FIXTURES . 'CleanData.csv');
+        $title = "A\\<b <info>x</info> \u{9B}2J";
+        $this->getConnectionPool()->getConnectionForTable('be_groups')->update('be_groups', ['title' => $title, 'tx_begroups_kind' => 'classic'], ['uid' => 1]);
+        $commandTester = $this->createCommandTester();
+
+        $commandTester->execute(['--format' => 'json'], ['decorated' => true]);
+
+        $display = $commandTester->getDisplay();
+        self::assertStringNotContainsString("\u{9B}", $display);
+        $result = json_decode($display, true, 512, JSON_THROW_ON_ERROR);
+        self::assertIsArray($result);
+        self::assertIsArray($result['findings']);
+        $titles = array_map(static fn(mixed $finding): mixed => is_array($finding) ? $finding['title'] ?? null : null, $result['findings']);
+        self::assertContains($title, $titles);
     }
 
     #[Test]

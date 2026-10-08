@@ -23,6 +23,7 @@ use Cretection\BeGroups\Domain\Repository\BackendGroupRepository;
 use Cretection\BeGroups\Domain\Repository\BackendUserRepository;
 use Cretection\BeGroups\Domain\Repository\DatabaseRow;
 use Cretection\BeGroups\Domain\Repository\PageOwnerRepository;
+use TYPO3\CMS\Core\Utility\GeneralUtility;
 
 /**
  * Proposes how a classic group fits into the role model, without changing effective permissions.
@@ -32,16 +33,14 @@ use Cretection\BeGroups\Domain\Repository\PageOwnerRepository;
  * permissions of several kinds, with subgroups and own permissions, or that is assigned to
  * users directly is split: the group keeps its uid as a role, so assignments stay unchanged.
  *
+ * Building blocks are always created, never shared with other groups: the uid of an existing
+ * group may be referenced elsewhere (owner group of pages, workspace member, TSconfig conditions),
+ * so adding users to it could grant them more.
+ *
  * @internal
  */
 final readonly class GroupClassifier
 {
-    /**
-     * Fields whose order decides the precedence of TSconfig. Building blocks with these fields
-     * are never shared, as TYPO3 applies a group that is reached twice only once.
-     */
-    private const ORDER_SENSITIVE_FIELDS = ['TSconfig', 'tsconfig_includes'];
-
     public function __construct(
         private BackendGroupRepository $backendGroupRepository,
         private BackendUserRepository $backendUserRepository,
@@ -75,16 +74,13 @@ final readonly class GroupClassifier
         $classifications = [];
         foreach ($groups as $group) {
             if (($onlyUid === null || $group->getUid() === $onlyUid) && $group->get(GroupKind::FIELD_NAME) === GroupKind::Classic->value) {
-                $classifications[] = $this->classifyGroup($group, $groups, $directUserCounts[$group->getUid()] ?? 0, isset($pageOwners[$group->getUid()]));
+                $classifications[] = $this->classifyGroup($group, $directUserCounts[$group->getUid()] ?? 0, isset($pageOwners[$group->getUid()]));
             }
         }
         return $classifications;
     }
 
-    /**
-     * @param list<DatabaseRow> $groups all non-deleted groups
-     */
-    private function classifyGroup(DatabaseRow $group, array $groups, int $directUsers, bool $ownsPages): Classification
+    private function classifyGroup(DatabaseRow $group, int $directUsers, bool $ownsPages): Classification
     {
         $values = [];
         foreach ($this->kindFieldResolver->getManagedFieldNames() as $fieldName) {
@@ -93,19 +89,17 @@ final readonly class GroupClassifier
             }
         }
         [$concerns, $fieldsWithoutKind] = $this->assignToKinds($values);
-        $isHidden = $group->get('hidden') === '1';
-        $hasSubgroups = RelationList::fromValue($group->get('subgroup'))->getUids() !== [];
-        $firstMembers = $this->findFirstMembers($groups);
-        $concerns = array_map(fn(int $index, Concern $concern): Concern => new Concern(
-            $concern->kind,
-            $concern->values,
-            // TYPO3 makes the first group a user resolves the owner group of the pages the user creates.
-            // Without subgroups, the first building block takes this place: it must belong to this role only.
-            $index === 0 && !$hasSubgroups ? null : $this->findReusableBlock($concern, $group->getUid(), $groups, $firstMembers),
-        ), array_keys($concerns), $concerns);
-        $proposal = fn(ClassificationAction $action, ?string $targetKind, string $reason): Classification
-            => new Classification($group->getUid(), $group->get('title'), $isHidden, $action, $targetKind, $concerns, $reason);
+        $subgroups = $group->get('subgroup');
+        $hasSubgroups = $subgroups !== '';
+        $proposal = static fn(ClassificationAction $action, ?string $targetKind, string $reason): Classification
+            => new Classification($group->getUid(), $group->get('title'), $group->get('hidden') === '1', $action, $targetKind, $concerns, $reason);
 
+        if (!RelationList::isCanonical($subgroups)) {
+            return $proposal(ClassificationAction::Manual, null, sprintf(
+                'The subgroups "%s" contain duplicates or entries TYPO3 ignores. Clean them up first; saving the group in the backend makes every entry effective.',
+                $subgroups,
+            ));
+        }
         if ($fieldsWithoutKind !== []) {
             return $proposal(ClassificationAction::Manual, null, sprintf(
                 'The fields %s belong to no kind of building block. Assign them to a kind or keep the group classic.',
@@ -125,6 +119,9 @@ final readonly class GroupClassifier
         }
         if (count($concerns) === 1 && !$hasSubgroups && $directUsers === 0) {
             return $proposal(ClassificationAction::ChangeKind, $concerns[0]->kind, sprintf('Only grants permissions of the kind "%s".', $concerns[0]->kind));
+        }
+        if (in_array('0', GeneralUtility::trimExplode(',', $values['db_mountpoints'] ?? '', true), true)) {
+            return $proposal(ClassificationAction::Manual, null, 'Mounts the root of the page tree (page mount "0"), which the DataHandler cannot copy into a building block.');
         }
         if (count($concerns) > 1) {
             $reason = sprintf('Grants permissions of several kinds: %s.', implode(', ', array_map(static fn(Concern $concern): string => $concern->kind, $concerns)));
@@ -173,69 +170,14 @@ final readonly class GroupClassifier
     }
 
     /**
-     * Finds an existing building block that grants exactly the same, so splitting many groups
-     * does not create many identical blocks. Hidden blocks grant nothing and are never reused. A block
-     * that is the first member of a group may be the owner group of new pages of some users; sharing
-     * it would widen that group.
-     *
-     * @param list<DatabaseRow> $groups
-     * @param array<int, true> $firstMembers
-     */
-    private function findReusableBlock(Concern $concern, int $sourceUid, array $groups, array $firstMembers): ?int
-    {
-        if (array_intersect(array_keys($concern->values), self::ORDER_SENSITIVE_FIELDS) !== []) {
-            return null;
-        }
-        foreach ($groups as $candidate) {
-            if ($candidate->getUid() !== $sourceUid
-                && !isset($firstMembers[$candidate->getUid()])
-                && $candidate->get(GroupKind::FIELD_NAME) === $concern->kind
-                && $candidate->get('hidden') !== '1'
-                && $this->grantsExactly($candidate, $concern->values)
-            ) {
-                return $candidate->getUid();
-            }
-        }
-        return null;
-    }
-
-    /**
-     * @param list<DatabaseRow> $groups
-     * @return array<int, true> the uids of all groups that are the first member of a group
-     */
-    private function findFirstMembers(array $groups): array
-    {
-        $firstMembers = [];
-        foreach ($groups as $group) {
-            $firstMember = RelationList::fromValue($group->get('subgroup'))->getUids()[0] ?? null;
-            if ($firstMember !== null) {
-                $firstMembers[$firstMember] = true;
-            }
-        }
-        return $firstMembers;
-    }
-
-    /**
-     * @param array<string, string> $values
-     */
-    private function grantsExactly(DatabaseRow $group, array $values): bool
-    {
-        foreach ($this->kindFieldResolver->getManagedFieldNames() as $fieldName) {
-            if (!$this->kindFieldResolver->isSameValue($fieldName, $group->get($fieldName), $values[$fieldName] ?? '')) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    /**
      * @return array<int, int> the number of users per group they are assigned to directly
      */
     private function countDirectUsers(): array
     {
         $counts = [];
         foreach ($this->backendUserRepository->findAllForOverview() as $user) {
-            foreach (RelationList::fromValue($user->get('usergroup'))->getUids() as $groupUid) {
+            // Read like TYPO3 does: entries that are no number become 0 and match no group.
+            foreach (array_unique(GeneralUtility::intExplode(',', $user->get('usergroup'), true)) as $groupUid) {
                 $counts[$groupUid] = ($counts[$groupUid] ?? 0) + 1;
             }
         }

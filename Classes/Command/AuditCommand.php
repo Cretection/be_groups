@@ -18,6 +18,7 @@ namespace Cretection\BeGroups\Command;
 use Cretection\BeGroups\Domain\Audit\AuditFinding;
 use Cretection\BeGroups\Domain\Audit\AuditSeverity;
 use Cretection\BeGroups\Domain\Audit\PermissionAudit;
+use Cretection\BeGroups\Utility\ConsoleTextUtility;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
@@ -70,7 +71,7 @@ final class AuditCommand extends Command
         $warnings = count($findings) - $errors;
 
         if ($format === self::FORMAT_JSON) {
-            $output->writeln(json_encode([
+            $json = json_encode([
                 'errors' => $errors,
                 'warnings' => $warnings,
                 'findings' => array_map(static fn(AuditFinding $finding): array => [
@@ -81,7 +82,10 @@ final class AuditCommand extends Command
                     'title' => $finding->title,
                     'message' => $finding->message,
                 ], $findings),
-            ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE | JSON_THROW_ON_ERROR));
+            ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_INVALID_UTF8_SUBSTITUTE | JSON_THROW_ON_ERROR);
+            // Raw: the console formatter must not interpret tags in titles. Unicode stays escaped,
+            // so no control characters reach the terminal.
+            $output->writeln($json, OutputInterface::OUTPUT_RAW);
         } else {
             $this->renderText(new SymfonyStyle($input, $output), $findings, $errors, $warnings);
         }
@@ -102,7 +106,7 @@ final class AuditCommand extends Command
         }
         $io->table(
             ['Severity', 'Record', 'Check', 'Finding'],
-            array_map(static fn(AuditFinding $finding): array => array_map(ConsoleText::escape(...), [
+            array_map(static fn(AuditFinding $finding): array => array_map(ConsoleTextUtility::escape(...), [
                 $finding->severity->value,
                 sprintf('%s:%d %s', $finding->table, $finding->uid, $finding->title),
                 $finding->identifier,

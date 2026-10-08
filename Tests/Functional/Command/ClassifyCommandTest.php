@@ -16,9 +16,9 @@ declare(strict_types=1);
 namespace Cretection\BeGroups\Tests\Functional\Command;
 
 use Cretection\BeGroups\Command\ClassifyCommand;
-use Cretection\BeGroups\Command\ConsoleText;
 use Cretection\BeGroups\Domain\Classification\GroupClassifier;
 use Cretection\BeGroups\Domain\Classification\GroupConverter;
+use Cretection\BeGroups\Utility\ConsoleTextUtility;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use Symfony\Component\Console\Command\Command;
@@ -27,7 +27,7 @@ use TYPO3\CMS\Core\Localization\LanguageServiceFactory;
 use TYPO3\TestingFramework\Core\Functional\FunctionalTestCase;
 
 #[CoversClass(ClassifyCommand::class)]
-#[CoversClass(ConsoleText::class)]
+#[CoversClass(ConsoleTextUtility::class)]
 #[CoversClass(GroupClassifier::class)]
 #[CoversClass(GroupConverter::class)]
 final class ClassifyCommandTest extends FunctionalTestCase

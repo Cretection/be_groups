@@ -19,7 +19,9 @@ use Cretection\BeGroups\DataHandling\RelationList;
 use Cretection\BeGroups\Domain\Kind\GroupKind;
 use Cretection\BeGroups\Domain\Kind\KindFieldResolver;
 use Cretection\BeGroups\Domain\Repository\BackendGroupRepository;
+use Cretection\BeGroups\Domain\Repository\BackendUserRepository;
 use Cretection\BeGroups\Domain\Repository\DatabaseRow;
+use Cretection\BeGroups\Domain\Repository\SystemLogRepository;
 use Doctrine\DBAL\Exception as DatabaseException;
 use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\CMS\Core\DataHandling\DataHandler;
@@ -29,9 +31,10 @@ use TYPO3\CMS\Core\Utility\GeneralUtility;
  * Converts classic groups as proposed by the GroupClassifier.
  *
  * All changes are written through the DataHandler (rules, system log, history, reference
- * index) within one transaction per group. Afterwards the stored records are compared with
- * the former group: if the effective permissions differ in any way, the transaction is
- * rolled back and the group stays unchanged.
+ * index) within one transaction per group. Afterwards, for every combination of groups a
+ * user has, the permissions TYPO3 grants are compared with those before the conversion (see
+ * GroupPermissionResolver). If anything differs, the transaction is rolled back and the
+ * group stays unchanged.
  *
  * Requires an authenticated administrator ($GLOBALS['BE_USER']).
  *
@@ -43,7 +46,10 @@ final readonly class GroupConverter
 
     public function __construct(
         private GroupClassifier $groupClassifier,
+        private GroupPermissionResolver $groupPermissionResolver,
         private BackendGroupRepository $backendGroupRepository,
+        private BackendUserRepository $backendUserRepository,
+        private SystemLogRepository $systemLogRepository,
         private KindFieldResolver $kindFieldResolver,
         private ConnectionPool $connectionPool,
     ) {}
@@ -55,8 +61,8 @@ final readonly class GroupConverter
     {
         return $this->transactional($uid, function () use ($uid): ConversionResult {
             $classification = $this->groupClassifier->classify($uid);
-            $before = $this->backendGroupRepository->findByUid($uid);
-            if ($classification === null || $before === null
+            $groupsBefore = $this->findGroups();
+            if ($classification === null || !isset($groupsBefore[$uid])
                 || $classification->action !== ClassificationAction::ChangeKind || $classification->targetKind === null
             ) {
                 return new ConversionResult($uid, ConversionStatus::Skipped, 'Not a classic group whose kind can be changed, see begroups:classify.');
@@ -68,39 +74,43 @@ final readonly class GroupConverter
             if ($after === null || $after->get(GroupKind::FIELD_NAME) !== $classification->targetKind) {
                 return new ConversionResult($uid, ConversionStatus::Failed, 'The kind could not be changed, e.g. because a rule or another extension rejected it. Nothing was changed.');
             }
+            // Also covers permission fields of other extensions, which TYPO3 does not merge itself.
             foreach ($this->kindFieldResolver->getManagedFieldNames() as $fieldName) {
-                if (!$this->kindFieldResolver->isSameValue($fieldName, $before->get($fieldName), $after->get($fieldName))) {
+                if (!$this->kindFieldResolver->isSameValue($fieldName, $groupsBefore[$uid]->get($fieldName), $after->get($fieldName))) {
                     return new ConversionResult($uid, ConversionStatus::Failed, sprintf('The field "%s" would change; nothing was changed.', $fieldName));
                 }
+            }
+            $change = $this->findPermissionChange($uid, $groupsBefore, []);
+            if ($change !== null) {
+                return new ConversionResult($uid, ConversionStatus::Failed, $change);
             }
             return new ConversionResult($uid, ConversionStatus::Converted, sprintf('The kind is now "%s".', $classification->targetKind));
         });
     }
 
     /**
-     * Moves the permissions of a classic group into building blocks and makes the group a role
+     * Moves the permissions of a classic group into new building blocks and makes the group a role
      * that contains them. The group keeps its uid, so users and other groups keep their assignments.
      */
     public function split(int $uid): ConversionResult
     {
         return $this->transactional($uid, function () use ($uid): ConversionResult {
             $classification = $this->groupClassifier->classify($uid);
-            $group = $this->backendGroupRepository->findByUid($uid);
+            $groupsBefore = $this->findGroups();
+            $group = $groupsBefore[$uid] ?? null;
             if ($classification === null || $group === null || $classification->action !== ClassificationAction::Split) {
                 return new ConversionResult($uid, ConversionStatus::Skipped, 'Not a classic group that can be split, see begroups:classify.');
             }
 
-            $blocks = $this->createBlocks($group, $classification);
-            if ($blocks === null) {
+            $blockUids = $this->createBlocks($group, $classification);
+            if ($blockUids === null) {
                 return new ConversionResult(
                     $uid,
                     ConversionStatus::Failed,
                     'A building block could not be created with exactly the permissions of the group, e.g. because of values '
-                    . 'the DataHandler no longer accepts (modules or tables that do not exist any more). Save the group once '
-                    . 'in the backend to clean it up. Nothing was changed.',
+                    . 'the DataHandler no longer accepts. Nothing was changed.',
                 );
             }
-            [$blockUids, $createdUids, $reusedUids] = $blocks;
 
             $subgroups = RelationList::fromValue($group->get('subgroup'));
             foreach ($blockUids as $blockUid) {
@@ -114,48 +124,36 @@ final readonly class GroupConverter
             ] + $this->kindFieldResolver->getForeignFieldsWithEmptyValue(GroupKind::Role->value)]]);
 
             $role = $this->backendGroupRepository->findByUid($uid);
-            if ($role === null
-                || $role->get(GroupKind::FIELD_NAME) !== GroupKind::Role->value
-                || $this->getEffectiveMembers($role->get('subgroup')) !== $this->getEffectiveMembers($subgroups->toString())
-            ) {
-                return new ConversionResult($uid, ConversionStatus::Failed, 'The group could not be changed into a role as planned; nothing was changed.');
+            if ($role === null || $role->get(GroupKind::FIELD_NAME) !== GroupKind::Role->value) {
+                return new ConversionResult($uid, ConversionStatus::Failed, 'The group could not be changed into a role; nothing was changed.');
             }
             foreach ($this->kindFieldResolver->getForeignFieldsWithEmptyValue(GroupKind::Role->value) as $fieldName => $emptyValue) {
                 if (!$this->kindFieldResolver->isEmptyValue($fieldName, $role->get($fieldName))) {
                     return new ConversionResult($uid, ConversionStatus::Failed, sprintf('The field "%s" of the role could not be emptied; nothing was changed.', $fieldName));
                 }
             }
+            $change = $this->findPermissionChange($uid, $groupsBefore, $blockUids);
+            if ($change !== null) {
+                return new ConversionResult($uid, ConversionStatus::Failed, $change);
+            }
             return new ConversionResult(
                 $uid,
                 ConversionStatus::Converted,
-                sprintf('The group is now a role with %d new and %d existing building block(s).', count($createdUids), count($reusedUids)),
-                $createdUids,
-                $reusedUids,
+                sprintf('The group is now a role with %d new building block(s).', count($blockUids)),
+                $blockUids,
             );
         });
     }
 
     /**
-     * @return array{list<int>, list<int>, list<int>}|null all building blocks in the order of the concerns,
-     *                                                    the created and the reused ones, or null if a
-     *                                                    created block does not grant exactly the same
+     * @return list<int>|null the new building blocks in the order of the concerns, or null if one
+     *                        does not grant exactly the permissions of its concern
      */
     private function createBlocks(DatabaseRow $group, Classification $classification): ?array
     {
-        $blocks = [];
-        $reusedUids = [];
-        $placeholders = [];
         $datamap = [];
         foreach ($classification->concerns as $index => $concern) {
-            if ($concern->reusableBlockUid !== null) {
-                $blocks[] = $concern->reusableBlockUid;
-                $reusedUids[] = $concern->reusableBlockUid;
-                continue;
-            }
-            $placeholder = 'NEW_begroups_split_' . $index;
-            $blocks[] = $placeholder;
-            $placeholders[$placeholder] = $concern;
-            $datamap[self::TABLE][$placeholder] = [
+            $datamap[self::TABLE]['NEW_begroups_split_' . $index] = [
                 'pid' => (int)$group->get('pid'),
                 'title' => (GroupKind::tryFrom($concern->kind)?->prefix() ?? strtoupper($concern->kind) . '_') . $group->get('title'),
                 'description' => sprintf('Created by begroups:split from group %d "%s".', $group->getUid(), $group->get('title')),
@@ -166,24 +164,20 @@ final readonly class GroupConverter
             ] + $concern->values;
         }
         if ($datamap === []) {
-            return [$reusedUids, [], $reusedUids];
+            return [];
         }
 
         $dataHandler = $this->process($datamap);
-        $createdUids = [];
-        foreach ($placeholders as $placeholder => $concern) {
-            $blockUid = $dataHandler->substNEWwithIDs[$placeholder] ?? null;
+        $blockUids = [];
+        foreach ($classification->concerns as $position => $plannedConcern) {
+            $blockUid = $dataHandler->substNEWwithIDs['NEW_begroups_split_' . $position] ?? null;
             $block = is_int($blockUid) ? $this->backendGroupRepository->findByUid($blockUid) : null;
-            if ($block === null || !$this->grantsExactly($block, $concern)) {
+            if ($block === null || !$this->grantsExactly($block, $plannedConcern)) {
                 return null;
             }
-            $createdUids[$placeholder] = $block->getUid();
+            $blockUids[] = $block->getUid();
         }
-        return [
-            array_map(static fn(int|string $block): int => is_int($block) ? $block : $createdUids[$block], $blocks),
-            array_values($createdUids),
-            $reusedUids,
-        ];
+        return $blockUids;
     }
 
     private function grantsExactly(DatabaseRow $block, Concern $concern): bool
@@ -200,16 +194,73 @@ final readonly class GroupConverter
     }
 
     /**
-     * The members TYPO3 resolves, in their order: entries without an existing group grant nothing.
+     * Compares what TYPO3 grants every combination of groups a user has, before and after the
+     * conversion, and what the group itself grants (also while it is hidden or not assigned).
+     * Only the new building blocks may be added to the resolved groups, and only one of them may
+     * become the owner group of new pages in place of the converted group: they are new and only
+     * reachable through it, so they have exactly the users of the converted group.
      *
-     * @return list<int>
+     * @param array<int, DatabaseRow> $groupsBefore
+     * @param list<int> $createdUids
+     * @return string|null a description of the change, or null if nothing changes
      */
-    private function getEffectiveMembers(string $subgroupList): array
+    private function findPermissionChange(int $uid, array $groupsBefore, array $createdUids): ?string
     {
-        return array_values(array_filter(
-            RelationList::fromValue($subgroupList)->getUids(),
-            fn(int $memberUid): bool => $this->backendGroupRepository->findByUid($memberUid) !== null,
-        ));
+        $groupsAfter = $this->findGroups();
+        $checks = array_map(
+            static fn(string $usergroupList): array => [$usergroupList, sprintf('users with the groups "%s"', $usergroupList), $groupsBefore, $groupsAfter],
+            $this->backendUserRepository->findDistinctUsergroupLists(),
+        );
+        $checks[] = [(string)$uid, 'the group itself', $this->withVisibleGroup($groupsBefore, $uid), $this->withVisibleGroup($groupsAfter, $uid)];
+
+        foreach ($checks as [$usergroupList, $affected, $groupsToCompareBefore, $groupsToCompareAfter]) {
+            $before = $this->groupPermissionResolver->resolve($usergroupList, $groupsToCompareBefore);
+            if (!in_array($uid, $before->groupUids, true)) {
+                continue;
+            }
+            $after = $this->groupPermissionResolver->resolve($usergroupList, $groupsToCompareAfter);
+            $change = match (true) {
+                $after->fields !== $before->fields => sprintf('permissions (%s)', implode(', ', array_keys(array_filter(
+                    $before->fields,
+                    static fn(array $values, string $fieldName): bool => $values !== ($after->fields[$fieldName] ?? []),
+                    ARRAY_FILTER_USE_BOTH,
+                )))),
+                $after->workspacePermissions !== $before->workspacePermissions => 'workspace permissions',
+                $after->tsConfig !== $before->tsConfig => 'TSconfig',
+                array_values(array_diff($after->groupUids, $createdUids)) !== $before->groupUids => 'group memberships',
+                $after->firstGroupUid !== $before->firstGroupUid
+                    && !($before->firstGroupUid === $uid && in_array($after->firstGroupUid, $createdUids, true)) => 'owner group of new pages',
+                default => null,
+            };
+            if ($change !== null) {
+                return sprintf('The %s of %s would change; nothing was changed.', $change, $affected);
+            }
+        }
+        return null;
+    }
+
+    /**
+     * @param array<int, DatabaseRow> $groups
+     * @return array<int, DatabaseRow>
+     */
+    private function withVisibleGroup(array $groups, int $uid): array
+    {
+        if (isset($groups[$uid])) {
+            $groups[$uid] = $groups[$uid]->with(['hidden' => '0']);
+        }
+        return $groups;
+    }
+
+    /**
+     * @return array<int, DatabaseRow> all non-deleted groups by uid
+     */
+    private function findGroups(): array
+    {
+        $groups = [];
+        foreach ($this->backendGroupRepository->findAll() as $group) {
+            $groups[$group->getUid()] = $group;
+        }
+        return $groups;
     }
 
     /**
@@ -225,8 +276,7 @@ final readonly class GroupConverter
 
     /**
      * Runs a conversion in a transaction that is only committed if the conversion succeeded.
-     * Entries of the system log written during a rolled back conversion are gone as well, so the
-     * result explains what happened.
+     * The system log is rolled back as well, so the result names the errors the DataHandler logged.
      *
      * @param \Closure(): ConversionResult $conversion
      */
@@ -235,7 +285,14 @@ final readonly class GroupConverter
         $connection = $this->connectionPool->getConnectionForTable(self::TABLE);
         $connection->beginTransaction();
         try {
+            $lastLogUid = $this->systemLogRepository->findLastUid();
             $result = $conversion();
+            if ($result->status === ConversionStatus::Failed) {
+                $errors = $this->systemLogRepository->findErrorMessagesAfter($lastLogUid);
+                if ($errors !== []) {
+                    $result = new ConversionResult($uid, $result->status, $result->message . ' Logged errors: ' . implode(' | ', $errors));
+                }
+            }
         } catch (DatabaseException $exception) {
             // e.g. PostgreSQL aborts the whole transaction after a failed statement of the DataHandler
             $connection->rollBack();

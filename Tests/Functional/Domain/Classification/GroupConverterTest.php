@@ -79,12 +79,13 @@ final class GroupConverterTest extends FunctionalTestCase
         $result = $this->get(GroupConverter::class)->split(2);
 
         self::assertSame(ConversionStatus::Converted, $result->status, $result->message);
-        self::assertCount(3, $result->createdBlockUids);
-        self::assertSame([7], $result->reusedBlockUids);
-        [$aclUid, $mountUid, $tsConfigUid] = $result->createdBlockUids;
+        self::assertSame('The group is now a role with 4 new building block(s).', $result->message);
+        // Group 7 grants the same file operations, but is never shared: see GroupClassifier.
+        [$aclUid, $mountUid, $fileOperationsUid, $tsConfigUid] = $result->createdBlockUids;
+        self::assertSame(['title' => 'FO_Editors', 'file_permissions' => 'readFile,writeFile'], $this->getGroup($fileOperationsUid, ['title', 'file_permissions']));
         self::assertSame([
             'tx_begroups_kind' => 'role',
-            'subgroup' => implode(',', [$aclUid, $mountUid, 7, $tsConfigUid]),
+            'subgroup' => implode(',', [$aclUid, $mountUid, $fileOperationsUid, $tsConfigUid]),
             'groupMods' => '',
             'db_mountpoints' => '',
             'file_permissions' => '',
@@ -107,6 +108,33 @@ final class GroupConverterTest extends FunctionalTestCase
         // Only reachable through the hidden role; showing the role again restores its permissions.
         self::assertSame('0', $this->getGroup($aclUid, ['hidden'])['hidden']);
         self::assertSame('0', $this->getGroup($fileOperationsUid, ['hidden'])['hidden']);
+    }
+
+    #[Test]
+    public function doesNotConvertGroupsWhoseSubgroupsTypo3ReadsDifferently(): void
+    {
+        $connection = $this->getConnectionPool()->getConnectionForTable('be_groups');
+        $connection->update('be_groups', ['subgroup' => '4,4'], ['uid' => 9]);
+        $connection->update('be_groups', ['subgroup' => 'be_groups_1'], ['uid' => 3]);
+        $converter = $this->get(GroupConverter::class);
+
+        self::assertSame(ConversionStatus::Skipped, $converter->split(9)->status);
+        self::assertSame(ConversionStatus::Skipped, $converter->changeKind(3)->status);
+        self::assertSame(['subgroup' => 'be_groups_1', 'tx_begroups_kind' => 'classic'], $this->getGroup(3, ['subgroup', 'tx_begroups_kind']));
+    }
+
+    #[Test]
+    public function keepsTheRootPageMount(): void
+    {
+        $connection = $this->getConnectionPool()->getConnectionForTable('be_groups');
+        $connection->update('be_groups', ['db_mountpoints' => '0'], ['uid' => 1]);
+        $connection->update('be_groups', ['db_mountpoints' => '0'], ['uid' => 2]);
+        $converter = $this->get(GroupConverter::class);
+
+        self::assertSame(ConversionStatus::Converted, $converter->changeKind(1)->status);
+        self::assertSame(['tx_begroups_kind' => 'db_mount', 'db_mountpoints' => '0'], $this->getGroup(1, ['tx_begroups_kind', 'db_mountpoints']));
+        // The DataHandler cannot store page mount "0" in a new building block.
+        self::assertSame(ConversionStatus::Skipped, $converter->split(2)->status);
     }
 
     #[Test]

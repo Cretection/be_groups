@@ -19,6 +19,7 @@ use Cretection\BeGroups\Domain\Classification\ConversionStatus;
 use Cretection\BeGroups\Domain\Classification\GroupConverter;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
+use TYPO3\CMS\Core\Database\Connection;
 use TYPO3\CMS\Core\Localization\LanguageServiceFactory;
 use TYPO3\TestingFramework\Core\Functional\FunctionalTestCase;
 
@@ -70,6 +71,33 @@ final class GroupConverterRollbackTest extends FunctionalTestCase
         self::assertStringStartsWith('Database error, nothing was changed: ', $result->message);
         self::assertSame($groupCount, $connection->count('uid', 'be_groups', []));
         self::assertSame('classic', $connection->select(['tx_begroups_kind'], 'be_groups', ['uid' => 2])->fetchOne());
+    }
+
+    #[Test]
+    public function rollsBackIfUsersWouldGetAnotherGroup(): void
+    {
+        $groupCount = $this->getConnectionPool()->getConnectionForTable('be_groups')->count('uid', 'be_groups', []);
+
+        $result = $this->get(GroupConverter::class)->split(6);
+
+        self::assertSame(ConversionStatus::Failed, $result->status);
+        self::assertSame('The permissions (groupMods) of users with the groups "6" would change; nothing was changed.', $result->message);
+        self::assertSame($groupCount, $this->getConnectionPool()->getConnectionForTable('be_groups')->count('uid', 'be_groups', []));
+    }
+
+    #[Test]
+    public function rollsBackIfAHiddenGroupWouldGrantMoreOnceItIsShownAgain(): void
+    {
+        $result = $this->get(GroupConverter::class)->split(9);
+
+        self::assertSame(ConversionStatus::Failed, $result->status);
+        self::assertSame('The group memberships of the group itself would change; nothing was changed.', $result->message);
+        $queryBuilder = $this->getConnectionPool()->getQueryBuilderForTable('be_groups');
+        $queryBuilder->getRestrictions()->removeAll();
+        $kind = $queryBuilder->select('tx_begroups_kind')->from('be_groups')
+            ->where($queryBuilder->expr()->eq('uid', $queryBuilder->createNamedParameter(9, Connection::PARAM_INT)))
+            ->executeQuery()->fetchOne();
+        self::assertSame('classic', $kind);
     }
 
     #[Test]

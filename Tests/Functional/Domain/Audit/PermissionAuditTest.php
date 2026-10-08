@@ -59,9 +59,12 @@ final class PermissionAuditTest extends FunctionalTestCase
             'error be_groups:11 foreign-permissions',
             'error be_users:3 user-building-block',
             'warning be_groups:4 classic-group',
+            'warning be_groups:12 unclean-group-list',
+            'warning be_groups:13 unclean-group-list',
             'warning be_users:4 user-permissions',
             'warning be_users:5 user-ignores-group-mounts',
             'warning be_users:7 user-permissions',
+            'warning be_users:8 unclean-group-list',
         ], array_map(self::summarize(...), $this->get(PermissionAudit::class)->run()));
     }
 
@@ -85,6 +88,21 @@ final class PermissionAuditTest extends FunctionalTestCase
         self::assertStringContainsString('building block 1 "ACL ok"', $messages['be_users:3'][0]);
         self::assertStringContainsString(': file_permissions.', $messages['be_users:4'][0]);
         self::assertStringContainsString(': allowed_languages.', $messages['be_users:7'][0]);
+    }
+
+    #[Test]
+    public function readsListsOfGroupsLikeTypo3(): void
+    {
+        $this->importCSVDataSet(__DIR__ . '/Fixtures/AuditData.csv');
+
+        $findings = [];
+        foreach ($this->get(PermissionAudit::class)->run() as $finding) {
+            $findings[$finding->table . ':' . $finding->uid][] = $finding->identifier;
+        }
+
+        // TYPO3 reads "be_groups_4" (a classic group) and "be_groups_1" (a building block) as 0, which matches no group.
+        self::assertSame(['unclean-group-list'], $findings['be_groups:13']);
+        self::assertSame(['unclean-group-list'], $findings['be_users:8']);
     }
 
     #[Test]

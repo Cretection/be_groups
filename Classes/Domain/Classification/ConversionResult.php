@@ -25,13 +25,11 @@ final readonly class ConversionResult
     /**
      * @param string $message an English explanation for administrators
      * @param list<int> $createdBlockUids
-     * @param list<int> $reusedBlockUids
      */
     public function __construct(
         public int $uid,
         public ConversionStatus $status,
         public string $message,
         public array $createdBlockUids = [],
-        public array $reusedBlockUids = [],
     ) {}
 }

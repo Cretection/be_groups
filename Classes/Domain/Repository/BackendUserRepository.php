@@ -119,6 +119,24 @@ final readonly class BackendUserRepository
         return $users;
     }
 
+    /**
+     * @return list<string> every distinct group list of the non-deleted users
+     */
+    public function findDistinctUsergroupLists(): array
+    {
+        $result = $this->createQueryBuilder()
+            ->select('usergroup')
+            ->distinct()
+            ->from(self::TABLE)
+            ->executeQuery();
+
+        $lists = [];
+        while ($row = $result->fetchAssociative()) {
+            $lists[] = DatabaseRow::fromArray($row)->get('usergroup');
+        }
+        return array_values(array_unique($lists));
+    }
+
     private function createQueryBuilder(): QueryBuilder
     {
         $queryBuilder = $this->connectionPool->getQueryBuilderForTable(self::TABLE);

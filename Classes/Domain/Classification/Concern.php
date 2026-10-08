@@ -24,11 +24,9 @@ final readonly class Concern
 {
     /**
      * @param array<string, string> $values the permission fields with their stored values
-     * @param int|null $reusableBlockUid an existing building block that grants exactly the same
      */
     public function __construct(
         public string $kind,
         public array $values,
-        public ?int $reusableBlockUid = null,
     ) {}
 }

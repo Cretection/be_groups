@@ -13,7 +13,7 @@ declare(strict_types=1);
  * LICENSE.txt file that was distributed with this source code.
  */
 
-namespace Cretection\BeGroups\Command;
+namespace Cretection\BeGroups\Utility;
 
 use Symfony\Component\Console\Formatter\OutputFormatter;
 
@@ -22,7 +22,7 @@ use Symfony\Component\Console\Formatter\OutputFormatter;
  *
  * @internal
  */
-final class ConsoleText
+final class ConsoleTextUtility
 {
     /**
      * The text must neither be read as console formatting nor carry control characters

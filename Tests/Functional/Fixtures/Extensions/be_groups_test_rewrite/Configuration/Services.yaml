@@ -5,5 +5,5 @@ services:
     public: false
 
   # Hooks are instantiated by the DataHandler through GeneralUtility::makeInstance().
-  Cretection\BeGroups\Tests\Functional\Fixtures\Extensions\be_groups_test_rewrite\Classes\AddPageMount:
+  Cretection\BeGroups\Tests\Functional\Fixtures\Extensions\be_groups_test_rewrite\Classes\RewritePermissions:
     public: true

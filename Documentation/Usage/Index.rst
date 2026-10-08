@@ -147,6 +147,11 @@ consistency check. It reads all groups and users and changes nothing:
           those of the roles. New users get all file operations by default
           (core default of :sql:`file_permissions`); clear them in the user
           record.
+    *   - ``unclean-group-list``
+        - warning
+        - The subgroups of a group or the groups of a user contain duplicates
+          or entries TYPO3 ignores, such as ``be_groups_5``. Saving the record
+          in the backend makes every entry effective; check them first.
     *   - ``user-ignores-group-mounts``
         - warning
         - The field :guilabel:`Mount from groups` (:sql:`options`) of a user
@@ -181,7 +186,8 @@ monitoring:
     *   - ``1``
         - Errors found, or warnings with ``--fail-on-warnings``.
     *   - ``2``
-        - Invalid option, for example an unknown format.
+        - Invalid value of ``--format``. Unknown options are rejected by the
+          console with exit code ``1``.
 
 ..  code-block:: bash
     :caption: Example: stop a deployment on errors

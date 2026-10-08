@@ -153,7 +153,12 @@ Konsistenzprüfung. Sie liest alle Gruppen und Benutzer und ändert nichts:
           Rollen hinzufügt. Neue Benutzer erhalten standardmäßig alle
           Dateioperationen (Core-Standardwert von :sql:`file_permissions`);
           entfernen Sie sie im Benutzer-Datensatz.
-    *   - ``user-ignores-group-mounts``
+    *   - ``unclean-group-list``
+        - Warnung
+        - Die Untergruppen einer Gruppe oder die Gruppen eines Benutzers
+          enthalten Duplikate oder Einträge, die TYPO3 ignoriert, etwa
+          ``be_groups_5``. Speichern im Backend macht jeden Eintrag wirksam;
+          prüfen Sie sie vorher.
         - Warnung
         - Das Feld :sql:`options` eines Benutzers (im englischen Backend
           :guilabel:`Mount from groups`) umfasst nicht alle Seitenbaum- und
@@ -189,7 +194,8 @@ Monitoring einsetzen:
     *   - ``1``
         - Fehler gefunden, oder Warnungen mit ``--fail-on-warnings``.
     *   - ``2``
-        - Ungültige Option, zum Beispiel ein unbekanntes Format.
+        - Ungültiger Wert für ``--format``. Unbekannte Optionen lehnt die
+          Konsole mit Exit-Code ``1`` ab.
 
 ..  code-block:: bash
     :caption: Beispiel: Deployment bei Fehlern abbrechen

@@ -21,6 +21,7 @@ use Cretection\BeGroups\Domain\Classification\ConversionStatus;
 use Cretection\BeGroups\Domain\Classification\GroupClassifier;
 use Cretection\BeGroups\Domain\Classification\GroupConverter;
 use Cretection\BeGroups\Domain\Kind\GroupKind;
+use Cretection\BeGroups\Utility\ConsoleTextUtility;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
@@ -54,10 +55,10 @@ final class SplitCommand extends Command
             ->addOption('all', null, InputOption::VALUE_NONE, 'Split all classic groups that begroups:classify proposes to split')
             ->addOption('dry-run', null, InputOption::VALUE_NONE, 'Only show what would be created, change nothing')
             ->setHelp(
-                'The permissions of the group move into one building block per kind; existing building blocks that '
-                . 'grant exactly the same are reused (except for TSconfig). The group becomes a role containing its '
-                . 'former subgroups followed by the building blocks, so the precedence of TSconfig stays the same. '
-                . 'Effective permissions never change: every split is verified and rolled back otherwise.',
+                'The permissions of the group move into one new building block per kind. The group becomes a role '
+                . 'containing its former subgroups followed by the building blocks, so the precedence of TSconfig stays '
+                . 'the same. Effective permissions never change: every split is verified for all users and rolled back '
+                . 'otherwise.',
             );
     }
 
@@ -83,7 +84,7 @@ final class SplitCommand extends Command
                 $classifications[] = $classification;
             } elseif (!$all) {
                 $failed = true;
-                $io->writeln(ConsoleText::escape(sprintf('be_groups:%d %s: skipped, %s', $classification->uid, $classification->title, $classification->reason)));
+                $io->writeln(ConsoleTextUtility::escape(sprintf('be_groups:%d %s: skipped, %s', $classification->uid, $classification->title, $classification->reason)));
             }
         }
         if ($classifications === []) {
@@ -100,7 +101,7 @@ final class SplitCommand extends Command
         foreach ($classifications as $classification) {
             $result = $this->groupConverter->split($classification->uid);
             $failed = $failed || $result->status !== ConversionStatus::Converted;
-            $io->writeln(ConsoleText::escape(sprintf(
+            $io->writeln(ConsoleTextUtility::escape(sprintf(
                 'be_groups:%d %s: %s %s%s',
                 $result->uid,
                 $classification->title,
@@ -143,16 +144,14 @@ final class SplitCommand extends Command
         foreach ($classifications as $classification) {
             $group = sprintf('be_groups:%d %s%s', $classification->uid, $classification->title, $classification->hidden ? ' (disabled)' : '');
             foreach ($classification->concerns as $concern) {
-                $rows[] = array_map(ConsoleText::escape(...), [
+                $rows[] = array_map(ConsoleTextUtility::escape(...), [
                     $group,
-                    $concern->reusableBlockUid === null
-                        ? sprintf('new %s%s', GroupKind::tryFrom($concern->kind)?->prefix() ?? strtoupper($concern->kind) . '_', $classification->title)
-                        : sprintf('existing be_groups:%d', $concern->reusableBlockUid),
+                    sprintf('new %s%s', GroupKind::tryFrom($concern->kind)?->prefix() ?? strtoupper($concern->kind) . '_', $classification->title),
                     implode(', ', array_keys($concern->values)),
                 ]);
                 $group = '';
             }
-            $rows[] = array_map(ConsoleText::escape(...), [$group, 'the group becomes a role', '']);
+            $rows[] = array_map(ConsoleTextUtility::escape(...), [$group, 'the group becomes a role', '']);
         }
         return $rows;
     }
