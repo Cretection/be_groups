@@ -696,7 +696,7 @@ case ${TEST_SUITE} in
     composerUpdateDev)
         # The TYPO3 extension for PHPStan and the TYPO3 Rector rules only support released core versions.
         DEV_PACKAGES="typo3/cms-core:dev-main typo3/cms-backend:dev-main"
-        DEV_DEV_PACKAGES="typo3/cms-dashboard:dev-main typo3/cms-workspaces:dev-main typo3/testing-framework:dev-main phpunit/phpunit:^12.5"
+        DEV_DEV_PACKAGES="typo3/cms-beuser:dev-main typo3/cms-dashboard:dev-main typo3/cms-workspaces:dev-main typo3/testing-framework:dev-main phpunit/phpunit:^12.5"
         COMMAND="cp composer.json ${COMPOSER_BUILD_FILE} && (composer config --unset platform.php && composer config minimum-stability dev && composer config prefer-stable true && composer remove --dev --no-update saschaegerer/phpstan-typo3 ssch/typo3-rector && composer require --no-update ${DEV_PACKAGES} && composer require --dev --no-update ${DEV_DEV_PACKAGES} && composer update --no-progress --no-interaction && composer show typo3/cms-core); COMPOSER_EXIT_CODE=\$?; rm -f ${COMPOSER_BUILD_FILE}; exit \$COMPOSER_EXIT_CODE"
         ${CONTAINER_BIN} run ${CONTAINER_COMMON_PARAMS} --name composer-update-dev-${SUFFIX} -e COMPOSER=${COMPOSER_BUILD_FILE} ${COMPOSER_PARAMS} ${IMAGE_PHP} /bin/sh -c "${COMMAND}"
         SUITE_EXIT_CODE=$?

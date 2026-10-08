@@ -50,11 +50,11 @@ extended by "TSconfig" and "Workspace".
         -   Fields of the kind
     *   -   ``role``
         -   Role
-        -   ``R_``
+        -   ``META``
         -   Only :sql:`subgroup`, which may only contain building blocks.
     *   -   ``acl``
         -   Access rights
-        -   ``ACL_``
+        -   ``ACL``
         -   Modules (:sql:`groupMods`), table permissions
             (:sql:`tables_modify`, :sql:`tables_select`), allowed excludefields
             (:sql:`non_exclude_fields`), explicitly allowed values
@@ -64,35 +64,35 @@ extended by "TSconfig" and "Workspace".
             (:sql:`availableWidgets`, with EXT:dashboard)
     *   -   ``page_group``
         -   Page permission group
-        -   ``PG_``
+        -   ``PG``
         -   No own fields. Used as owner group for page permissions.
     *   -   ``db_mount``
         -   Page tree entry points
-        -   ``DBM_``
+        -   ``DBM``
         -   :sql:`db_mountpoints`
     *   -   ``file_mount``
         -   File mounts
-        -   ``FM_``
+        -   ``FM``
         -   :sql:`file_mountpoints`
     *   -   ``file_operations``
         -   File operations
-        -   ``FO_``
+        -   ``FO``
         -   :sql:`file_permissions`
     *   -   ``category_mount``
         -   Category mounts
-        -   ``CM_``
+        -   ``CM``
         -   :sql:`category_perms`
     *   -   ``language``
         -   Languages
-        -   ``L_``
+        -   ``L``
         -   :sql:`allowed_languages`
     *   -   ``tsconfig``
         -   TSconfig
-        -   ``TS_``
+        -   ``TS``
         -   :sql:`TSconfig`, :sql:`tsconfig_includes`
     *   -   ``workspace``
         -   Workspace
-        -   ``WS_``
+        -   ``WS``
         -   :sql:`workspace_perms` (only with EXT:workspaces)
     *   -   ``classic``
         -   Classic
@@ -101,7 +101,8 @@ extended by "TSconfig" and "Workspace".
             without this extension.
 
 All kinds additionally have a title, a description and the "disabled"
-flag.
+flag. The title does not need to contain the kind: TYPO3 shows the prefix of
+the kind in front of it, see :ref:`usage-prefixes`.
 
 Only the configured kinds are valid: the items of the field
 :sql:`tx_begroups_kind` that have a form of their own. A stored value that is

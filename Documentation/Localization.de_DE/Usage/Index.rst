@@ -55,6 +55,66 @@ Speichern jeden gespeicherten Wert verwerfen, der nicht in ihr enthalten ist –
 mit der vollständigen Liste entfernt das Speichern eines Formulars nie eine
 bestehende Zuweisung.
 
+..  _usage-prefixes:
+
+Der Typ als Präfix
+==================
+
+Der Titel einer Gruppe muss nicht sagen, was die Gruppe ist: Wo immer TYPO3
+eine Gruppe anzeigt, steht ihr Typ automatisch vor dem Titel. Eine Rolle
+„Redakteure“ erscheint als ``META: Redakteure``, ihr
+Seitenbaum-Einstiegspunkt als ``DBM: Redakteure``.
+
+..  list-table::
+    :header-rows: 1
+    :widths: 30 70
+
+    *   - Präfix
+        - Typ
+    *   - ``META``
+        - Rolle
+    *   - ``ACL``
+        - Zugriffsrechte
+    *   - ``PG``
+        - Seitenrechte-Gruppe
+    *   - ``DBM``
+        - Seitenbaum-Einstiegspunkte
+    *   - ``FM``
+        - Dateifreigaben
+    *   - ``FO``
+        - Dateioperationen
+    *   - ``CM``
+        - Kategorie-Freigaben
+    *   - ``L``
+        - Sprachen
+    *   - ``TS``
+        - TSconfig
+    *   - ``WS``
+        - Workspace
+
+Klassische Gruppen und Gruppen mit unbekanntem Typ haben kein Präfix. Typen
+anderer Extensions verwenden ihre Bezeichnung.
+
+Das Präfix erscheint in den Gruppen- und Benutzerformularen, in den
+Datensatzlisten, im Rechte-Modul, bei Eigentümern und Mitgliedern von
+Workspaces, im Element-Browser und im Core-Modul :guilabel:`Benutzer`
+(Benutzer- und Gruppenlisten, Gruppenfilter, Details und Vergleich).
+
+..  note::
+
+    Das Core-Modul :guilabel:`Benutzer` gibt die Titel selbst aus. Die
+    Extension überschreibt daher diejenigen seiner Templates, die
+    Gruppentitel ausgeben, mit Kopien der Templates von TYPO3 14.3, in denen
+    sich nur die Titel unterscheiden. Die Kopien werden nur verwendet,
+    solange die Templates des Core unverändert sind: Ändert ein TYPO3-Update
+    eines davon, verwendet das Modul wieder die Templates des Core und zeigt
+    die Titel ohne Präfix, bis eine neue Version dieser Extension die Kopien
+    aktualisiert.
+
+Für andere Präfixe überschreiben Sie die Labels ``kind.prefix.<kind>`` aus
+:file:`EXT:be_groups/Resources/Private/Language/db.xlf` per
+``$GLOBALS['TYPO3_CONF_VARS']['SYS']['locallangXMLOverride']``.
+
 ..  _usage-module:
 
 Das Modul „Rollen & Bausteine“

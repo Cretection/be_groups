@@ -84,8 +84,8 @@ final class GroupConverterTest extends FunctionalTestCase
         self::assertSame('The group is now a role with 5 new building block(s).', $result->message);
         // Group 7 grants the same file operations, but is never shared: see GroupClassifier.
         [$pageGroupUid, $aclUid, $mountUid, $fileOperationsUid, $tsConfigUid] = $result->createdBlockUids;
-        self::assertSame(['title' => 'PG_Editors', 'tx_begroups_kind' => 'page_group', 'groupMods' => '', 'db_mountpoints' => ''], $this->getGroup($pageGroupUid, ['title', 'tx_begroups_kind', 'groupMods', 'db_mountpoints']));
-        self::assertSame(['title' => 'FO_Editors', 'file_permissions' => 'readFile,writeFile'], $this->getGroup($fileOperationsUid, ['title', 'file_permissions']));
+        self::assertSame(['title' => 'Editors', 'tx_begroups_kind' => 'page_group', 'groupMods' => '', 'db_mountpoints' => ''], $this->getGroup($pageGroupUid, ['title', 'tx_begroups_kind', 'groupMods', 'db_mountpoints']));
+        self::assertSame(['title' => 'Editors', 'file_permissions' => 'readFile,writeFile'], $this->getGroup($fileOperationsUid, ['title', 'file_permissions']));
         self::assertSame([
             'tx_begroups_kind' => 'role',
             'subgroup' => implode(',', [$pageGroupUid, $aclUid, $mountUid, $fileOperationsUid, $tsConfigUid]),
@@ -94,9 +94,9 @@ final class GroupConverterTest extends FunctionalTestCase
             'file_permissions' => '',
             'TSconfig' => '',
         ], $this->getGroup(2, ['tx_begroups_kind', 'subgroup', 'groupMods', 'db_mountpoints', 'file_permissions', 'TSconfig']));
-        self::assertSame(['title' => 'ACL_Editors', 'tx_begroups_kind' => 'acl', 'groupMods' => 'web_layout', 'hidden' => '0'], $this->getGroup($aclUid, ['title', 'tx_begroups_kind', 'groupMods', 'hidden']));
-        self::assertSame(['title' => 'DBM_Editors', 'tx_begroups_kind' => 'db_mount', 'db_mountpoints' => '1', 'file_permissions' => ''], $this->getGroup($mountUid, ['title', 'tx_begroups_kind', 'db_mountpoints', 'file_permissions']));
-        self::assertSame(['title' => 'TS_Editors', 'tx_begroups_kind' => 'tsconfig', 'TSconfig' => 'options.clearCache.pages = 1'], $this->getGroup($tsConfigUid, ['title', 'tx_begroups_kind', 'TSconfig']));
+        self::assertSame(['title' => 'Editors', 'tx_begroups_kind' => 'acl', 'groupMods' => 'web_layout', 'hidden' => '0'], $this->getGroup($aclUid, ['title', 'tx_begroups_kind', 'groupMods', 'hidden']));
+        self::assertSame(['title' => 'Editors', 'tx_begroups_kind' => 'db_mount', 'db_mountpoints' => '1', 'file_permissions' => ''], $this->getGroup($mountUid, ['title', 'tx_begroups_kind', 'db_mountpoints', 'file_permissions']));
+        self::assertSame(['title' => 'Editors', 'tx_begroups_kind' => 'tsconfig', 'TSconfig' => 'options.clearCache.pages = 1'], $this->getGroup($tsConfigUid, ['title', 'tx_begroups_kind', 'TSconfig']));
         self::assertSame('2', $this->getConnectionPool()->getConnectionForTable('be_users')->select(['usergroup'], 'be_users', ['uid' => 2])->fetchOne());
     }
 

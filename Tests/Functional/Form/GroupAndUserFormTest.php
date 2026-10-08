@@ -15,7 +15,9 @@ declare(strict_types=1);
 
 namespace Cretection\BeGroups\Tests\Functional\Form;
 
+use Cretection\BeGroups\Backend\GroupRecordTitle;
 use Cretection\BeGroups\Configuration\ExtensionSettings;
+use Cretection\BeGroups\Domain\Kind\KindPrefix;
 use Cretection\BeGroups\Form\FormDataProvider\KindSelection;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
@@ -26,6 +28,8 @@ use PHPUnit\Framework\Attributes\Test;
  */
 #[CoversClass(KindSelection::class)]
 #[CoversClass(ExtensionSettings::class)]
+#[CoversClass(GroupRecordTitle::class)]
+#[CoversClass(KindPrefix::class)]
 final class GroupAndUserFormTest extends AbstractFormTestCase
 {
     #[Test]
@@ -43,6 +47,18 @@ final class GroupAndUserFormTest extends AbstractFormTestCase
         $formData = $this->compileForm('be_groups', 7);
 
         self::assertSame(['5', '1'], $this->getRowValues($formData, 'subgroup'));
+    }
+
+    #[Test]
+    public function groupsAreShownWithThePrefixOfTheirKind(): void
+    {
+        $formData = $this->compileForm('be_users', 4);
+
+        $labels = $this->getItemLabels($formData, 'usergroup');
+        self::assertContains('META: R editor', $labels);
+        self::assertContains('ACL: ACL editing', $labels);
+        self::assertContains('Classic all-in-one', $labels);
+        self::assertSame('META: R other', $this->compileForm('be_groups', 7)['recordTitle'] ?? null);
     }
 
     #[Test]

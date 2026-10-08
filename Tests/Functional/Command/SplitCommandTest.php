@@ -50,8 +50,8 @@ final class SplitCommandTest extends FunctionalTestCase
 
         self::assertSame(Command::SUCCESS, $commandTester->execute(['--all' => true, '--dry-run' => true]));
         $display = $commandTester->getDisplay();
-        self::assertStringContainsString('new ACL_Editors', $display);
-        self::assertStringContainsString('new FO_Editors', $display);
+        self::assertStringContainsString('new ACL: Editors', $display);
+        self::assertStringContainsString('new FO: Editors', $display);
         self::assertStringContainsString('the group becomes a role', $display);
         self::assertStringContainsString('3 group(s) would be split.', $display);
         self::assertSame($groupCount, $this->countGroups());

@@ -53,6 +53,65 @@ Neither list is filtered. A filtered list would drop every stored value that
 is not part of it whenever the form is saved – with the full list, saving a
 form never removes an existing assignment.
 
+..  _usage-prefixes:
+
+The kind as prefix
+==================
+
+The title of a group does not need to say what the group is: wherever TYPO3
+shows a group, its kind is put in front of the title automatically. A role
+called "Editors" appears as ``META: Editors``, its page tree entry point as
+``DBM: Editors``.
+
+..  list-table::
+    :header-rows: 1
+    :widths: 30 70
+
+    *   - Prefix
+        - Kind
+    *   - ``META``
+        - Role
+    *   - ``ACL``
+        - Access rights
+    *   - ``PG``
+        - Page permission group
+    *   - ``DBM``
+        - Page tree entry points
+    *   - ``FM``
+        - File mounts
+    *   - ``FO``
+        - File operations
+    *   - ``CM``
+        - Category mounts
+    *   - ``L``
+        - Languages
+    *   - ``TS``
+        - TSconfig
+    *   - ``WS``
+        - Workspace
+
+Classic groups and groups with an unknown kind have no prefix. Kinds of other
+extensions use their label.
+
+The prefix appears in the group and user forms, in the record lists, in the
+permissions module, in the owners and members of workspaces, in the element
+browser and in the core module :guilabel:`Users` (lists of users and groups,
+group filter, details and comparison).
+
+..  note::
+
+    The core module :guilabel:`Users` prints the titles itself. The extension
+    therefore overrides those of its templates that print group titles, with
+    copies of the templates of TYPO3 14.3 in which only the titles differ.
+    The copies are only used while the templates of the core are unchanged:
+    if a TYPO3 update changes one of them, the module uses the templates of
+    the core again and shows the titles without prefix until a new version
+    of this extension updates the copies.
+
+To use other prefixes, override the labels ``kind.prefix.<kind>`` of
+:file:`EXT:be_groups/Resources/Private/Language/db.xlf` with
+``$GLOBALS['TYPO3_CONF_VARS']['SYS']['locallangXMLOverride']``.
+
 ..  _usage-module:
 
 The module "Roles & Building Blocks"

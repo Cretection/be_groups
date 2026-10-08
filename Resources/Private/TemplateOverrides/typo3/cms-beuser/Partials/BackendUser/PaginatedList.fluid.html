@@ -1,0 +1,224 @@
+<html
+    xmlns:begroups="http://typo3.org/ns/Cretection/BeGroups/ViewHelpers"
+    xmlns:backend="http://typo3.org/ns/TYPO3/CMS/Backend/ViewHelpers"
+    xmlns:beuser="http://typo3.org/ns/TYPO3/CMS/Beuser/ViewHelpers"
+    xmlns:core="http://typo3.org/ns/TYPO3/CMS/Core/ViewHelpers"
+    xmlns:f="http://typo3.org/ns/TYPO3/CMS/Fluid/ViewHelpers"
+    data-namespace-typo3-fluid="true"
+>
+
+<div class="table-fit">
+    <table id="typo3-backend-user-list" class="table table-striped table-hover">
+        <thead>
+        <tr>
+            <th colspan="3"><f:translate key="LLL:EXT:beuser/Resources/Private/Language/locallang.xlf:userName" /> / <f:translate key="LLL:EXT:beuser/Resources/Private/Language/locallang.xlf:realName" /></th>
+            <th><f:translate key="LLL:EXT:beuser/Resources/Private/Language/locallang.xlf:backendUser.list.table.column.group" /></th>
+            <th class="col-datetime"><f:translate key="LLL:EXT:beuser/Resources/Private/Language/locallang.xlf:lastLogin" /></th>
+            <th class="col-control"><span class="visually-hidden"><f:translate key="LLL:EXT:core/Resources/Private/Language/locallang_core.xlf:labels._CONTROL_" /></span></th>
+        </tr>
+        </thead>
+        <tbody>
+            <f:for each="{paginator.paginatedItems}" as="backendUser">
+                <tr>
+                    <td class="col-indicator">
+                        <f:if condition="{onlineBackendUsers.{backendUser.uid}}">
+                            <typo3-backend-status-indicator state="success" live label="{f:translate(key:'backendUser.list.label.online', domain:'beuser.messages')}"></typo3-backend-status-indicator>
+                        </f:if>
+                    </td>
+                    <td class="col-avatar">
+                        <button
+                            type="button"
+                            class="btn btn-link"
+                            data-contextmenu-trigger="click"
+                            data-contextmenu-table="be_users"
+                            data-contextmenu-uid="{backendUser.uid}"
+                            title="{f:if(condition: '{backendUser.description}', then: '{backendUser.description} (id={backendUser.uid})', else: 'id={backendUser.uid}')}"
+                            aria-label="{f:translate(key: 'LLL:EXT:core/Resources/Private/Language/locallang_core.xlf:labels.contextMenu.open')}"
+                        >
+                            <backend:avatar backendUser="{backendUser.uid}" showIcon="TRUE" />
+                        </button>
+                    </td>
+                    <td class="col-50">
+                        <backend:link.editRecord table="be_users" uid="{backendUser.uid}" title="{f:translate(key:'btn.edit')}">
+                            <f:if condition="{backendUser.realName}">
+                                <f:then>
+                                    {backendUser.realName}
+                                    <beuser:mfaStatus userUid="{backendUser.uid}"/><br>
+                                    <span class="text-variant">({backendUser.username})</span>
+                                </f:then>
+                                <f:else>
+                                    {backendUser.username}
+                                    <beuser:mfaStatus userUid="{backendUser.uid}"/>
+                                </f:else>
+                            </f:if>
+                        </backend:link.editRecord>
+                    </td>
+                    <td class="col-50 nowrap-disabled">
+                        <f:for each="{backendUser.backendUserGroups}" as="backendUserGroup" iteration="backendUserGroupIterator">
+                            <backend:link.editRecord table="be_groups" uid="{backendUserGroup.uid}" title="{f:translate(key:'btn.edit')}" class="nowrap">{begroups:groupTitle(uid: backendUserGroup.uid, title: backendUserGroup.title)}</backend:link.editRecord><f:if condition="!{backendUserGroupIterator.isLast}">,</f:if>
+                        </f:for>
+                    </td>
+                    <td class="col-datetime">
+                        <f:if condition="{backendUser.lastLoginDateAndTime}">
+                            <f:then>
+                                <f:format.date format="{dateFormat} {timeFormat}">{backendUser.lastLoginDateAndTime}</f:format.date>
+                            </f:then>
+                            <f:else>
+                                <f:translate key="LLL:EXT:beuser/Resources/Private/Language/locallang.xlf:never" />
+                            </f:else>
+                        </f:if>
+                    </td>
+                    <td class="col-control">
+                        <div class="btn-group" role="group">
+                            <backend:link.editRecord
+                                class="btn btn-default"
+                                table="be_users"
+                                uid="{backendUser.uid}"
+                                title="{f:translate(key:'btn.edit')}"
+                                role="button"
+                            >
+                                <core:icon identifier="actions-open" />
+                            </backend:link.editRecord>
+                            <f:if condition="{backendUser.currentlyLoggedIn} == 1">
+                                <f:then>
+                                    <span class="btn btn-default disabled"><core:icon identifier="empty-empty" /></span>
+                                </f:then>
+                                <f:else>
+                                    <f:if condition="{backendUser.isDisabled} == 1">
+                                        <f:then>
+                                            <a
+                                                class="btn btn-default"
+                                                href="{backend:moduleLink(route:'tce_db', query:'data[be_users][{backendUser.uid}][disable]=0', currentUrlParameterName:'redirect')}"
+                                                title="{f:translate(key:'btn.enable')}"
+                                                role="button"
+                                            >
+                                                <core:icon identifier="actions-edit-unhide" />
+                                            </a>
+                                        </f:then>
+                                        <f:else>
+                                            <a
+                                                class="btn btn-default"
+                                                href="{backend:moduleLink(route:'tce_db', query:'data[be_users][{backendUser.uid}][disable]=1', currentUrlParameterName:'redirect')}"
+                                                title="{f:translate(key:'btn.disable')}"
+                                                role="button"
+                                            >
+                                                <core:icon identifier="actions-edit-hide" />
+                                            </a>
+                                        </f:else>
+                                    </f:if>
+                                </f:else>
+                            </f:if>
+                            <f:if condition="{currentUserUid} == {backendUser.uid}">
+                                <f:then>
+                                    <span class="btn btn-default disabled"><core:icon identifier="empty-empty" /></span>
+                                </f:then>
+                                <f:else>
+                                    <form action="{backend:moduleLink(route:'tce_db', currentUrlParameterName:'redirect')}" name="be_user_remove_{backendUser.uid}" id="be_user_remove_{backendUser.uid}" method="post">
+                                        <input name="cmd[be_users][{backendUser.uid}][delete]=1" type="hidden" value="{group.uid}">
+                                    </form>
+                                    <button
+                                        type="submit"
+                                        class="btn btn-default t3js-modal-trigger"
+                                        data-target-form="be_user_remove_{backendUser.uid}"
+                                        title="{f:translate(key:'btn.delete')}"
+                                        data-severity="warning"
+                                        data-title="{f:translate(key:'LLL:EXT:backend/Resources/Private/Language/locallang_alt_doc.xlf:label.confirm.delete_record.title')}"
+                                        data-content="{f:translate(key:'backendUser.confirmDelete',arguments:'{0:backendUser.userName}')}"
+                                        data-button-close-text="{f:translate(key:'LLL:EXT:core/Resources/Private/Language/locallang_common.xlf:cancel')}"
+                                        data-button-ok-text="{f:translate(key:'LLL:EXT:backend/Resources/Private/Language/locallang_alt_doc.xlf:buttons.confirm.delete_record.yes')}"
+                                    >
+                                        <core:icon identifier="actions-edit-delete" />
+                                    </button>
+                                </f:else>
+                            </f:if>
+                        </div>
+                        <div class="btn-group" role="group">
+                            <f:if condition="{backendUser.passwordResetEnabled}">
+                                <f:then>
+                                    <f:form.button
+                                            name="user"
+                                            value="{backendUser.uid}"
+                                            form="form-initiate-password-reset"
+                                            class="btn btn-default t3js-modal-trigger"
+                                            title="{f:translate(key: 'resetPassword.label')}"
+                                            type="submit"
+                                            data-severity="warning"
+                                            data-title="{f:translate(key: 'resetPassword.confirmation.header')}"
+                                            data-content="{f:translate(key: 'resetPassword.confirmation.text', arguments: {0: '{backendUser.email}'})}"
+                                            data-button-close-text="{f:translate(key: 'LLL:EXT:core/Resources/Private/Language/locallang_common.xlf:cancel')}">
+                                        <core:icon identifier="actions-key" />
+                                    </f:form.button>
+                                </f:then>
+                                <f:else>
+                                    <span class="btn btn-default disabled"><core:icon identifier="empty-empty" /></span>
+                                </f:else>
+                            </f:if>
+                            <f:link.action
+                                action="show"
+                                arguments="{uid: backendUser.uid}"
+                                class="btn btn-default"
+                                title="{f:translate(key: 'btn.details')}"
+                                role="button"
+                            >
+                                <core:icon identifier="actions-system-options-view" size="small"/>
+                            </f:link.action>
+                            <a
+                                class="btn btn-default"
+                                href="#"
+                                title="{f:translate(key:'btn.info')}"
+                                data-dispatch-action="TYPO3.InfoWindow.showItem"
+                                data-dispatch-args-list="be_users,{backendUser.uid}"
+                                role="button"
+                            >
+                                <core:icon identifier="actions-document-info" />
+                            </a>
+                        </div>
+                        <div class="btn-group" role="group">
+                            <f:if condition="{compareUserUidList.{backendUser.uid}}">
+                                <f:then>
+                                    <f:form.button
+                                        form="form-remove-from-compare-list"
+                                        name="uid"
+                                        value="{backendUser.uid}"
+                                        type="submit"
+                                        class="btn btn-default"
+                                        title="{f:translate(key: 'btn.removeFromCompareList')}"
+                                    >
+                                        <core:icon identifier="actions-minus" size="small"/>
+                                        <f:translate key="LLL:EXT:beuser/Resources/Private/Language/locallang.xlf:btn.compare" />
+                                    </f:form.button>
+                                </f:then>
+                                <f:else>
+                                    <f:form.button
+                                        form="form-add-to-compare-list"
+                                        name="uid"
+                                        value="{backendUser.uid}"
+                                        type="submit"
+                                        class="btn btn-default"
+                                        title="{f:translate(key: 'btn.addToCompareList')}"
+                                    >
+                                        <core:icon identifier="actions-plus" size="small"/>
+                                        <f:translate key="LLL:EXT:beuser/Resources/Private/Language/locallang.xlf:btn.compare" />
+                                    </f:form.button>
+                                </f:else>
+                            </f:if>
+                            <beuser:SwitchUser class="btn btn-default" backendUser="{backendUser}" />
+                        </div>
+                    </td>
+                </tr>
+            </f:for>
+        </tbody>
+        <tfoot>
+            <tr>
+                <td colspan="6">
+                    <f:if condition="{totalAmountOfBackendUsers} > 1">
+                        <f:then>{totalAmountOfBackendUsers} <f:translate key="LLL:EXT:beuser/Resources/Private/Language/locallang.xlf:users" /></f:then>
+                        <f:else>{totalAmountOfBackendUsers} <f:translate key="LLL:EXT:beuser/Resources/Private/Language/locallang.xlf:user" /></f:else>
+                    </f:if>
+                </td>
+            </tr>
+        </tfoot>
+    </table>
+</div>
+
+<f:render partial="SimplePagination" arguments="{paginator:paginator, pagination:pagination, actionName:'list'}" />

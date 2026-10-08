@@ -47,9 +47,10 @@ kind where nothing else changes:
 ``begroups:split`` splits the groups you name by uid, or with ``--all`` every
 group that ``begroups:classify`` proposes to split:
 
-*   The permissions move into one building block per kind, named with the
-    prefix of the kind and the title of the group, for example
-    ``ACL_Editors`` and ``DBM_Editors``. A hidden group stays hidden; its
+*   The permissions move into one building block per kind. The building
+    blocks get the title of the group; TYPO3 shows their kind as prefix,
+    for example ``ACL: Editors`` and ``DBM: Editors`` (see
+    :ref:`usage-prefixes`). A hidden group stays hidden; its
     building blocks are only reachable through it, so showing the group
     again restores its permissions as before.
 *   **The group keeps its uid and becomes a role.** Users and other groups
@@ -57,7 +58,7 @@ group that ``begroups:classify`` proposes to split:
     subgroups, so the precedence of TSconfig stays the same.
 *   TYPO3 makes the first group of a user the owner group of the pages the
     user creates. If that is the group itself – it has no active subgroups –
-    a new page group without permissions (for example ``PG_Editors``) becomes
+    a new page group without permissions (``PG: Editors``) becomes
     its first member and takes over this task. It belongs to the role alone,
     so the owner group has exactly the same members as before.
 *   The building blocks are always new, even if an identical one exists. An
@@ -127,5 +128,5 @@ the command line. Split them afterwards to start with two roles:
 
 The result are the roles "Editor" and "Advanced Editor", each with its own
 building blocks: a page group as owner of new pages, access rights, page
-tree entry point and file mount (for example ``PG_Editor``, ``ACL_Editor``,
-``DBM_Editor`` and ``FM_Editor``).
+tree entry point and file mount (``PG: Editor``, ``ACL: Editor``,
+``DBM: Editor`` and ``FM: Editor``).

@@ -19,6 +19,8 @@ use Cretection\BeGroups\Command\SplitCommand;
 use Cretection\BeGroups\DataHandling\RelationList;
 use Cretection\BeGroups\Domain\Classification\GroupClassifier;
 use Cretection\BeGroups\Domain\Classification\GroupConverter;
+use Cretection\BeGroups\Domain\Kind\KindPrefix;
+use Cretection\BeGroups\Domain\Repository\BackendGroupRepository;
 use Cretection\BeGroups\Domain\Repository\DatabaseRow;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
@@ -77,31 +79,20 @@ final class SplitCoreDefaultGroupsTest extends FunctionalTestCase
 
         self::assertSame(Command::SUCCESS, $commandTester->execute(['--all' => true]), $commandTester->getDisplay());
 
-        $titles = [];
         $groups = [];
-        foreach ($this->getConnectionPool()->getConnectionForTable('be_groups')->select(['uid', 'title', 'tx_begroups_kind', 'subgroup'], 'be_groups', [], [], ['uid' => 'ASC'])->fetchAllAssociative() as $row) {
-            $group = DatabaseRow::fromArray($row);
-            $titles[$group->getUid()] = $group->get('title');
-            $groups[$group->get('title')] = $group;
+        foreach ($this->get(BackendGroupRepository::class)->findAll() as $group) {
+            $groups[$group->getUid()] = $group;
         }
-        $describe = static fn(DatabaseRow $group): string => sprintf(
-            '%s [%s]',
-            $group->get('tx_begroups_kind'),
-            implode(', ', array_map(static fn(int $uid): string => $titles[$uid] ?? (string)$uid, RelationList::fromValue($group->get('subgroup'))->getUids())),
+        $kindPrefix = $this->get(KindPrefix::class);
+        $describe = static fn(DatabaseRow $role): array => array_map(
+            static fn(int $uid): string => $kindPrefix->prefixTitle($groups[$uid]->get('tx_begroups_kind'), $groups[$uid]->get('title')),
+            RelationList::fromValue($role->get('subgroup'))->getUids(),
         );
-        self::assertSame([
-            'Editor' => 'role [PG_Editor, ACL_Editor, DBM_Editor, FM_Editor]',
-            'Advanced Editor' => 'role [PG_Advanced Editor, ACL_Advanced Editor, DBM_Advanced Editor, FM_Advanced Editor]',
-            'PG_Editor' => 'page_group []',
-            'ACL_Editor' => 'acl []',
-            'DBM_Editor' => 'db_mount []',
-            'FM_Editor' => 'file_mount []',
-            'PG_Advanced Editor' => 'page_group []',
-            'ACL_Advanced Editor' => 'acl []',
-            'DBM_Advanced Editor' => 'db_mount []',
-            'FM_Advanced Editor' => 'file_mount []',
-        ], array_map($describe, $groups));
-        self::assertSame($this->editorUid, $groups['Editor']->getUid());
-        self::assertSame($this->advancedEditorUid, $groups['Advanced Editor']->getUid());
+        // The building blocks keep the title of their role; TYPO3 shows their kind as prefix.
+        self::assertSame(['PG: Editor', 'ACL: Editor', 'DBM: Editor', 'FM: Editor'], $describe($groups[$this->editorUid]));
+        self::assertSame(['PG: Advanced Editor', 'ACL: Advanced Editor', 'DBM: Advanced Editor', 'FM: Advanced Editor'], $describe($groups[$this->advancedEditorUid]));
+        self::assertSame('role', $groups[$this->editorUid]->get('tx_begroups_kind'));
+        self::assertSame('role', $groups[$this->advancedEditorUid]->get('tx_begroups_kind'));
+        self::assertCount(10, $groups);
     }
 }

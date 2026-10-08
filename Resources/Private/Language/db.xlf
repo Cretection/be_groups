@@ -42,6 +42,36 @@
       <trans-unit id="kind.classic">
         <source>Classic (all settings)</source>
       </trans-unit>
+      <trans-unit id="kind.prefix.role">
+        <source>META</source>
+      </trans-unit>
+      <trans-unit id="kind.prefix.acl">
+        <source>ACL</source>
+      </trans-unit>
+      <trans-unit id="kind.prefix.page_group">
+        <source>PG</source>
+      </trans-unit>
+      <trans-unit id="kind.prefix.db_mount">
+        <source>DBM</source>
+      </trans-unit>
+      <trans-unit id="kind.prefix.file_mount">
+        <source>FM</source>
+      </trans-unit>
+      <trans-unit id="kind.prefix.file_operations">
+        <source>FO</source>
+      </trans-unit>
+      <trans-unit id="kind.prefix.category_mount">
+        <source>CM</source>
+      </trans-unit>
+      <trans-unit id="kind.prefix.language">
+        <source>L</source>
+      </trans-unit>
+      <trans-unit id="kind.prefix.tsconfig">
+        <source>TS</source>
+      </trans-unit>
+      <trans-unit id="kind.prefix.workspace">
+        <source>WS</source>
+      </trans-unit>
       <trans-unit id="kind.group.roles">
         <source>Roles</source>
       </trans-unit>

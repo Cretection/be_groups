@@ -32,11 +32,10 @@ final class GroupKindTest extends UnitTestCase
     }
 
     #[Test]
-    public function everyKindHasAnIconAndOnlyClassicHasNoPrefix(): void
+    public function everyKindHasAnIcon(): void
     {
         foreach (GroupKind::cases() as $kind) {
             self::assertNotSame('', $kind->iconIdentifier(), $kind->value);
-            self::assertSame($kind === GroupKind::Classic, $kind->prefix() === '', $kind->value);
         }
     }
 }

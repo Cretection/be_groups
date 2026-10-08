@@ -30,6 +30,8 @@ Relaunch für TYPO3 14.3 LTS.
     Rollenmodell folgt, mit Exit-Codes für Deployments und Monitoring und
     dem Event ``AfterAuditFindingsCollectedEvent`` für Prüfungen anderer
     Extensions, siehe :ref:`usage-audit`.
+*   Der Typ erscheint als Präfix vor dem Titel, wo immer TYPO3 eine Gruppe
+    anzeigt, siehe :ref:`usage-prefixes`.
 *   Das Event ``ModifyKindOfNewGroupEvent`` bestimmt den Typ neuer Gruppen,
     die Import- oder Synchronisations-Werkzeuge ohne Typ anlegen, siehe
     :ref:`developer-kind-event`.

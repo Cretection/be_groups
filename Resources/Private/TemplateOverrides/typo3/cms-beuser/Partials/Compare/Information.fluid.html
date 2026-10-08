@@ -1,0 +1,490 @@
+<html
+    xmlns:begroups="http://typo3.org/ns/Cretection/BeGroups/ViewHelpers"
+    xmlns:backend="http://typo3.org/ns/TYPO3/CMS/Backend/ViewHelpers"
+    xmlns:beuser="http://typo3.org/ns/TYPO3/CMS/Beuser/ViewHelpers"
+    xmlns:core="http://typo3.org/ns/TYPO3/CMS/Core/ViewHelpers"
+    xmlns:f="http://typo3.org/ns/TYPO3/CMS/Fluid/ViewHelpers"
+    data-namespace-typo3-fluid="true"
+>
+
+<f:section name="languages">
+    <f:if condition="{languages}">
+        <div class="table-fit">
+            <table class="table">
+                <f:for each="{languages}" key="languageId" as="language">
+                    <tr>
+                        <f:if condition="{languageId} == 0">
+                            <f:then>
+                                <td class="col-icon"></td>
+                                <td class="col-title">
+                                    {language.title} (<f:translate key="LLL:EXT:beuser/Resources/Private/Language/locallang.xlf:information.defaultLanguage" />)<f:if condition="{showUid}"> <code>[{languageId}]</code></f:if>
+                                </td>
+                            </f:then>
+                            <f:else>
+                                <td class="col-icon">
+                                    <span title="id={languageId}"><core:icon identifier="{language.flagIconIdentifier}" /></span>
+                                </td>
+                                <td class="col-title">{language.title}<f:if condition="{showUid}"> <code>[{languageId}]</code></f:if></td>
+                            </f:else>
+                        </f:if>
+                    </tr>
+                </f:for>
+            </table>
+        </div>
+    </f:if>
+</f:section>
+
+<f:section name="groups">
+    <f:if condition="{groups.all}">
+        <div class="table-fit">
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th><f:translate key="LLL:EXT:beuser/Resources/Private/Language/locallang.xlf:information.groups.table.column.groupTitle" /></th>
+                        <th{f:if(condition: '{hasColumnClasses}', then: ' class="col-min"')}><f:translate key="LLL:EXT:beuser/Resources/Private/Language/locallang.xlf:compare.direct.direct" /></th>
+                        <th{f:if(condition: '{hasColumnClasses}', then: ' class="col-min"')}><f:translate key="LLL:EXT:beuser/Resources/Private/Language/locallang.xlf:compare.direct.inherit" /></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <f:for each="{groups.all}" as="group">
+                        <tr>
+                            <td class="col-title col-responsive">
+                                <button
+                                    type="button"
+                                    class="btn btn-link"
+                                    data-contextmenu-trigger="click"
+                                    data-contextmenu-table="be_groups"
+                                    data-contextmenu-uid="{group.row.uid}"
+                                    title="id={group.row.uid}"
+                                    aria-label="{f:translate(key: 'LLL:EXT:core/Resources/Private/Language/locallang_core.xlf:labels.contextMenu.open')}"
+                                >
+                                    <core:iconForRecord table="be_groups" row="{group.row}"/>
+                                </button>
+                                <backend:link.editRecord
+                                    table="be_groups"
+                                    uid="{group.row.uid}"
+                                    title="{f:translate(key: 'LLL:EXT:beuser/Resources/Private/Language/locallang.xlf:btn.edit')}"
+                                >
+                                    {begroups:groupTitle(uid: group.row.uid, title: group.row.title)}<f:if condition="{showUid}"> <code>[{group.row.uid}]</code></f:if>
+                                </backend:link.editRecord>
+                            </td>
+                            <td{f:if(condition: '{hasColumnClasses}', then: ' class="col-min"')}>
+                                <f:if condition="{group.direct}"><span class="text-success"><core:icon identifier="actions-check" size="small" /></span></f:if>
+                            </td>
+                            <td{f:if(condition: '{hasColumnClasses}', then: ' class="col-min"')}>
+                                <f:if condition="{group.diff}"><span class="text-success"><core:icon identifier="actions-check" size="small" /></span></f:if>
+                            </td>
+                        </tr>
+                    </f:for>
+                </tbody>
+            </table>
+        </div>
+    </f:if>
+</f:section>
+
+<f:section name="dbMounts">
+    <f:if condition="{dbMounts}">
+        <div class="table-fit">
+            <table class="table">
+                <f:for each="{dbMounts}" as="item">
+                    <tr>
+                        <td class="col-icon">
+                            <button
+                                type="button"
+                                class="btn btn-link"
+                                data-contextmenu-trigger="click"
+                                data-contextmenu-table="pages"
+                                data-contextmenu-uid="{item.uid}"
+                                title="id={item.uid}"
+                                aria-label="{f:translate(key: 'LLL:EXT:core/Resources/Private/Language/locallang_core.xlf:labels.contextMenu.open')}"
+                            >
+                                <core:iconForRecord table="pages" row="{item}"/>
+                            </button>
+                        </td>
+                        <td class="col-title">
+                            <backend:link.editRecord
+                                table="pages"
+                                uid="{item.uid}"
+                                title="{f:translate(key: 'LLL:EXT:beuser/Resources/Private/Language/locallang.xlf:btn.edit')}"
+                            >
+                                {item.title}<f:if condition="{showUid}"> <code>[{item.uid}]</code></f:if>
+                            </backend:link.editRecord>
+                        </td>
+                    </tr>
+                </f:for>
+            </table>
+        </div>
+    </f:if>
+</f:section>
+
+<f:section name="fileMounts">
+    <f:if condition="{fileMounts}">
+        <div class="table-fit">
+            <table class="table">
+                <f:for each="{fileMounts}" as="item">
+                    <tr>
+                        <td class="col-icon">
+                            <button
+                                type="button"
+                                class="btn btn-link"
+                                data-contextmenu-trigger="click"
+                                data-contextmenu-table="sys_filemounts"
+                                data-contextmenu-uid="{item.uid}"
+                                title="id={item.uid}"
+                                aria-label="{f:translate(key: 'LLL:EXT:core/Resources/Private/Language/locallang_core.xlf:labels.contextMenu.open')}"
+                            >
+                                <core:iconForRecord table="sys_filemounts" row="{item}"/>
+                            </button>
+                        </td>
+                        <td class="col-title">
+                            <backend:link.editRecord
+                                table="sys_filemounts"
+                                uid="{item.uid}"
+                                title="{f:translate(key: 'LLL:EXT:beuser/Resources/Private/Language/locallang.xlf:btn.edit')}"
+                            >
+                                {item.title}<f:if condition="{showUid}"> <code>[{item.uid}]</code></f:if>
+                            </backend:link.editRecord>
+                        </td>
+                    </tr>
+                </f:for>
+            </table>
+        </div>
+    </f:if>
+</f:section>
+
+<f:section name="fileFolderPermissions">
+    <f:if condition="{fileFolderPermissions}">
+        <div class="table-fit">
+            <table class="table">
+                <f:for each="{fileFolderPermissions}" as="item">
+                    <tr>
+                        <td class="col-icon"><core:icon identifier="{item.icon}" /></td>
+                        <td class="col-title">
+                            <f:if condition="{item.label}">
+                                <f:then>{f:translate(key:item.label,default:item.label)}</f:then>
+                                <f:else>{item.value}</f:else>
+                            </f:if>
+                            <f:if condition="{showUid}"> <code>[{item.value}]</code></f:if>
+                        </td>
+                    </tr>
+                </f:for>
+            </table>
+        </div>
+    </f:if>
+</f:section>
+
+<f:section name="categories">
+    <f:if condition="{categories}">
+        <div class="table-fit">
+            <table class="table">
+                <f:for each="{categories}" as="item">
+                    <tr>
+                        <td class="col-icon">
+                            <button
+                                type="button"
+                                class="btn btn-link"
+                                data-contextmenu-trigger="click"
+                                data-contextmenu-table="sys_category"
+                                data-contextmenu-uid="{item.uid}"
+                                title="id={item.uid}"
+                                aria-label="{f:translate(key: 'LLL:EXT:core/Resources/Private/Language/locallang_core.xlf:labels.contextMenu.open')}"
+                            >
+                                <core:iconForRecord table="sys_category" row="{item}"/>
+                            </button>
+                        </td>
+                        <td class="col-title">
+                            <backend:link.editRecord
+                                table="sys_category"
+                                uid="{item.uid}"
+                                title="{f:translate(key: 'LLL:EXT:beuser/Resources/Private/Language/locallang.xlf:btn.edit')}"
+                            >
+                                {item.title}<f:if condition="{showUid}"> <code>[{item.uid}]</code></f:if>
+                            </backend:link.editRecord>
+                        </td>
+                    </tr>
+                </f:for>
+            </table>
+        </div>
+    </f:if>
+</f:section>
+
+<f:section name="workspaces">
+    <f:if condition="{workspaces}">
+        <f:if condition="{workspaces.record.uid}">
+            <div class="table-fit">
+                <table class="table">
+                    <tr>
+                        <td class="col-icon">
+                            <button
+                                type="button"
+                                class="btn btn-link"
+                                data-contextmenu-trigger="click"
+                                data-contextmenu-table="sys_workspace"
+                                data-contextmenu-uid="{workspaces.record.uid}"
+                                title="id={workspaces.record.uid}"
+                                aria-label="{f:translate(key: 'LLL:EXT:core/Resources/Private/Language/locallang_core.xlf:labels.contextMenu.open')}"
+                            >
+                                <core:icon identifier="mimetypes-x-sys_workspace" size="small" />
+                            </button>
+                        </td>
+                        <td class="col-title">
+                            <backend:link.editRecord
+                                table="sys_workspace"
+                                uid="{workspaces.record.uid}"
+                                title="{f:translate(key: 'LLL:EXT:beuser/Resources/Private/Language/locallang.xlf:btn.edit')}"
+                            >{workspaces.record.title}</backend:link.editRecord>
+                            (<f:translate key="LLL:EXT:beuser/Resources/Private/Language/locallang.xlf:information.defaultWorkspace" />)<f:if condition="{showUid}"> <code>[{workspaces.record.uid}]</code></f:if>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </f:if>
+    </f:if>
+</f:section>
+
+<f:section name="pageTypes">
+    <f:if condition="{pageTypes}">
+        <div class="table-fit">
+            <table class="table">
+                <f:for each="{pageTypes}" as="item">
+                    <tr>
+                        <td class="col-icon"><core:icon identifier="{item.icon}" /></td>
+                        <td class="col-title">
+                            <f:if condition="{item.label}">{f:translate(key:item.label,default:item.label)}</f:if><f:if condition="{showUid}"> <code>[{item.value}]</code></f:if>
+                        </td>
+                    </tr>
+                </f:for>
+            </table>
+        </div>
+    </f:if>
+</f:section>
+
+<f:section name="modules">
+    <f:if condition="{modules}">
+        <div class="table-fit">
+            <table class="table">
+                <f:if condition="{showHeadline}">
+                    <thead>
+                        <tr>
+                            <th><f:translate key="LLL:EXT:beuser/Resources/Private/Language/locallang.xlf:modules" /></th>
+                        </tr>
+                    </thead>
+                </f:if>
+                <tbody>
+                    <f:for each="{modules}" as="module">
+                        <tr>
+                            <td class="col-icon"><core:icon identifier="{module.iconIdentifier}" /></td>
+                            <td class="col-title">{f:translate(key: module.title, default: module.title)}<f:if condition="{showUid}"> <code>[{module.identifier}]</code></f:if></td>
+                        </tr>
+                    </f:for>
+                </tbody>
+            </table>
+        </div>
+    </f:if>
+</f:section>
+
+<f:section name="tables">
+    <f:if condition="{tables.all}">
+        <f:for each="{tables.all}" key="table" as="label">
+            <f:if condition="{tables.tables_select.{table}} && !{tables.tables_modify.{table}}">
+                <f:variable name="tableReadConfigured" value="1" />
+            </f:if>
+            <f:if condition="{tables.tables_modify.{table}}">
+                <f:variable name="tableReadWriteConfigured" value="1" />
+            </f:if>
+        </f:for>
+        <f:if condition="{tableReadConfigured}">
+            <div class="panel panel-default">
+                <div class="panel-heading" role="tab">
+                    <div class="panel-heading-row">
+                        <button
+                            class="panel-button collapsed"
+                            type="button"
+                            data-bs-toggle="collapse"
+                            data-bs-target="#permission-group-read-table-{id}-collapse"
+                            aria-controls="permission-group-read-table-{id}-collapse"
+                            aria-expanded="false"
+                        >
+                            <div class="panel-title">
+                                <f:translate key="LLL:EXT:beuser/Resources/Private/Language/locallang.xlf:tableModes.read" />
+                            </div>
+                            <span class="caret"></span>
+                        </button>
+                    </div>
+                </div>
+                <div id="permission-group-read-table-{id}-collapse" class="panel-collapse collapse" data-persist-collapse-state="true" role="tabpanel">
+                    <div class="table-fit">
+                        <table class="table">
+                            <f:for each="{tables.all}" key="table" as="label">
+                                <f:if condition="{tables.tables_select.{table}} && !{tables.tables_modify.{table}}">
+                                    <tr>
+                                        <td class="col-icon">
+                                            <core:iconForRecord table="{table}" row="{id: '0'}" />
+                                        </td>
+                                        <td class="col-title">
+                                            <f:if condition="{label}">{f:translate(key:label, default:label)}</f:if><f:if condition="{showUid}"> <code>[{table}]</code></f:if>
+                                        </td>
+                                    </tr>
+                                </f:if>
+                            </f:for>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </f:if>
+
+        <f:if condition="{tableReadWriteConfigured}">
+            <div class="panel panel-default">
+                <div class="panel-heading" role="tab">
+                    <div class="panel-heading-row">
+                        <button
+                            class="panel-button collapsed"
+                            type="button"
+                            data-bs-toggle="collapse"
+                            data-bs-target="#permission-group-read-write-table-{id}-collapse"
+                            aria-controls="permission-group-read-write-table-{id}-collapse"
+                            aria-expanded="false"
+                        >
+                            <div class="panel-title">
+                                <f:translate key="LLL:EXT:beuser/Resources/Private/Language/locallang.xlf:tableModes.write" />
+                            </div>
+                            <span class="caret"></span>
+                        </button>
+                    </div>
+                </div>
+                <div id="permission-group-read-write-table-{id}-collapse" class="panel-collapse collapse" data-persist-collapse-state="true" role="tabpanel">
+                    <div class="table-fit">
+                        <table class="table">
+                            <f:for each="{tables.all}" key="table" as="label">
+                                <f:if condition="{tables.tables_modify.{table}}">
+                                    <tr>
+                                        <td class="col-icon">
+                                            <core:iconForRecord table="{table}" row="{id: '0'}" />
+                                        </td>
+                                        <td class="col-title">
+                                            <f:if condition="{label}">{f:translate(key:label, default:label)}</f:if><f:if condition="{showUid}"> <code>[{table}]</code></f:if>
+                                        </td>
+                                    </tr>
+                                </f:if>
+                            </f:for>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </f:if>
+    </f:if>
+</f:section>
+
+<f:section name="nonExcludeFields">
+    <f:if condition="{nonExcludeFields}">
+        <f:for each="{nonExcludeFields}" key="tableName" as="table">
+            <div class="panel panel-default">
+                <div class="panel-heading" role="tab">
+                    <div class="panel-heading-row">
+                        <button
+                            class="panel-button collapsed"
+                            type="button"
+                            data-bs-toggle="collapse"
+                            data-bs-target="#permission-group-{tableName}-{id}-collapse"
+                            aria-controls="permission-group-{tableName}-{id}-collapse"
+                            aria-expanded="false"
+                        >
+                            <div class="panel-icon">
+                                <core:iconForRecord table="{tableName}" row="{id: '0'}" />
+                            </div>
+                            <div class="panel-title">
+                                <f:if condition="{table.label}">{f:translate(key:table.label,default:table.label)}</f:if><f:if condition="{showUid}"> <code>[{tableName}]</code></f:if>
+                            </div>
+                            <span class="caret"></span>
+                        </button>
+                    </div>
+                </div>
+                <div id="permission-group-{tableName}-{id}-collapse" class="panel-collapse collapse" data-persist-collapse-state="true" role="tabpanel">
+                    <div class="panel-body">
+                        <ul class="panel-list">
+                            <f:for each="{table.fields}" as="label" key="field">
+                                <li><f:if condition="{label}">{f:translate(key:label,default:label)} </f:if><code>[{field}]</code></li>
+                            </f:for>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </f:for>
+    </f:if>
+</f:section>
+
+<f:section name="tsconfig">
+    <div class="panel panel-default">
+        <div class="panel-heading" role="tab">
+            <div class="panel-heading-row">
+                <button
+                    class="panel-button collapsed"
+                    type="button"
+                    data-bs-toggle="collapse"
+                    data-bs-target="#permission-group-tsconfig-{id}-collapse"
+                    aria-controls="permission-group-tsconfig-{id}-collapse"
+                    aria-expanded="false"
+                >
+                    <div class="panel-title">
+                        <f:translate key="LLL:EXT:core/Resources/Private/Language/locallang_tca.xlf:TSconfig" />
+                    </div>
+                    <span class="caret"></span>
+                </button>
+            </div>
+        </div>
+        <div id="permission-group-tsconfig-{id}-collapse" class="panel-collapse collapse" data-persist-collapse-state="true" role="tabpanel">
+            <div class="panel-body">
+                <f:render section="userTsConfigTree" arguments="{treeArray: tsconfig}" />
+            </div>
+        </div>
+    </div>
+</f:section>
+
+<f:section name="userTsConfigTree">
+    <ul class="treelist">
+        <f:for each="{treeArray}" key="key" as="value">
+            <li>
+                <span class="treelist-group treelist-group-monospace">
+                    <span class="treelist-label">{key}</span>
+                    <f:if condition="!{beuser:isArray(value: value)}">
+                        <span class="treelist-operator">=</span>
+                        <span class="treelist-value">{value}</span>
+                    </f:if>
+                </span>
+                <f:if condition="{beuser:isArray(value: value)}">
+                    <f:render section="userTsConfigTree" arguments="{treeArray: value}" />
+                </f:if>
+            </li>
+        </f:for>
+    </ul>
+</f:section>
+
+<f:section name="pageContentTypes">
+    <f:if condition="{pageContentTypes}">
+        <div class="table-fit">
+            <table class="table">
+                <f:for each="{pageContentTypes}" as="item">
+                    <tr>
+                        <td class="col-icon">
+                            <core:icon identifier="{f:if(condition: item.icon, then: item.icon, else: 'empty-empty')}" />
+                        </td>
+                        <td class="col-title">
+                            <f:if condition="{item.label}">
+                                <f:then>
+                                    {f:translate(key: item.label)}
+                                    <f:if condition="{showUid}"><code title="{item.longType}">[{item.shortType}]</code></f:if>
+                                </f:then>
+                                <f:else>
+                                    {f:translate(key: 'LLL:EXT:core/Resources/Private/Language/locallang_common.xlf:notAvailableAbbreviation')}
+                                    <f:if condition="{showUid}"><code>[{item.longType}]</code></f:if>
+                                </f:else>
+                            </f:if>
+                        </td>
+                    </tr>
+                </f:for>
+            </table>
+        </div>
+    </f:if>
+</f:section>
+
+</html>

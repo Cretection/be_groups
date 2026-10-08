@@ -50,6 +50,7 @@
 		"spaze/phpstan-disallowed-calls": "4.14.0",
 		"ssch/typo3-rector": "3.16.0",
 		"symfony/yaml": "^7.4 || ^8.0",
+		"typo3/cms-beuser": "^14.3",
 		"typo3/cms-dashboard": "^14.3",
 		"typo3/cms-workspaces": "^14.3",
 		"typo3/coding-standards": "0.9.0",

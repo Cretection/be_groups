@@ -59,24 +59,4 @@ enum GroupKind: string
             self::Classic => 'actions-key',
         };
     }
-
-    /**
-     * Prefix as recommended by the official TYPO3 permission guideline.
-     */
-    public function prefix(): string
-    {
-        return match ($this) {
-            self::Role => 'R_',
-            self::AccessControl => 'ACL_',
-            self::PageGroup => 'PG_',
-            self::DatabaseMount => 'DBM_',
-            self::FileMount => 'FM_',
-            self::FileOperations => 'FO_',
-            self::CategoryMount => 'CM_',
-            self::Language => 'L_',
-            self::TsConfig => 'TS_',
-            self::Workspace => 'WS_',
-            self::Classic => '',
-        };
-    }
 }

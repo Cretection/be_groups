@@ -177,6 +177,24 @@ final readonly class BackendGroupRepository
     }
 
     /**
+     * @return array<int, array{title: string, kind: string}> title and kind of all non-deleted groups by uid
+     */
+    public function findAllTitlesAndKinds(): array
+    {
+        $result = $this->createQueryBuilder()
+            ->select('uid', 'title', GroupKind::FIELD_NAME)
+            ->from(self::TABLE)
+            ->executeQuery();
+
+        $groups = [];
+        while ($row = $result->fetchAssociative()) {
+            $group = DatabaseRow::fromArray($row);
+            $groups[$group->getUid()] = ['title' => $group->get('title'), 'kind' => $group->get(GroupKind::FIELD_NAME)];
+        }
+        return $groups;
+    }
+
+    /**
      * Returns a non-deleted group with all fields.
      */
     public function findByUid(int $uid): ?DatabaseRow

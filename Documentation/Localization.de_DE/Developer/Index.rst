@@ -100,6 +100,9 @@ Einen eigenen Typ ergänzen
 Verwenden Sie eine nicht numerische Kennung mit Präfix (``my_news``, nicht
 ``news``), damit sie nicht mit künftigen Typen dieser Extension kollidiert.
 
+Die Bezeichnung Ihres Typs erscheint als Präfix vor den Titeln seiner
+Gruppen, siehe :ref:`usage-prefixes`.
+
 Optional geben Sie Ihrem Typ eine Bezeichnung in den nach Typ gruppierten
 Listen der Rollen- und Benutzerformulare (sonst wird die Kennung angezeigt):
 

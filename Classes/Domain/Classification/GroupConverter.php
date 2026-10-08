@@ -167,7 +167,8 @@ final readonly class GroupConverter
         foreach ($concerns as $index => $concern) {
             $datamap[self::TABLE]['NEW_begroups_split_' . $index] = [
                 'pid' => (int)$group->get('pid'),
-                'title' => (GroupKind::tryFrom($concern->kind)?->prefix() ?? strtoupper($concern->kind) . '_') . $group->get('title'),
+                // The kind is shown as prefix wherever TYPO3 shows the title (see GroupRecordTitle).
+                'title' => $group->get('title'),
                 'description' => sprintf('Created by begroups:split from group %d "%s".', $group->getUid(), $group->get('title')),
                 // Visible: the blocks are only reachable through the group, which keeps its hidden state,
                 // so showing the group again restores its permissions as before.

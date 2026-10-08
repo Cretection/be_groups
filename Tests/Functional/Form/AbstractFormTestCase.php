@@ -58,6 +58,31 @@ abstract class AbstractFormTestCase extends FunctionalTestCase
 
     /**
      * @param array<array-key, mixed> $formData
+     * @return array<string, string> the labels of the items by value
+     */
+    protected function getItemLabels(array $formData, string $field): array
+    {
+        $processedTca = $formData['processedTca'] ?? null;
+        self::assertIsArray($processedTca);
+        $columns = $processedTca['columns'] ?? null;
+        self::assertIsArray($columns);
+        $column = $columns[$field] ?? null;
+        self::assertIsArray($column);
+        $config = $column['config'] ?? null;
+        self::assertIsArray($config);
+        $items = $config['items'] ?? null;
+        self::assertIsArray($items);
+        $labels = [];
+        foreach ($items as $item) {
+            if (is_array($item) && is_scalar($item['value'] ?? null) && is_scalar($item['label'] ?? null)) {
+                $labels[(string)$item['value']] = (string)$item['label'];
+            }
+        }
+        return $labels;
+    }
+
+    /**
+     * @param array<array-key, mixed> $formData
      * @return list<string>
      */
     protected function getItemValues(array $formData, string $field): array

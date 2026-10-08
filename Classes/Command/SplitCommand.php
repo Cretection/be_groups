@@ -20,7 +20,7 @@ use Cretection\BeGroups\Domain\Classification\ClassificationAction;
 use Cretection\BeGroups\Domain\Classification\ConversionStatus;
 use Cretection\BeGroups\Domain\Classification\GroupClassifier;
 use Cretection\BeGroups\Domain\Classification\GroupConverter;
-use Cretection\BeGroups\Domain\Kind\GroupKind;
+use Cretection\BeGroups\Domain\Kind\KindPrefix;
 use Cretection\BeGroups\Utility\ConsoleTextUtility;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
@@ -44,6 +44,7 @@ final class SplitCommand extends Command
     public function __construct(
         private readonly GroupClassifier $groupClassifier,
         private readonly GroupConverter $groupConverter,
+        private readonly KindPrefix $kindPrefix,
     ) {
         parent::__construct();
     }
@@ -146,7 +147,7 @@ final class SplitCommand extends Command
             foreach ($classification->concerns as $concern) {
                 $rows[] = array_map(ConsoleTextUtility::escape(...), [
                     $group,
-                    sprintf('new %s%s', GroupKind::tryFrom($concern->kind)?->prefix() ?? strtoupper($concern->kind) . '_', $classification->title),
+                    'new ' . $this->kindPrefix->prefixTitle($concern->kind, $classification->title),
                     implode(', ', array_keys($concern->values)),
                 ]);
                 $group = '';

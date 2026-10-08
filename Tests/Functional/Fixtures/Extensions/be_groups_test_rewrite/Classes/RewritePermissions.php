@@ -23,9 +23,9 @@ use TYPO3\CMS\Core\DataHandling\DataHandler;
  * Simulates another extension that changes data while groups are saved. What it changes is
  * chosen by the description of the saved group ("rewrite:…"), or by the title of new groups:
  *
- * - new group "DBM_Editors": page 2 is added to the page mounts,
- * - new group "ACL_Database error": a query fails,
- * - new group "ACL_Unknown column": a column that does not exist is written,
+ * - new page tree mount "Editors": page 2 is added to the page mounts,
+ * - new access rights "Database error": a query fails,
+ * - new access rights "Unknown column": a column that does not exist is written,
  * - "rewrite:page-mount": page 2 is added to the page mounts when the kind changes,
  * - "rewrite:add-subgroup": group 12 is added to the subgroups of the new role,
  * - "rewrite:widen-other-group": group 12 gets another module,
@@ -48,10 +48,12 @@ final readonly class RewritePermissions
             return;
         }
         if ($status === 'new') {
-            match ($fieldArray['title'] ?? '') {
-                'DBM_Editors' => $fieldArray['db_mountpoints'] = '1,2',
-                'ACL_Database error' => $this->connectionPool->getConnectionForTable('be_groups')->executeQuery('SELECT * FROM be_groups_table_that_does_not_exist'),
-                'ACL_Unknown column' => $fieldArray['column_that_does_not_exist'] = 1,
+            $kind = is_string($fieldArray['tx_begroups_kind'] ?? null) ? $fieldArray['tx_begroups_kind'] : '';
+            $title = is_string($fieldArray['title'] ?? null) ? $fieldArray['title'] : '';
+            match ($kind . ':' . $title) {
+                'db_mount:Editors' => $fieldArray['db_mountpoints'] = '1,2',
+                'acl:Database error' => $this->connectionPool->getConnectionForTable('be_groups')->executeQuery('SELECT * FROM be_groups_table_that_does_not_exist'),
+                'acl:Unknown column' => $fieldArray['column_that_does_not_exist'] = 1,
                 default => null,
             };
             return;

@@ -55,6 +55,46 @@
         <source>Classic (all settings)</source>
         <target>Klassisch (alle Einstellungen)</target>
       </trans-unit>
+      <trans-unit id="kind.prefix.role" approved="yes">
+        <source>META</source>
+        <target>META</target>
+      </trans-unit>
+      <trans-unit id="kind.prefix.acl" approved="yes">
+        <source>ACL</source>
+        <target>ACL</target>
+      </trans-unit>
+      <trans-unit id="kind.prefix.page_group" approved="yes">
+        <source>PG</source>
+        <target>PG</target>
+      </trans-unit>
+      <trans-unit id="kind.prefix.db_mount" approved="yes">
+        <source>DBM</source>
+        <target>DBM</target>
+      </trans-unit>
+      <trans-unit id="kind.prefix.file_mount" approved="yes">
+        <source>FM</source>
+        <target>FM</target>
+      </trans-unit>
+      <trans-unit id="kind.prefix.file_operations" approved="yes">
+        <source>FO</source>
+        <target>FO</target>
+      </trans-unit>
+      <trans-unit id="kind.prefix.category_mount" approved="yes">
+        <source>CM</source>
+        <target>CM</target>
+      </trans-unit>
+      <trans-unit id="kind.prefix.language" approved="yes">
+        <source>L</source>
+        <target>L</target>
+      </trans-unit>
+      <trans-unit id="kind.prefix.tsconfig" approved="yes">
+        <source>TS</source>
+        <target>TS</target>
+      </trans-unit>
+      <trans-unit id="kind.prefix.workspace" approved="yes">
+        <source>WS</source>
+        <target>WS</target>
+      </trans-unit>
       <trans-unit id="kind.group.roles" approved="yes">
         <source>Roles</source>
         <target>Rollen</target>

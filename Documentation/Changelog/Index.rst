@@ -30,6 +30,8 @@ Relaunch for TYPO3 14.3 LTS.
     not follow the role model, with exit codes for deployments and
     monitoring and the event ``AfterAuditFindingsCollectedEvent`` for checks
     of other extensions, see :ref:`usage-audit`.
+*   The kind is shown as prefix in front of the title wherever TYPO3 shows a
+    group, see :ref:`usage-prefixes`.
 *   The event ``ModifyKindOfNewGroupEvent`` chooses the kind of new groups
     that import or synchronisation tools create without a kind, see
     :ref:`developer-kind-event`.

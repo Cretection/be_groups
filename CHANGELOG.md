@@ -72,6 +72,13 @@ Relaunch for TYPO3 14.3 LTS (version 1.0.0).
 - Extension setting `allowClassicGroups` (default: enabled). It takes effect
   immediately: when disabled, the form no longer offers "classic" (except for
   groups that already are classic) and new groups start as "role".
+- The kind is shown as prefix in front of the title wherever TYPO3 shows a
+  group (`META: Editors`, `ACL: Editors`, …): forms, record lists, the
+  permissions module, workspaces, the element browser and the core module
+  "Users". Titles do not need to contain the kind. For the module "Users",
+  the templates that print group titles are overridden, but only while the
+  templates of the core are unchanged. `begroups:split` no longer writes
+  prefixes into the titles of new building blocks.
 - Icons in the style of TYPO3 14 for the light and the dark backend theme:
   the kinds use monochrome icons of the core, the module has its own
   monochrome icon with the accent color of the theme.

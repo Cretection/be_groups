@@ -1,0 +1,5 @@
+"be_groups"
+,"uid","pid","title","tx_begroups_kind","subgroup","file_permissions"
+,1,0,"Editors","role","2",""
+,2,0,"Editors","acl","",""
+,3,0,"Legacy <b>","classic","",""

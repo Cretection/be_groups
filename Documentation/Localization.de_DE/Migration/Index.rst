@@ -49,9 +49,10 @@ Rechte zu verändern. Beide zeigen ihren Plan zuerst mit ``--dry-run``:
 ``begroups:split`` teilt die per uid genannten Gruppen auf, oder mit
 ``--all`` jede Gruppe, für die ``begroups:classify`` das Aufteilen vorschlägt:
 
-*   Die Rechte wandern in je einen Baustein pro Typ, benannt mit dem Präfix
-    des Typs und dem Titel der Gruppe, zum Beispiel ``ACL_Editors`` und
-    ``DBM_Editors``. Eine versteckte Gruppe bleibt versteckt; ihre Bausteine
+*   Die Rechte wandern in je einen Baustein pro Typ. Die Bausteine erhalten
+    den Titel der Gruppe; TYPO3 zeigt ihren Typ als Präfix, zum Beispiel
+    ``ACL: Editors`` und ``DBM: Editors`` (siehe :ref:`usage-prefixes`).
+    Eine versteckte Gruppe bleibt versteckt; ihre Bausteine
     sind nur über sie erreichbar, sodass sie beim Wiedereinblenden die
     Rechte wie vorher gewährt.
 *   **Die Gruppe behält ihre uid und wird zur Rolle.** Benutzer und andere
@@ -60,7 +61,7 @@ Rechte zu verändern. Beide zeigen ihren Plan zuerst mit ``--dry-run``:
 *   TYPO3 macht die erste Gruppe eines Benutzers zur Eigentümergruppe der
     Seiten, die er anlegt. Ist das die Gruppe selbst – sie hat keine aktiven
     Untergruppen –, wird eine neue Seitenrechte-Gruppe ohne Rechte (zum
-    Beispiel ``PG_Editors``) ihr erstes Mitglied und übernimmt diese
+    Beispiel ``PG: Editors``) ihr erstes Mitglied und übernimmt diese
     Aufgabe. Sie gehört nur zur Rolle, die Eigentümergruppe hat also genau
     dieselben Mitglieder wie vorher.
 *   Die Bausteine werden immer neu angelegt, auch wenn es einen gleichen
@@ -135,5 +136,5 @@ beginnen:
 
 Das Ergebnis sind die Rollen „Editor“ und „Advanced Editor“ mit jeweils
 eigenen Bausteinen: einer Seitenrechte-Gruppe als Eigentümerin neuer
-Seiten, Zugriffsrechten, Seitenbaum-Einstiegspunkt und Dateifreigabe (zum
-Beispiel ``PG_Editor``, ``ACL_Editor``, ``DBM_Editor`` und ``FM_Editor``).
+Seiten, Zugriffsrechten, Seitenbaum-Einstiegspunkt und Dateifreigabe
+(``PG: Editor``, ``ACL: Editor``, ``DBM: Editor`` und ``FM: Editor``).

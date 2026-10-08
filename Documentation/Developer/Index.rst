@@ -99,6 +99,9 @@ Add your own kind
 Use a prefixed, non-numeric identifier for your kind (``my_news``, not
 ``news``) to avoid collisions with future kinds of this extension.
 
+The label of your kind is shown as prefix in front of the titles of its
+groups, see :ref:`usage-prefixes`.
+
 Optionally give your kind a label in the lists of the role and user forms,
 which are grouped by kind (otherwise the identifier is shown):
 

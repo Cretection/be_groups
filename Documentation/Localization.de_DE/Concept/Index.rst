@@ -51,11 +51,11 @@ ergänzt um „TSconfig“ und „Workspace“.
         -   Felder des Typs
     *   -   ``role``
         -   Rolle
-        -   ``R_``
+        -   ``META``
         -   Nur :sql:`subgroup`, und darin nur Bausteine.
     *   -   ``acl``
         -   Zugriffsrechte
-        -   ``ACL_``
+        -   ``ACL``
         -   Module (:sql:`groupMods`), Tabellenrechte
             (:sql:`tables_modify`, :sql:`tables_select`), erlaubte
             Ausschlussfelder (:sql:`non_exclude_fields`), ausdrücklich
@@ -65,35 +65,35 @@ ergänzt um „TSconfig“ und „Workspace“.
             (:sql:`availableWidgets`, mit EXT:dashboard)
     *   -   ``page_group``
         -   Seitenrechte-Gruppe
-        -   ``PG_``
+        -   ``PG``
         -   Keine eigenen Felder. Dient als Eigentümergruppe für Seitenrechte.
     *   -   ``db_mount``
         -   Seitenbaum-Einstiegspunkte
-        -   ``DBM_``
+        -   ``DBM``
         -   :sql:`db_mountpoints`
     *   -   ``file_mount``
         -   Dateifreigaben
-        -   ``FM_``
+        -   ``FM``
         -   :sql:`file_mountpoints`
     *   -   ``file_operations``
         -   Dateioperationen
-        -   ``FO_``
+        -   ``FO``
         -   :sql:`file_permissions`
     *   -   ``category_mount``
         -   Kategorie-Freigaben
-        -   ``CM_``
+        -   ``CM``
         -   :sql:`category_perms`
     *   -   ``language``
         -   Sprachen
-        -   ``L_``
+        -   ``L``
         -   :sql:`allowed_languages`
     *   -   ``tsconfig``
         -   TSconfig
-        -   ``TS_``
+        -   ``TS``
         -   :sql:`TSconfig`, :sql:`tsconfig_includes`
     *   -   ``workspace``
         -   Workspace
-        -   ``WS_``
+        -   ``WS``
         -   :sql:`workspace_perms` (nur mit EXT:workspaces)
     *   -   ``classic``
         -   Klassisch
@@ -102,6 +102,8 @@ ergänzt um „TSconfig“ und „Workspace“.
             diese Extension.
 
 Alle Typen haben außerdem Titel, Beschreibung und das Feld „Deaktiviert“.
+Der Titel muss den Typ nicht enthalten: TYPO3 zeigt das Präfix des Typs davor
+an, siehe :ref:`usage-prefixes`.
 
 Gültig sind nur die konfigurierten Typen: die Einträge des Felds
 :sql:`tx_begroups_kind`, die ein eigenes Formular haben. Ein gespeicherter
