@@ -1,0 +1,70 @@
+---
+name: Publish
+
+# Publishes a release to the TYPO3 Extension Repository (TER) when a version tag is pushed,
+# see CODING_GUIDELINES.md, §17, and the release steps in CONTRIBUTING.md.
+#
+# - Only tags like "1.2.3" on "main" are published. Tags of pre-releases like "1.2.3-rc1"
+#   do not match; Packagist offers them anyway.
+# - Every file carrying the version must match the tag (Build/Scripts/checkReleaseVersion.php).
+# - The archive is created with "git archive", so the TER package contains exactly the files
+#   of the Composer package (export-ignore in .gitattributes).
+# - The upload needs the secret TYPO3_API_TOKEN in the environment "ter": a TER access token
+#   for the extension key "be_groups" (tailor ter:token:create).
+#
+# Actions are pinned to commit SHAs, Dependabot keeps them up to date.
+
+on:
+  push:
+    tags:
+      - '[0-9]+.[0-9]+.[0-9]+'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    name: Publish to the TER
+    runs-on: ubuntu-26.04
+    timeout-minutes: 15
+    environment:
+      name: ter
+      url: https://extensions.typo3.org/extension/be_groups
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          # The whole history: the tag has to be on "main"
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Set up PHP
+        uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # 2.40.0
+        with:
+          php-version: '8.4'
+          tools: composer
+          coverage: none
+      - name: Check that the tag is on main
+        run: git merge-base --is-ancestor "${GITHUB_SHA}" origin/main
+      - name: Check that every file carries the version of the tag
+        run: php Build/Scripts/checkReleaseVersion.php "${GITHUB_REF_NAME}"
+      - name: Create the archive
+        run: git archive --format=zip --output="${RUNNER_TEMP}/be_groups_${GITHUB_REF_NAME}.zip" "${GITHUB_SHA}"
+      - name: Install tailor
+        run: composer global require --no-interaction --no-progress typo3/tailor:2.1.0
+      - name: Publish to the TER
+        env:
+          TYPO3_API_TOKEN: ${{ secrets.TYPO3_API_TOKEN }}
+        run: |
+          # The message of the tag is the upload comment
+          COMMENT="$(git tag --list --format='%(contents:subject)%0a%0a%(contents:body)' "${GITHUB_REF_NAME}")"
+          if [ -z "${COMMENT//[[:space:]]/}" ]; then
+            COMMENT="Version ${GITHUB_REF_NAME}, see CHANGELOG.md"
+          fi
+          "$(composer global config bin-dir --absolute 2>/dev/null)/tailor" ter:publish \
+            --artefact="${RUNNER_TEMP}/be_groups_${GITHUB_REF_NAME}.zip" \
+            --comment="${COMMENT}" \
+            "${GITHUB_REF_NAME}"

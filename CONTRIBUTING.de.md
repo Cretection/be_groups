@@ -127,3 +127,52 @@ Das Handbuch ist in reStructuredText geschrieben, in `Documentation/`
 (Englisch) und `Documentation/Localization.de_DE/` (Deutsch). Die Struktur
 beider Handbücher bleibt identisch, damit Leser auf jeder Seite die Sprache
 wechseln können.
+
+## Releases
+
+Versionen folgen der semantischen Versionierung. Die Version steht in
+`composer.json` (`extra.typo3/cms.version`) und in den Einstellungen beider
+Handbücher; zwischen zwei Releases trägt sie das Suffix `-dev` (zum Beispiel
+`1.2.1-dev`), das TYPO3 als Stabilität der Extension liest.
+
+1. Das Release in einem Pull Request vorbereiten:
+
+   ```bash
+   php Build/Scripts/setVersion.php 1.2.0
+   ```
+
+   Danach in `CHANGELOG.md` aus `## [Unreleased]` den Abschnitt
+   `## [1.2.0] - JJJJ-MM-TT` machen und dem Eintrag in beiden Changelogs des
+   Handbuchs (`Documentation/Changelog/` und
+   `Documentation/Localization.de_DE/Changelog/`) die Überschrift
+   `1.2.0 (JJJJ-MM-TT)` geben. Das Ergebnis prüfen:
+
+   ```bash
+   php Build/Scripts/checkReleaseVersion.php 1.2.0
+   ```
+
+2. Nach dem Merge den Commit auf `main` mit einem annotierten Tag versehen und
+   ihn pushen. Die Nachricht des Tags wird zum Upload-Kommentar im TER:
+
+   ```bash
+   git tag -a 1.2.0 -m "Kurze Zusammenfassung des Releases"
+   git push origin 1.2.0
+   ```
+
+   Der Workflow `Publish` (`.github/workflows/publish.yml`) prüft, dass der Tag
+   auf `main` liegt und jede Datei seine Version trägt, und lädt das Archiv des
+   Tags mit tailor ins TER hoch. Das Archiv enthält dieselben Dateien wie das
+   Composer-Paket (`export-ignore` in `.gitattributes`). Packagist und
+   docs.typo3.org aktualisieren sich über ihre Webhooks.
+
+3. Die nächste Version beginnen, z. B. mit
+   `php Build/Scripts/setVersion.php 1.2.1-dev`, und in `CHANGELOG.md` einen
+   neuen Abschnitt `## [Unreleased]` anlegen.
+
+Tags von Vorabversionen wie `1.2.0-rc1` werden nicht ins TER hochgeladen, das
+nur Versionen wie `1.2.0` annimmt; Packagist bietet sie trotzdem an.
+
+Für den Upload braucht es ein TER-Zugriffstoken für den Extension-Key
+`be_groups` als Secret `TYPO3_API_TOKEN` der GitHub-Umgebung `ter`. Wie man
+eines anlegt, beschreibt die
+[Dokumentation von tailor](https://docs.typo3.org/other/typo3/tailor/main/en-us/Index.html).
