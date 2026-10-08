@@ -75,9 +75,13 @@ final class SplitCommand extends Command
         $io->title('Split classic groups');
 
         $failed = false;
+        $proposals = [];
+        foreach ($this->groupClassifier->classifyAll() as $proposal) {
+            $proposals[$proposal->uid] = $proposal;
+        }
         $classifications = [];
-        foreach ($all ? $this->groupClassifier->classifyAll() : $uids as $item) {
-            $classification = $item instanceof Classification ? $item : $this->groupClassifier->classify($item);
+        foreach ($all ? $proposals : $uids as $item) {
+            $classification = $item instanceof Classification ? $item : ($proposals[$item] ?? null);
             if ($classification === null) {
                 $failed = true;
                 $io->writeln(sprintf('be_groups:%d: skipped, no classic group.', $item));

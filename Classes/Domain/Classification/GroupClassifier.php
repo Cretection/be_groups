@@ -55,21 +55,31 @@ final readonly class GroupClassifier
      */
     public function classifyAll(): array
     {
-        return $this->classifyGroups(null);
+        return $this->classifyGroups($this->backendGroupRepository->findAll(), $this->findUsergroupListsOfUsers(), null);
     }
 
     public function classify(int $uid): ?Classification
     {
-        return $this->classifyGroups($uid)[0] ?? null;
+        return $this->classifyGroups($this->backendGroupRepository->findAll(), $this->findUsergroupListsOfUsers(), $uid)[0] ?? null;
     }
 
     /**
+     * Classifies a group with the groups and users of a snapshot, i.e. without reading them again
+     * within the transaction of a conversion.
+     */
+    public function classifyInSnapshot(int $uid, ConversionSnapshot $snapshot): ?Classification
+    {
+        return $this->classifyGroups(array_values($snapshot->getActiveGroups()), $snapshot->getUsergroupListsOfActiveUsers(), $uid)[0] ?? null;
+    }
+
+    /**
+     * @param list<DatabaseRow> $groups all non-deleted groups
+     * @param list<string> $usergroupLists the list of groups of each non-deleted user
      * @return list<Classification>
      */
-    private function classifyGroups(?int $onlyUid): array
+    private function classifyGroups(array $groups, array $usergroupLists, ?int $onlyUid): array
     {
-        $groups = $this->backendGroupRepository->findAll();
-        $directUserCounts = $this->countDirectUsers();
+        $directUserCounts = $this->countDirectUsers($usergroupLists);
         $pageOwners = array_flip($this->pageOwnerRepository->findOwnerGroupUids());
 
         $groupsByUid = [];
@@ -213,14 +223,23 @@ final readonly class GroupClassifier
     }
 
     /**
+     * @return list<string> the list of groups of each non-deleted user
+     */
+    private function findUsergroupListsOfUsers(): array
+    {
+        return array_map(static fn(DatabaseRow $user): string => $user->get('usergroup'), $this->backendUserRepository->findAllForOverview());
+    }
+
+    /**
+     * @param list<string> $usergroupLists the list of groups of each user
      * @return array<int, int> the number of users per group they are assigned to directly
      */
-    private function countDirectUsers(): array
+    private function countDirectUsers(array $usergroupLists): array
     {
         $counts = [];
-        foreach ($this->backendUserRepository->findAllForOverview() as $user) {
+        foreach ($usergroupLists as $usergroupList) {
             // Read like TYPO3 does: entries that are no number become 0 and match no group.
-            foreach (array_unique(GeneralUtility::intExplode(',', $user->get('usergroup'), true)) as $groupUid) {
+            foreach (array_unique(GeneralUtility::intExplode(',', $usergroupList, true)) as $groupUid) {
                 $counts[$groupUid] = ($counts[$groupUid] ?? 0) + 1;
             }
         }

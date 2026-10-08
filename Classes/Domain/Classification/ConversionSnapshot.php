@@ -26,7 +26,8 @@ final readonly class ConversionSnapshot
 {
     /**
      * @param array<int, DatabaseRow> $groups all groups by uid, including deleted ones
-     * @param array<int, DatabaseRow> $users all users by uid, including deleted ones
+     * @param array<int, array<string, mixed>> $users all users by uid, including deleted ones, with the
+     *                                              values as the database returns them
      */
     public function __construct(
         public array $groups,
@@ -42,16 +43,29 @@ final readonly class ConversionSnapshot
     }
 
     /**
+     * @return list<string> the list of groups of each user that is not deleted, in the order of the users
+     */
+    public function getUsergroupListsOfActiveUsers(): array
+    {
+        $lists = [];
+        foreach ($this->users as $user) {
+            if (self::toString($user['deleted'] ?? null) !== '1') {
+                $lists[] = self::toString($user['usergroup'] ?? null);
+            }
+        }
+        return $lists;
+    }
+
+    /**
      * @return list<string> every distinct list of groups of the users that are not deleted
      */
     public function getUsergroupLists(): array
     {
-        $lists = [];
-        foreach ($this->users as $user) {
-            if ($user->get('deleted') !== '1') {
-                $lists[] = $user->get('usergroup');
-            }
-        }
-        return array_values(array_unique($lists));
+        return array_values(array_unique($this->getUsergroupListsOfActiveUsers()));
+    }
+
+    private static function toString(mixed $value): string
+    {
+        return is_scalar($value) ? (string)$value : '';
     }
 }

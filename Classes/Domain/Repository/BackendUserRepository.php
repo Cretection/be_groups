@@ -120,11 +120,13 @@ final readonly class BackendUserRepository
     }
 
     /**
-     * Returns all users with all fields, including deleted and disabled ones, ordered by uid.
+     * Returns all users with all fields as the database returns them, including deleted and disabled
+     * ones, indexed by uid. The values are not normalized: they are only meant to be compared with
+     * another read through the same connection, which is much faster for many users.
      *
-     * @return list<DatabaseRow>
+     * @return array<int, array<string, mixed>>
      */
-    public function findAllIncludingDeleted(): array
+    public function findAllRowsIncludingDeleted(): array
     {
         $queryBuilder = $this->connectionPool->getQueryBuilderForTable(self::TABLE);
         $queryBuilder->getRestrictions()->removeAll();
@@ -136,7 +138,7 @@ final readonly class BackendUserRepository
 
         $rows = [];
         while ($row = $result->fetchAssociative()) {
-            $rows[] = DatabaseRow::fromArray($row);
+            $rows[is_numeric($row['uid'] ?? null) ? (int)$row['uid'] : 0] = $row;
         }
         return $rows;
     }

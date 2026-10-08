@@ -82,6 +82,42 @@ final readonly class GroupPermissionResolver
     }
 
     /**
+     * Returns the lists of groups from which the group can be reached through subgroups, read like
+     * resolve() reads them. Only for these lists can resolve() contain the group; it skips hidden
+     * groups and cycles in addition, so some of the returned lists may not contain it.
+     *
+     * @param list<string> $usergroupLists stored groups of users (be_users.usergroup)
+     * @param array<int, DatabaseRow> $groups all non-deleted groups by uid, hidden ones included
+     * @return list<string>
+     */
+    public function findListsReaching(int $groupUid, array $usergroupLists, array $groups): array
+    {
+        $parentUids = [];
+        foreach ($groups as $group) {
+            foreach (GeneralUtility::intExplode(',', $group->get('subgroup'), true) as $subgroupUid) {
+                $parentUids[$subgroupUid][] = $group->getUid();
+            }
+        }
+        $reaching = [$groupUid => true];
+        $pending = [$groupUid];
+        while ($pending !== []) {
+            foreach ($parentUids[array_pop($pending)] ?? [] as $parentUid) {
+                if (!isset($reaching[$parentUid])) {
+                    $reaching[$parentUid] = true;
+                    $pending[] = $parentUid;
+                }
+            }
+        }
+        return array_values(array_filter(
+            $usergroupLists,
+            static fn(string $usergroupList): bool => array_intersect_key(
+                array_flip(GeneralUtility::intExplode(',', $usergroupList, true)),
+                $reaching,
+            ) !== [],
+        ));
+    }
+
+    /**
      * Reads the values of a field the way TYPO3 uses them: page mounts as numbers including the
      * root "0" (filterValidWebMounts(), getWebmounts()), file mounts as numbers of existing records (getFileMountRecords()),
      * category mounts without empty values (getCategoryMountPoints()), all others as strings.

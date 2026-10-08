@@ -105,6 +105,20 @@ final class GroupConverterRollbackTest extends FunctionalTestCase
     }
 
     #[Test]
+    public function rollsBackIfUsersOfAGroupContainingItWouldGetMore(): void
+    {
+        // The user only reaches group 6 through group 3, which contains it.
+        $this->updateGroup(6, ['groupMods' => 'web_info', 'description' => 'rewrite:add-subgroup']);
+        $this->updateGroup(3, ['subgroup' => '6']);
+        $this->getConnectionPool()->getConnectionForTable('be_users')->update('be_users', ['usergroup' => '3'], ['uid' => 3]);
+
+        $result = $this->get(GroupConverter::class)->split(6);
+
+        self::assertSame(ConversionStatus::Failed, $result->status);
+        self::assertSame('The permissions (groupMods) of users with the groups "3" would change; nothing was changed.', $result->message);
+    }
+
+    #[Test]
     public function rollsBackIfAHiddenGroupWouldGrantMoreOnceItIsShownAgain(): void
     {
         $this->updateGroup(9, ['description' => 'rewrite:add-subgroup']);

@@ -15,6 +15,7 @@ declare(strict_types=1);
 
 namespace Cretection\BeGroups\Domain\Kind;
 
+use TYPO3\CMS\Core\Schema\TcaSchema;
 use TYPO3\CMS\Core\Schema\TcaSchemaFactory;
 
 /**
@@ -31,9 +32,18 @@ final readonly class KindRegistry
     private const TABLE = 'be_groups';
     private const FALLBACK_ICON = 'actions-users';
 
+    /**
+     * The definitions per schema of be_groups: a new schema is only built when TCA changes.
+     *
+     * @var \WeakMap<TcaSchema, array<string, KindDefinition>>
+     */
+    private \WeakMap $definitionsBySchema;
+
     public function __construct(
         private TcaSchemaFactory $tcaSchemaFactory,
-    ) {}
+    ) {
+        $this->definitionsBySchema = new \WeakMap();
+    }
 
     public function isKind(string $kind): bool
     {
@@ -54,6 +64,32 @@ final readonly class KindRegistry
             return [];
         }
         $schema = $this->tcaSchemaFactory->get(self::TABLE);
+        $this->definitionsBySchema[$schema] ??= $this->buildDefinitions($schema);
+        return $this->definitionsBySchema[$schema];
+    }
+
+    /**
+     * The default kind configured in TCA, "classic" if none (or an invalid one) is configured.
+     */
+    public function getDefaultKind(): string
+    {
+        $default = $this->tcaSchemaFactory->has(self::TABLE) && $this->tcaSchemaFactory->get(self::TABLE)->hasField(GroupKind::FIELD_NAME)
+            ? $this->tcaSchemaFactory->get(self::TABLE)->getField(GroupKind::FIELD_NAME)->getDefaultValue()
+            : null;
+        return is_string($default) && $this->isKind($default) ? $default : GroupKind::Classic->value;
+    }
+
+    public function getIconIdentifier(string $kind): string
+    {
+        $definitions = $this->getDefinitions();
+        return isset($definitions[$kind]) ? $definitions[$kind]->iconIdentifier : self::FALLBACK_ICON;
+    }
+
+    /**
+     * @return array<string, KindDefinition>
+     */
+    private function buildDefinitions(TcaSchema $schema): array
+    {
         if (!$schema->hasField(GroupKind::FIELD_NAME)) {
             return [];
         }
@@ -80,22 +116,5 @@ final readonly class KindRegistry
             );
         }
         return $definitions;
-    }
-
-    /**
-     * The default kind configured in TCA, "classic" if none (or an invalid one) is configured.
-     */
-    public function getDefaultKind(): string
-    {
-        $default = $this->tcaSchemaFactory->has(self::TABLE) && $this->tcaSchemaFactory->get(self::TABLE)->hasField(GroupKind::FIELD_NAME)
-            ? $this->tcaSchemaFactory->get(self::TABLE)->getField(GroupKind::FIELD_NAME)->getDefaultValue()
-            : null;
-        return is_string($default) && $this->isKind($default) ? $default : GroupKind::Classic->value;
-    }
-
-    public function getIconIdentifier(string $kind): string
-    {
-        $definitions = $this->getDefinitions();
-        return isset($definitions[$kind]) ? $definitions[$kind]->iconIdentifier : self::FALLBACK_ICON;
     }
 }

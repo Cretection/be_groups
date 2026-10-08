@@ -74,10 +74,27 @@ final readonly class KindFieldResolver
      */
     private const ROOT_RELATION_FIELDS = ['db_mountpoints'];
 
+    /**
+     * The managed fields per schema of be_groups: a new schema is only built when TCA changes.
+     *
+     * @var \WeakMap<TcaSchema, list<FieldTypeInterface>>
+     */
+    private \WeakMap $managedFieldsBySchema;
+
+    /**
+     * The allowed field names per schema of a kind.
+     *
+     * @var \WeakMap<TcaSchema, array<string, true>>
+     */
+    private \WeakMap $allowedFieldNamesBySubSchema;
+
     public function __construct(
         private TcaSchemaFactory $tcaSchemaFactory,
         private KindRegistry $kindRegistry,
-    ) {}
+    ) {
+        $this->managedFieldsBySchema = new \WeakMap();
+        $this->allowedFieldNamesBySubSchema = new \WeakMap();
+    }
 
     /**
      * Whether the rules for building blocks and roles apply to the kind:
@@ -203,6 +220,15 @@ final readonly class KindFieldResolver
     private function getManagedFields(): array
     {
         $schema = $this->getSchema();
+        $this->managedFieldsBySchema[$schema] ??= $this->findManagedFields($schema);
+        return $this->managedFieldsBySchema[$schema];
+    }
+
+    /**
+     * @return list<FieldTypeInterface>
+     */
+    private function findManagedFields(TcaSchema $schema): array
+    {
         $managedFieldNames = array_fill_keys(self::CORE_PERMISSION_FIELDS, true);
         foreach ($this->kindRegistry->getDefinitions() as $definition) {
             if ($this->isRestrictedKind($definition->value)) {
@@ -223,6 +249,15 @@ final readonly class KindFieldResolver
      * @return array<string, true>
      */
     private function getAllowedFieldNames(TcaSchema $subSchema): array
+    {
+        $this->allowedFieldNamesBySubSchema[$subSchema] ??= $this->findAllowedFieldNames($subSchema);
+        return $this->allowedFieldNamesBySubSchema[$subSchema];
+    }
+
+    /**
+     * @return array<string, true>
+     */
+    private function findAllowedFieldNames(TcaSchema $subSchema): array
     {
         $allowedFields = [];
         foreach ($subSchema->getFields() as $field) {

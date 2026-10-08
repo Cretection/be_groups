@@ -65,8 +65,8 @@ final readonly class GroupConverter
     public function changeKind(int $uid): ConversionResult
     {
         return $this->transactional($uid, function () use ($uid): ConversionResult {
-            $classification = $this->groupClassifier->classify($uid);
             $before = $this->takeSnapshot();
+            $classification = $this->groupClassifier->classifyInSnapshot($uid, $before);
             $groupBefore = $before->groups[$uid] ?? null;
             if ($classification === null || $groupBefore === null || $groupBefore->get('deleted') === '1'
                 || $classification->action !== ClassificationAction::ChangeKind || $classification->targetKind === null
@@ -101,8 +101,8 @@ final readonly class GroupConverter
     public function split(int $uid): ConversionResult
     {
         return $this->transactional($uid, function () use ($uid): ConversionResult {
-            $classification = $this->groupClassifier->classify($uid);
             $before = $this->takeSnapshot();
+            $classification = $this->groupClassifier->classifyInSnapshot($uid, $before);
             $group = $before->groups[$uid] ?? null;
             if ($classification === null || $group === null || $group->get('deleted') === '1' || $classification->action !== ClassificationAction::Split) {
                 return new ConversionResult($uid, ConversionStatus::Skipped, 'Not a classic group that can be split, see begroups:classify.');
@@ -212,11 +212,7 @@ final readonly class GroupConverter
         foreach ($this->backendGroupRepository->findAllIncludingDeleted() as $group) {
             $groups[$group->getUid()] = $group;
         }
-        $users = [];
-        foreach ($this->backendUserRepository->findAllIncludingDeleted() as $user) {
-            $users[$user->getUid()] = $user;
-        }
-        return new ConversionSnapshot($groups, $users);
+        return new ConversionSnapshot($groups, $this->backendUserRepository->findAllRowsIncludingDeleted());
     }
 
     /**
@@ -228,7 +224,7 @@ final readonly class GroupConverter
     {
         $after = $this->takeSnapshot();
         foreach ($before->users as $userUid => $user) {
-            if (($after->users[$userUid] ?? null)?->values !== $user->values) {
+            if (($after->users[$userUid] ?? null) !== $user) {
                 return sprintf('The user %d would change while saving; nothing was changed.', $userUid);
             }
         }
@@ -258,6 +254,8 @@ final readonly class GroupConverter
      * through the group, so it has exactly the users of the group.
      *
      * Combinations without the group are not compared: all other groups and users are unchanged.
+     * Combinations that cannot reach the group through subgroups are not even resolved, so the
+     * effort grows with the users of the group instead of with all users.
      *
      * @param array<int, DatabaseRow> $groupsBefore
      * @param array<int, DatabaseRow> $groupsAfter
@@ -268,7 +266,7 @@ final readonly class GroupConverter
     {
         $checks = array_map(
             static fn(string $usergroupList): array => [$usergroupList, sprintf('users with the groups "%s"', $usergroupList), $groupsBefore, $groupsAfter],
-            $usergroupLists,
+            $this->groupPermissionResolver->findListsReaching($uid, $usergroupLists, $groupsBefore),
         );
         $checks[] = [(string)$uid, 'the group itself', $this->withVisibleGroup($groupsBefore, $uid), $this->withVisibleGroup($groupsAfter, $uid)];
 

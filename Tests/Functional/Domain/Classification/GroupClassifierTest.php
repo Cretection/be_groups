@@ -19,6 +19,7 @@ use Cretection\BeGroups\DataHandling\RelationList;
 use Cretection\BeGroups\Domain\Classification\Classification;
 use Cretection\BeGroups\Domain\Classification\ClassificationAction;
 use Cretection\BeGroups\Domain\Classification\Concern;
+use Cretection\BeGroups\Domain\Classification\ConversionSnapshot;
 use Cretection\BeGroups\Domain\Classification\GroupClassifier;
 use Cretection\BeGroups\Domain\Kind\KindFieldResolver;
 use Cretection\BeGroups\Domain\Kind\KindRegistry;
@@ -33,6 +34,7 @@ use TYPO3\TestingFramework\Core\Functional\FunctionalTestCase;
 #[CoversClass(GroupClassifier::class)]
 #[CoversClass(Classification::class)]
 #[CoversClass(Concern::class)]
+#[CoversClass(ConversionSnapshot::class)]
 #[CoversClass(PageOwnerRepository::class)]
 #[CoversClass(BackendGroupRepository::class)]
 #[CoversClass(BackendUserRepository::class)]
@@ -126,6 +128,26 @@ final class GroupClassifierTest extends FunctionalTestCase
         self::assertNull($classifier->classify(7));
         self::assertNull($classifier->classify(10));
         self::assertNull($classifier->classify(11));
+    }
+
+    #[Test]
+    public function classifiesAGroupInASnapshotLikeInTheDatabase(): void
+    {
+        // A deleted user with a group must not count as direct user, a disabled one must.
+        $this->getConnectionPool()->getConnectionForTable('be_users')->insert('be_users', ['uid' => 4, 'pid' => 0, 'username' => 'deleted', 'usergroup' => '1', 'deleted' => 1]);
+        $this->getConnectionPool()->getConnectionForTable('be_users')->insert('be_users', ['uid' => 5, 'pid' => 0, 'username' => 'disabled', 'usergroup' => '5', 'disable' => 1]);
+        $groups = [];
+        foreach ($this->get(BackendGroupRepository::class)->findAllIncludingDeleted() as $group) {
+            $groups[$group->getUid()] = $group;
+        }
+        $snapshot = new ConversionSnapshot($groups, $this->get(BackendUserRepository::class)->findAllRowsIncludingDeleted());
+        $classifier = $this->get(GroupClassifier::class);
+
+        for ($uid = 1; $uid <= 12; $uid++) {
+            self::assertEquals($classifier->classify($uid), $classifier->classifyInSnapshot($uid, $snapshot), 'Group ' . $uid);
+        }
+        self::assertSame('change-kind db_mount', $this->summarize([$classifier->classifyInSnapshot(1, $snapshot) ?? self::fail('Group 1')])[1]);
+        self::assertSame('manual', $this->summarize([$classifier->classifyInSnapshot(5, $snapshot) ?? self::fail('Group 5')])[5]);
     }
 
     /**
