@@ -392,20 +392,24 @@ final class GroupKindRules
     /**
      * The value the DataHandler gives a field of a new record that does not set it: the default of
      * TCA, overruled by TCAdefaults of user TSconfig, of page TSconfig and type-specific TCAdefaults
-     * ("TCAdefaults.be_users.usergroup.types.0").
+     * ("TCAdefaults.be_users.usergroup.types.0"). Like the DataHandler, only fields of the record
+     * type get a default.
      *
      * @param array<string, mixed> $fieldArray
      */
     private function findDefaultValue(string $table, string $fieldName, array $fieldArray, ?string $recordType, DataHandler $dataHandler): string
     {
-        $value = null;
-        if ($this->tcaSchemaFactory->has($table)) {
-            $schema = $this->tcaSchemaFactory->get($table);
-            if ($recordType !== null && $schema->hasSubSchema($recordType)) {
-                $schema = $schema->getSubSchema($recordType);
-            }
-            $value = $schema->hasField($fieldName) ? $schema->getField($fieldName)->getDefaultValue() : null;
+        if (!$this->tcaSchemaFactory->has($table)) {
+            return '';
         }
+        $schema = $this->tcaSchemaFactory->get($table);
+        if ($recordType !== null && $schema->hasSubSchema($recordType)) {
+            $schema = $schema->getSubSchema($recordType);
+        }
+        if (!$schema->hasField($fieldName)) {
+            return '';
+        }
+        $value = $schema->getField($fieldName)->getDefaultValue();
         $tsConfigs = [$dataHandler->BE_USER->getTSConfig(), BackendUtility::getPagesTSconfig($this->getPageUid($fieldArray))];
         $paths = [[$fieldName]];
         if ($recordType !== null) {
