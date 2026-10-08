@@ -43,7 +43,7 @@
         <source>Inconsistencies found</source>
       </trans-unit>
       <trans-unit id="issues.message">
-        <source>%1$s entries do not follow the role model. They are marked below.</source>
+        <source>Entries that do not follow the role model: %1$s. They are marked below.</source>
       </trans-unit>
       <trans-unit id="classicDisabled.title">
         <source>Classic groups are disabled</source>

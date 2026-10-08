@@ -56,8 +56,8 @@
         <target>Inkonsistenzen gefunden</target>
       </trans-unit>
       <trans-unit id="issues.message" approved="yes">
-        <source>%1$s entries do not follow the role model. They are marked below.</source>
-        <target>%1$s Einträge folgen nicht dem Rollenmodell. Sie sind unten markiert.</target>
+        <source>Entries that do not follow the role model: %1$s. They are marked below.</source>
+        <target>Einträge, die nicht dem Rollenmodell folgen: %1$s. Sie sind unten markiert.</target>
       </trans-unit>
       <trans-unit id="classicDisabled.title" approved="yes">
         <source>Classic groups are disabled</source>

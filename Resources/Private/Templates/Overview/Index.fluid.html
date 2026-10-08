@@ -239,13 +239,12 @@
         table="be_groups"
         returnUrl="{returnUrl}"
         title="{f:translate(key: 'label.edit', domain: 'be_groups.modules.overview', arguments: {0: group.title})}"
-    ><f:if condition="{withKind}"><f:then><begroups:groupTitle uid="{group.uid}" title="{group.title}" /></f:then><f:else>{group.title}</f:else></f:if></be:link.editRecord>
-</f:section>
+    ><f:if condition="{withKind}"><f:then><begroups:groupTitle uid="{group.uid}" title="{group.title}" /></f:then><f:else>{group.title}</f:else></f:if></be:link.editRecord></f:section>
 
 <f:section name="UserList">
     <f:if condition="{users}">
         <f:then>
-            <ul class="list-unstyled mb-0">
+            <ul class="list-unstyled mb-0 d-flex flex-column gap-2">
                 <f:for each="{users}" as="user">
                     <li>
                         <core:icon identifier="actions-user" size="small" />
