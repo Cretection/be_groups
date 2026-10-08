@@ -85,7 +85,10 @@ Otherwise – for example because another extension changes data while
 saving – the transaction is rolled back and the group stays unchanged. This
 also applies to database errors; the result names the errors the
 DataHandler logged, as the system log is rolled back as well. On
-PostgreSQL, the result only names the aborted transaction.
+PostgreSQL, the result only names the aborted transaction. Cache commands of
+page TSconfig (``TCEMAIN.clearCacheCmd``) run only after the transaction is
+committed: flushing caches would end the transaction early on MySQL and
+MariaDB.
 
 Limits of the verification:
 

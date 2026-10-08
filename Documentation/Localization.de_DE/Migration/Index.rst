@@ -90,7 +90,10 @@ Andernfalls – zum Beispiel, weil eine andere Extension beim Speichern Daten
 unverändert. Das gilt auch für Datenbankfehler; das Ergebnis nennt die vom
 DataHandler protokollierten Fehler, da auch das Systemprotokoll
 zurückgerollt wird. Unter PostgreSQL nennt das Ergebnis nur die
-abgebrochene Transaktion.
+abgebrochene Transaktion. Cache-Befehle aus dem Page-TSconfig
+(``TCEMAIN.clearCacheCmd``) laufen erst nach dem Abschluss der Transaktion:
+Das Leeren von Caches würde die Transaktion unter MySQL und MariaDB
+vorzeitig beenden.
 
 Grenzen der Prüfung:
 

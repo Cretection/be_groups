@@ -15,6 +15,7 @@ declare(strict_types=1);
 
 namespace Cretection\BeGroups\Domain\Classification;
 
+use Cretection\BeGroups\DataHandling\CacheCommandDeferral;
 use Cretection\BeGroups\DataHandling\RelationList;
 use Cretection\BeGroups\Domain\Kind\GroupKind;
 use Cretection\BeGroups\Domain\Kind\KindFieldResolver;
@@ -57,6 +58,7 @@ final readonly class GroupConverter
         private SystemLogRepository $systemLogRepository,
         private KindFieldResolver $kindFieldResolver,
         private ConnectionPool $connectionPool,
+        private CacheCommandDeferral $cacheCommandDeferral,
     ) {}
 
     /**
@@ -325,6 +327,8 @@ final readonly class GroupConverter
     /**
      * Runs a conversion in a transaction that is only committed if the conversion succeeded.
      * The system log is rolled back as well, so the result names the errors the DataHandler logged.
+     * Cache commands of page TSconfig are held back until the commit: flushing a cache group
+     * truncates tables, which would commit the transaction implicitly on MySQL and MariaDB.
      *
      * @param \Closure(): ConversionResult $conversion
      */
@@ -332,6 +336,7 @@ final readonly class GroupConverter
     {
         $connection = $this->connectionPool->getConnectionForTable(self::TABLE);
         $connection->beginTransaction();
+        $this->cacheCommandDeferral->start();
         try {
             $lastLogUid = $this->systemLogRepository->findLastUid();
             $result = $conversion();
@@ -343,13 +348,36 @@ final readonly class GroupConverter
             }
         } catch (DatabaseException $exception) {
             // e.g. PostgreSQL aborts the whole transaction after a failed statement of the DataHandler
+            $this->cacheCommandDeferral->stop();
             $connection->rollBack();
             return new ConversionResult($uid, ConversionStatus::Failed, sprintf('Database error, nothing was changed: %s', $exception->getMessage()));
         } catch (\Throwable $exception) {
+            $this->cacheCommandDeferral->stop();
             $connection->rollBack();
             throw $exception;
         }
-        $result->status === ConversionStatus::Converted ? $connection->commit() : $connection->rollBack();
+        $cacheCommands = $this->cacheCommandDeferral->stop();
+        if ($result->status !== ConversionStatus::Converted) {
+            $connection->rollBack();
+            return $result;
+        }
+        $connection->commit();
+        $this->runCacheCommands($cacheCommands);
         return $result;
+    }
+
+    /**
+     * @param list<int|string> $cacheCommands
+     */
+    private function runCacheCommands(array $cacheCommands): void
+    {
+        if ($cacheCommands === []) {
+            return;
+        }
+        $dataHandler = GeneralUtility::makeInstance(DataHandler::class);
+        $dataHandler->start([], []);
+        foreach ($cacheCommands as $cacheCommand) {
+            $dataHandler->clear_cacheCmd($cacheCommand);
+        }
     }
 }
