@@ -323,6 +323,51 @@ final class GroupKindRulesTest extends FunctionalTestCase
         self::assertSame('6,1', $this->getRecord('be_users', 4)['usergroup']);
     }
 
+    #[Test]
+    public function changingTheKindIsLoggedAsInformationAndNoError(): void
+    {
+        $this->writeGroup(1, ['tx_begroups_kind' => 'db_mount']);
+
+        self::assertSame(
+            [['error' => 0, 'details' => 'Fields not belonging to kind "{kind}" have been emptied: {fields}']],
+            $this->getExtensionLogEntries(),
+        );
+    }
+
+    #[Test]
+    public function fieldsTheCallerEmptiesItselfAreNotReported(): void
+    {
+        $this->writeGroup(1, ['tx_begroups_kind' => 'db_mount', 'groupMods' => '']);
+
+        self::assertSame([], $this->getExtensionLogEntries());
+        self::assertSame('', $this->getRecord('be_groups', 1)['groupMods']);
+    }
+
+    #[Test]
+    public function rejectedAssignmentsAreLoggedAsUserErrors(): void
+    {
+        $this->writeUser(2, ['usergroup' => '5,1']);
+
+        self::assertSame(
+            [['error' => 1, 'details' => 'Only roles can be assigned to users. Rejected groups: {uids}']],
+            $this->getExtensionLogEntries(),
+        );
+    }
+
+    /**
+     * @return list<array{error: int, details: string}> the entries the extension wrote to the system log
+     */
+    private function getExtensionLogEntries(): array
+    {
+        $rows = $this->get(ConnectionPool::class)->getConnectionForTable('sys_log')
+            ->select(['error', 'details'], 'sys_log', ['type' => 4], [], ['uid' => 'ASC'])
+            ->fetchAllAssociative();
+        return array_map(
+            static fn(array $row): array => ['error' => is_numeric($row['error']) ? (int)$row['error'] : -1, 'details' => is_string($row['details']) ? $row['details'] : ''],
+            $rows,
+        );
+    }
+
     private function setUpBackendUserWithLanguage(int $uid): void
     {
         $backendUser = $this->setUpBackendUser($uid);

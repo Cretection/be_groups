@@ -165,7 +165,10 @@ group that would be created as "classic" while classic groups are disabled
 is not created at all. Import and synchronisation tools therefore keep
 working. Every intervention is written to the system log
 (:guilabel:`Administration > Log`) and, in the backend, shown to the editor
-as message. Corrections are reported after the save operation has completed:
+as message: emptied fields of a former kind as information (this is what a
+change of the kind is meant to do), rejected values and records as user
+error. Fields the caller empties itself are not reported. Corrections are
+reported after the save operation has completed:
 if a save is aborted, for example because the password confirmation of the
 sudo mode is cancelled, no correction is logged. A rejected record or a
 rejected change to "classic" is reported right away.

@@ -23,7 +23,8 @@ Auswahl zeigt das Formular nur die Einstellungen dieses Typs:
 
 Beim Speichern einer Gruppe werden alle Rechte-Einstellungen entfernt, die
 nicht zu ihrem Typ gehören, auch Standardwerte. Das Systemprotokoll
-(*Administration > Protokoll*) hält jede Korrektur der Extension fest.
+(*Administration > Protokoll*) hält das als Information fest, siehe
+:ref:`concept-rules`.
 
 ..  _usage-role-form:
 

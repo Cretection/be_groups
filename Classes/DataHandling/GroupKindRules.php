@@ -54,7 +54,7 @@ final class GroupKindRules
     private const USERS_TABLE = 'be_users';
 
     /**
-     * @var list<array{table: string, id: string|int, labelKey: string, logMessage: string, arguments: array<string, string>}>
+     * @var list<array{table: string, id: string|int, labelKey: string, logMessage: string, arguments: array<string, string>, information: bool}>
      */
     private array $pendingCorrections = [];
 
@@ -97,7 +97,8 @@ final class GroupKindRules
     public function processDatamap_afterAllOperations(DataHandler $dataHandler): void
     {
         foreach ($this->pendingCorrections as $correction) {
-            $this->reporter->reportCorrection(
+            $report = $correction['information'] ? $this->reporter->reportInformation(...) : $this->reporter->reportCorrection(...);
+            $report(
                 $dataHandler->BE_USER,
                 $correction['table'],
                 $correction['id'],
@@ -283,7 +284,9 @@ final class GroupKindRules
         foreach ($foreignFields as $fieldName => $emptyValue) {
             $incomingHasValue = array_key_exists($fieldName, $incomingFieldArray)
                 && !$this->kindFieldResolver->isEmptyValue($fieldName, $incomingFieldArray[$fieldName]);
-            $storedHasValue = array_key_exists($fieldName, $storedValues)
+            // A stored value the caller empties itself is no correction of the rules.
+            $storedHasValue = !array_key_exists($fieldName, $incomingFieldArray)
+                && array_key_exists($fieldName, $storedValues)
                 && !$this->kindFieldResolver->isEmptyValue($fieldName, $storedValues[$fieldName]);
             if ($incomingHasValue || $storedHasValue) {
                 $removedFields[] = $fieldName;
@@ -300,6 +303,7 @@ final class GroupKindRules
                 'rules.foreignFieldsRemoved',
                 'Fields not belonging to kind "{kind}" have been emptied: {fields}',
                 ['kind' => $kind, 'fields' => implode(', ', $removedFields)],
+                true,
             );
         }
     }
@@ -410,7 +414,7 @@ final class GroupKindRules
     /**
      * @param array<string, string> $arguments
      */
-    private function addCorrection(string $table, string|int $id, string $labelKey, string $logMessage, array $arguments): void
+    private function addCorrection(string $table, string|int $id, string $labelKey, string $logMessage, array $arguments, bool $information = false): void
     {
         $this->pendingCorrections[] = [
             'table' => $table,
@@ -418,6 +422,7 @@ final class GroupKindRules
             'labelKey' => $labelKey,
             'logMessage' => $logMessage,
             'arguments' => $arguments,
+            'information' => $information,
         ];
     }
 

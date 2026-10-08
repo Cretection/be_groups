@@ -101,6 +101,18 @@ final class GroupConverterTest extends FunctionalTestCase
     }
 
     #[Test]
+    public function writesNoErrorsToTheSystemLog(): void
+    {
+        $converter = $this->get(GroupConverter::class);
+        self::assertSame(ConversionStatus::Converted, $converter->changeKind(1)->status);
+        self::assertSame(ConversionStatus::Converted, $converter->split(2)->status);
+        self::assertSame(ConversionStatus::Converted, $converter->split(9)->status);
+
+        self::assertSame(0, $this->countLogErrors());
+        self::assertSame(0, $this->getConnectionPool()->getConnectionForTable('sys_log')->count('uid', 'sys_log', ['type' => 4]));
+    }
+
+    #[Test]
     public function aNewPageGroupOwnsThePagesTheUsersCreate(): void
     {
         // Administrators may create pages anywhere; their groups are resolved all the same.
@@ -183,6 +195,16 @@ final class GroupConverterTest extends FunctionalTestCase
             ['tx_begroups_kind' => 'role', 'subgroup' => implode(',', $result->createdBlockUids), 'db_mountpoints' => ''],
             $this->getGroup(6, ['tx_begroups_kind', 'subgroup', 'db_mountpoints']),
         );
+    }
+
+    private function countLogErrors(): int
+    {
+        $queryBuilder = $this->getConnectionPool()->getQueryBuilderForTable('sys_log');
+        $count = $queryBuilder->count('uid')->from('sys_log')
+            ->where($queryBuilder->expr()->gt('error', $queryBuilder->createNamedParameter(0, Connection::PARAM_INT)))
+            ->executeQuery()
+            ->fetchOne();
+        return is_numeric($count) ? (int)$count : -1;
     }
 
     private function createPageAndGetItsGroup(): int

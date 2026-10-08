@@ -23,7 +23,8 @@ shows the settings of that kind:
 
 When a group is saved, all permission settings that do not belong to its
 kind are removed, including default values. The system log
-(*Administration > Log*) records every correction made by the extension.
+(*Administration > Log*) records this as information, see
+:ref:`concept-rules`.
 
 ..  _usage-role-form:
 

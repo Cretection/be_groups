@@ -34,7 +34,9 @@ Relaunch for TYPO3 14.3 LTS (version 1.0.0).
   - New records without kind get the kind the DataHandler stores (TCA
     default, `TCAdefaults` in user and page TSconfig).
 - Every intervention of the rules is written to the system log and shown to
-  the editor as flash message. Corrections are reported after the save
+  the editor as flash message: emptied fields of a former kind as
+  information, rejected values and records as user error; fields the caller
+  empties itself are not reported. Corrections are reported after the save
   operation has completed, so an aborted save (e.g. a cancelled sudo mode
   confirmation) leaves no log entry.
 - Read-only backend module "Roles & Building Blocks" (Administration): roles

@@ -173,7 +173,10 @@ Gruppe, die bei abgeschalteten klassischen Gruppen als „Klassisch“ angelegt
 würde, wird gar nicht angelegt. Import- und Synchronisierungs-Werkzeuge
 funktionieren deshalb weiter. Jeder Eingriff wird ins Systemprotokoll
 (:guilabel:`Administration > Protokoll`) geschrieben und im Backend als
-Meldung angezeigt. Korrekturen werden gemeldet, nachdem das Speichern
+Meldung angezeigt: geleerte Felder eines früheren Typs als Information (das
+ist der Zweck eines Typwechsels), abgelehnte Werte und Datensätze als
+Bedienfehler. Felder, die der Aufrufer selbst leert, werden nicht gemeldet.
+Korrekturen werden gemeldet, nachdem das Speichern
 abgeschlossen ist: Wird das Speichern abgebrochen, zum Beispiel weil die
 Passwortabfrage des Sudo-Modus abgebrochen wird, wird keine Korrektur
 protokolliert. Ein abgelehnter Datensatz oder eine abgelehnte Umstellung auf

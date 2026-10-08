@@ -37,8 +37,8 @@ final readonly class RuleViolationReporter
      */
     private const LOG_TYPE_EXTENSION = 4;
     private const LOG_ACTION_NONE = 0;
+    private const LOG_MESSAGE = 0;
     private const LOG_ERROR_USER = 1;
-    private const LOG_ERROR_SECURITY_NOTICE = 3;
     private const LABEL_DOMAIN = 'be_groups.messages';
 
     public function __construct(
@@ -47,13 +47,24 @@ final readonly class RuleViolationReporter
     ) {}
 
     /**
-     * A value was corrected to keep the permission model consistent (e.g. a foreign field was emptied).
+     * The rules did what the kind demands, e.g. emptied the fields of the former kind after the kind
+     * was changed. This is no error.
+     *
+     * @param array<string, string> $arguments
+     */
+    public function reportInformation(BackendUserAuthentication $backendUser, string $table, string|int $id, string $labelKey, string $logMessage, array $arguments): void
+    {
+        $this->report($backendUser, $table, $id, $labelKey, $logMessage, $arguments, self::LOG_MESSAGE, ContextualFeedbackSeverity::INFO);
+    }
+
+    /**
+     * A value that is not allowed was not saved, e.g. a building block assigned to a user directly.
      *
      * @param array<string, string> $arguments
      */
     public function reportCorrection(BackendUserAuthentication $backendUser, string $table, string|int $id, string $labelKey, string $logMessage, array $arguments): void
     {
-        $this->report($backendUser, $table, $id, $labelKey, $logMessage, $arguments, self::LOG_ERROR_SECURITY_NOTICE, ContextualFeedbackSeverity::WARNING);
+        $this->report($backendUser, $table, $id, $labelKey, $logMessage, $arguments, self::LOG_ERROR_USER, ContextualFeedbackSeverity::WARNING);
     }
 
     /**
