@@ -215,6 +215,38 @@ jobs:
             .Build/logs/e2e-*.log
           if-no-files-found: ignore
 
+  mutation:
+    name: Mutation tests (Domain and DataHandling)
+    # The mutants run one after another and take more than an hour, so the job runs weekly and
+    # on demand. It has to be green before every release (CONTRIBUTING.md).
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-26.04
+    timeout-minutes: 240
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Cache dependencies installed with composer
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          key: "mutation-php-8.5-composer-${{ hashFiles('composer.json') }}"
+          path: .cache/composer
+          restore-keys: "mutation-php-8.5-composer-"
+      - name: Install composer dependencies
+        run: Build/Scripts/runTests.sh -b docker -p 8.5 -s composerUpdateMax
+      - name: Run Infection (minimum MSI 80 %)
+        run: Build/Scripts/runTests.sh -b docker -p 8.5 -s mutation
+      - name: Upload the reports
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: mutation
+          path: |
+            .Build/logs/infection.log
+            .Build/logs/infection-summary.log
+          if-no-files-found: ignore
+
   coverage:
     name: Code coverage (unit and functional tests)
     runs-on: ubuntu-26.04

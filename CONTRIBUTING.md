@@ -71,10 +71,15 @@ Build/Scripts/runTests.sh -s unit -m
 Build/Scripts/runTests.sh -s functional -m
 Build/Scripts/runTests.sh -s coverageMerge
 Build/Scripts/runTests.sh -s coverageCheck
+
+# Mutation tests of Classes/Domain and Classes/DataHandling, at least 80 % MSI
+# (takes more than an hour; one file: -- RelationList.php)
+Build/Scripts/runTests.sh -s mutation
 ```
 
 The end-to-end tests set up their own TYPO3 instance in `.Build/e2e` with the
-scenario of `Build/tests/playwright/scenario.php`.
+scenario of `Build/tests/playwright/scenario.php`. The mutation tests run
+weekly in CI and on demand, all other suites on every push.
 
 On GitHub Actions we use `-b docker`; locally Podman is the default.
 
@@ -151,7 +156,9 @@ Versions follow semantic versioning. The version lives in `composer.json`
 releases it carries the suffix `-dev` (for example `1.2.1-dev`), which TYPO3
 reads as the stability of the extension.
 
-1. Make sure that the jobs `typo3-next` and `e2e` are green.
+1. Make sure that the last run of the job `mutation` is green; start it on
+   demand in the Actions tab ("Run workflow"). The jobs `typo3-next` and `e2e`
+   have to be green as well.
 
 2. Prepare the release in a pull request:
 

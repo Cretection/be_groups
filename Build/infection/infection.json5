@@ -1,0 +1,34 @@
+{
+    // Mutation tests of the rule engine and the domain logic (CODING_GUIDELINES.md, §13):
+    // Build/Scripts/runTests.sh -s mutation
+    "$schema": "https://raw.githubusercontent.com/infection/infection/0.35.4/resources/schema.json",
+    "source": {
+        "directories": [
+            "../../Classes/DataHandling",
+            "../../Classes/Domain"
+        ]
+    },
+    // Infection reflects the mutated classes and needs the autoloader for that; without it,
+    // it fails on enums. Unlike the other paths, it is relative to the working directory,
+    // the root of the repository in runTests.sh.
+    "bootstrap": ".Build/vendor/autoload.php",
+    // phpunit.xml in this directory runs the unit and the functional tests together
+    "phpUnit": {
+        "configDir": "."
+    },
+    // Only the first run collects the coverage, the runs per mutant do not need Xdebug
+    "initialTestsPhpOptions": "-d xdebug.mode=coverage",
+    // Functional tests of the rules take a while; a timeout would count as a detected mutant
+    "timeout": 300,
+    "tmpDir": "../../.Build/.cache/infection",
+    // No HTML report: for all mutants of the extension it grows beyond 600 MB
+    "logs": {
+        "text": "../../.Build/logs/infection.log",
+        "summary": "../../.Build/logs/infection-summary.log",
+        "github": true
+    },
+    "mutators": {
+        "@default": true
+    },
+    "minMsi": 80
+}

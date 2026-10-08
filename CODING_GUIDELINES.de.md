@@ -382,7 +382,7 @@ final readonly class DeriveRoleCompositionTca
   - Playwright unter `Build/tests/playwright/` mit Setup-Login und Page-Objects nach dem Core (`backend-page`), gegen eine Instanz aus `Build/Scripts/setupE2E.sh` (`runTests.sh -s e2e`).
   - axe-Prüfung gegen `wcag2a`, `wcag2aa`, `wcag21a`, `wcag21aa` und `wcag22aa`, im hellen und im dunklen Theme. [Core][Projekt]
 - **JS-Unit-Tests** mit web-test-runner, sobald die Extension eigenes JavaScript hat. [Core]
-- **Abdeckung:** ≥ 90 % Zeilen in `Classes/` (`runTests.sh -s coverageCheck`). Infection (MSI ≥ 80 %) für `Domain/` und `DataHandling/`. [Projekt]
+- **Abdeckung:** ≥ 90 % Zeilen in `Classes/` (`runTests.sh -s coverageCheck`). Infection (MSI ≥ 80 %) für `Domain/` und `DataHandling/` (`runTests.sh -s mutation`, wöchentlich und vor jedem Release). [Projekt]
 
 ---
 

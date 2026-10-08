@@ -240,6 +240,12 @@ Options:
             - lintJson: JSON linting
             - lintPhp: PHP linting
             - lintYaml: YAML linting
+            - mutation: Mutation tests of "Classes/DataHandling" and "Classes/Domain" with Infection,
+              based on the unit and the functional tests on SQLite. Fails below an MSI of 80 %
+              (CODING_GUIDELINES.md, §13). Needs -p 8.3 or newer. The mutants run one after
+              another, because parallel runs of the same functional test class would share its
+              instance, so the suite takes long. Arguments after "--" go to Infection, e.g.
+              "-- RelationList.php".
             - phpstan: PHPStan (level max, without baseline)
             - psrVerify: Verifies PSR-4 namespace correctness.
             - rector: Fixes and upgrades the PHP code using Rector. Set -n for dry-run.
@@ -431,6 +437,27 @@ lintJson() {
 
 lintPhp() {
     ${CONTAINER_BIN} run ${CONTAINER_COMMON_PARAMS} --name lint-php-${SUFFIX} ${COMPOSER_PARAMS} ${IMAGE_PHP} /bin/sh -c "composer check:php:lint"
+}
+
+mutation() {
+    # Infection runs as PHAR: it needs PHP 8.3 or newer, while the extension supports PHP 8.2, so it
+    # must not become a dependency. To update it, check the signature of the new PHAR with the key
+    # given on https://infection.github.io/guide/installation.html, then change both values.
+    local INFECTION_VERSION="0.35.4"
+    local INFECTION_SHA256="24e9d2ab5fc5613be6b9fea99cfd2c689234d6e6053f339b8f5e05136246070a"
+    local INFECTION_PHAR=".Build/bin/infection-${INFECTION_VERSION}.phar"
+    if [ "${PHP_VERSION}" == "8.2" ]; then
+        echo "Infection needs PHP 8.3 or newer, use \"-p 8.5\"." >&2
+        return 1
+    fi
+    mkdir -p "${ROOT_DIR}/.Build/bin" "${ROOT_DIR}/.Build/public/typo3temp/var/tests/functional-sqlite-dbs/"
+    ${CONTAINER_BIN} run ${CONTAINER_COMMON_PARAMS} --name mutation-download-${SUFFIX} ${IMAGE_PHP} php -dxdebug.mode=off Build/Scripts/downloadVerifiedFile.php \
+        "https://github.com/infection/infection/releases/download/${INFECTION_VERSION}/infection.phar" "${INFECTION_PHAR}" "${INFECTION_SHA256}" || return 1
+    # No XDEBUG_MODE: it would override "initialTestsPhpOptions" of the Infection configuration,
+    # which collects the coverage in the first run only.
+    ${CONTAINER_BIN} run ${CONTAINER_COMMON_PARAMS} --name mutation-${SUFFIX} -e typo3DatabaseDriver=pdo_sqlite \
+        --tmpfs "${ROOT_DIR}/.Build/public/typo3temp/var/tests/functional-sqlite-dbs/:${TMPFS_MOUNT_OPTIONS}" \
+        ${IMAGE_PHP} php "${INFECTION_PHAR}" --configuration=Build/infection/infection.json5 --threads=1 --no-progress "$@"
 }
 
 lintYaml() {
@@ -872,6 +899,10 @@ case ${TEST_SUITE} in
         ;;
     lintYaml)
         lintYaml
+        SUITE_EXIT_CODE=$?
+        ;;
+    mutation)
+        mutation "$@"
         SUITE_EXIT_CODE=$?
         ;;
     phpstan)
