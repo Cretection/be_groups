@@ -61,6 +61,23 @@ Nach der Installation
     :ref:`migration`, oder legen Sie die ersten Bausteine und Rollen selbst
     an, siehe :ref:`concept`.
 
+..  _installation-update:
+
+Aktualisieren
+=============
+
+Vorher den Changelog der neuen Version lesen, siehe :ref:`changelog`. Nach
+dem Update alle Caches leeren und die Extension erneut einrichten:
+
+..  code-block:: bash
+
+    vendor/bin/typo3 cache:flush
+    vendor/bin/typo3 extension:setup
+
+TYPO3 hält die Konfiguration seiner Dienste in einem Cache. Bis er geleert
+ist, kann das Speichern von Gruppen und Benutzern mit einem Fehler
+abbrechen.
+
 ..  _installation-uninstall:
 
 Deinstallation

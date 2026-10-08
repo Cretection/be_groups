@@ -59,6 +59,22 @@ After the installation
     or create the first building blocks and roles yourself, see
     :ref:`concept`.
 
+..  _installation-update:
+
+Updating
+========
+
+Read the changelog of the new version first, see :ref:`changelog`. After
+updating, flush all caches and set the extension up again:
+
+..  code-block:: bash
+
+    vendor/bin/typo3 cache:flush
+    vendor/bin/typo3 extension:setup
+
+TYPO3 keeps the configuration of its services in a cache. Until it is
+flushed, saving groups and users can fail with an error.
+
 ..  _installation-uninstall:
 
 Uninstallation
