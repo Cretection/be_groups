@@ -1,0 +1,74 @@
+# git-cliff configuration: generates the entries of CHANGELOG.md from the commit messages,
+# see CONTRIBUTING.md, "Commit messages" and "Releases".
+#
+#   Build/Scripts/runTests.sh -s changelog -- --unreleased --tag 1.2.0
+#
+# The changelog lists changes that matter to users of the extension, one line per commit.
+# [FEATURE], [BUGFIX] and [SECURITY] commits and breaking commits ([!!!]) are listed;
+# [TASK] and [DOCS] commits are not, unless the body of the commit has a line like
+# "Changelog: changed" (or added, removed, deprecated, fixed, security) or "Changelog: skip".
+
+[changelog]
+header = """
+# Changelog
+
+All notable changes to this project are documented in this file.
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
+and this project adheres to
+[Semantic Versioning](https://semver.org/spec/v2.0.0.html) for its public API
+(see `CODING_GUIDELINES.md` §3.6).
+
+"""
+# The HTML comments only sort the groups, "striptags" removes them
+body = """
+{% if version -%}
+## [{{ version }}](https://github.com/Cretection/be_groups/compare/{{ previous.version }}...{{ version }}) - {{ timestamp | date(format="%Y-%m-%d") }}
+{% else -%}
+## [Unreleased]
+{% endif -%}
+{% for group, commits in commits | group_by(attribute="group") %}
+### {{ group | striptags | trim }}
+
+{% for commit in commits -%}
+- {{ commit.message | upper_first }}
+{% endfor -%}
+{% endfor %}
+"""
+trim = true
+
+[git]
+conventional_commits = true
+# Commits without a recognised prefix are neither listed nor reported
+filter_unconventional = true
+filter_commits = true
+protect_breaking_commits = true
+sort_commits = "oldest"
+tag_pattern = "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+topo_order = false
+
+# TYPO3 prefixes become conventional types, so that git-cliff understands them
+commit_preprocessors = [
+    { pattern = '^\[!!!\]\[(?:FEATURE|BUGFIX|TASK|DOCS)\]\s*', replace = "breaking!: " },
+    { pattern = '^\[FEATURE\]\s*', replace = "feat: " },
+    { pattern = '^\[BUGFIX\]\s*', replace = "fix: " },
+    { pattern = '^\[SECURITY\]\s*', replace = "security: " },
+    { pattern = '^\[TASK\]\s*', replace = "chore: " },
+    { pattern = '^\[DOCS\]\s*', replace = "docs: " },
+]
+
+# The first matching parser wins: lines in the body decide first
+commit_parsers = [
+    { footer = '(?i)^Changelog:\s*skip\s*$', skip = true },
+    { footer = '(?i)^Changelog:\s*added\s*$', group = "<!-- 1 -->Added" },
+    { footer = '(?i)^Changelog:\s*changed\s*$', group = "<!-- 2 -->Changed" },
+    { footer = '(?i)^Changelog:\s*deprecated\s*$', group = "<!-- 3 -->Deprecated" },
+    { footer = '(?i)^Changelog:\s*removed\s*$', group = "<!-- 4 -->Removed" },
+    { footer = '(?i)^Changelog:\s*fixed\s*$', group = "<!-- 5 -->Fixed" },
+    { footer = '(?i)^Changelog:\s*security\s*$', group = "<!-- 6 -->Security" },
+    { message = '^breaking', group = "<!-- 0 -->Breaking changes" },
+    { message = '^security', group = "<!-- 6 -->Security" },
+    { message = '^feat', group = "<!-- 1 -->Added" },
+    { message = '^fix', group = "<!-- 5 -->Fixed" },
+    { message = '^(chore|docs)', skip = true },
+]

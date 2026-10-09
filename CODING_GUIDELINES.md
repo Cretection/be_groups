@@ -398,6 +398,7 @@ final readonly class DeriveRoleCompositionTca
 | Integrity checks | unique exception codes, final test classes, no annotations, XLIFF integrity and normalization | copied from the [Core], paths adapted |
 | Frontend | ESLint (Core), Stylelint 17 (tea), `tsc`, build up-to-date check | [Core][tea] |
 | Docs | `render-guides` (pinned) with `--fail-on-log` | [CGL] |
+| Changelog | git-cliff (`cliff.toml`, image pinned in `runTests.sh`), TYPO3 commit prefixes as input | [Project] |
 
 **CI matrix in GitHub Actions** (`runTests.sh -b docker`, because podman is unreliable on GitHub runners):
 - **Unit:** PHP 8.2–8.5 with lowest and highest dependencies.
@@ -436,12 +437,12 @@ final readonly class DeriveRoleCompositionTca
   - Imperative mood, at most 72 characters, in English.
   - Plus a body explaining the *why*.
   - The Core's Gerrit-specific mandatory lines (`Change-Id`, `Releases:`) do **not** apply to us. [CGL][Project]
-- **Branches:** `main` is protected; changes only arrive through pull requests with a green pipeline and a review (Definition of Done in `RELAUNCH.md` §8.2).
+- **Branches:** `dev` is the default branch and the target of all changes. `main` holds released versions only; it is moved forward (fast-forward) to the tested state of `dev` at a release and never committed to. Both are protected, the required check is `Required checks` (CONTRIBUTING.md, "Branches and pull requests"). docs.typo3.org renders `main` and the tags, so the manual shows released versions only. [Project]
 - **History:** It is preserved, so no squashing of the 2012–2022 history.
 - **Releases:**
   - Semantic versioning; the version lives in `composer.json` under `extra.typo3/cms.version` and must match the tag.
   - A tag triggers the GitHub Action (tailor → TER); Packagist updates automatically.
-  - `CHANGELOG.md` and `Documentation/Changelog` are maintained.
+  - `CHANGELOG.md` is generated from the commit messages with git-cliff (`cliff.toml`, `runTests.sh -s changelog`): the subject of a `[FEATURE]`, `[BUGFIX]`, `[SECURITY]` or `[!!!]` commit is a line of the changelog, `[TASK]` and `[DOCS]` are not listed. The manual's changelogs (`Documentation/Changelog`, English and German) are written by hand per release. [Project]
 - **License:** `GPL-2.0-or-later` in `composer.json` and in the license header, as required by the TYPO3 Core (decision E6 in `RELAUNCH.md`).
 
 ---

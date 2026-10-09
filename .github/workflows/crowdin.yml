@@ -1,9 +1,10 @@
 ---
 name: Crowdin
 
-# Uploads the English labels to the Crowdin project of TYPO3 after a change on "main"
-# (https://docs.typo3.org/permalink/t3coreapi:crowdin-extension-integration). Translations
-# reach TYPO3 installations as language packs; German is maintained in this repository.
+# Uploads the English labels to the Crowdin project of TYPO3 after a change on the default
+# branch "dev" (https://docs.typo3.org/permalink/t3coreapi:crowdin-extension-integration).
+# Translations reach TYPO3 installations as language packs; German is maintained in this
+# repository.
 #
 # Needs the secrets CROWDIN_PROJECT_ID and CROWDIN_PERSONAL_TOKEN; without them the upload is
 # skipped. Actions are pinned to commit SHAs, Dependabot keeps them up to date.
@@ -11,7 +12,7 @@ name: Crowdin
 on:
   push:
     branches:
-      - main
+      - dev
     paths:
       - 'Resources/Private/Language/**.xlf'
   workflow_dispatch:
@@ -33,7 +34,7 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - name: Upload the sources (only one Crowdin branch, "main", is supported by TYPO3)
+      - name: Upload the sources (TYPO3 supports only one Crowdin branch, "main", whatever the Git branch)
         if: env.CROWDIN_PROJECT_ID != '' && env.CROWDIN_PERSONAL_TOKEN != ''
         uses: crowdin/github-action@9af557de76d70c480f88065d336f445a362f402b # v3.1.0
         with:

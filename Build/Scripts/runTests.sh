@@ -209,6 +209,9 @@ Options:
         Specifies the test suite to run
             - cgl: Fixes the code style and the license headers with PHP-CS-Fixer
               (typo3/coding-standards). Set -n for dry-run.
+            - changelog: Writes the entries of CHANGELOG.md from the commit messages with git-cliff
+              (cliff.toml, CONTRIBUTING.md, "Releases"). Arguments after "--" go to git-cliff, e.g.
+              "-- --unreleased --tag 1.2.0" as preview or "-- --unreleased --tag 1.2.0 --prepend CHANGELOG.md".
             - clean: clean up build, cache and testing related files and folders
             - cleanCache: clean up cache related files and folders
             - cleanDocs: clean up rendered documentation files and folders (Documentation-GENERATED-temp)
@@ -365,6 +368,10 @@ Examples:
     ./Build/Scripts/runTests.sh -p 8.2 -s functional -m
     ./Build/Scripts/runTests.sh -p 8.2 -s coverageMerge
     ./Build/Scripts/runTests.sh -p 8.2 -s coverageCheck
+
+    # Preview the changelog entry of the next release, then add it to CHANGELOG.md
+    ./Build/Scripts/runTests.sh -s changelog -- --unreleased --tag 1.2.0
+    ./Build/Scripts/runTests.sh -s changelog -- --unreleased --tag 1.2.0 --prepend CHANGELOG.md
 EOF
 }
 
@@ -667,6 +674,8 @@ mkdir -p .Build/public/typo3temp/var/tests
 
 IMAGE_PHP="ghcr.io/typo3/core-testing-$(echo "php${PHP_VERSION}" | sed -e 's/\.//'):$(getPhpImageVersion ${PHP_VERSION})"
 IMAGE_SHELLCHECK="docker.io/koalaman/shellcheck:v0.11.0"
+# The entrypoint of the image runs git-cliff as the owner of the mounted directory
+IMAGE_GIT_CLIFF="docker.io/orhunp/git-cliff:2.14.2"
 IMAGE_APACHE="ghcr.io/typo3/core-testing-apache24:1.7"
 # The browsers of the image belong to the version of "@playwright/test" in "Build/package.json"
 PLAYWRIGHT_VERSION=$(sed -n 's/.*"@playwright\/test": "\([0-9.]*\)".*/\1/p' Build/package.json)
@@ -733,6 +742,10 @@ fi
 case ${TEST_SUITE} in
     cgl)
         cgl
+        SUITE_EXIT_CODE=$?
+        ;;
+    changelog)
+        ${CONTAINER_BIN} run ${CONTAINER_INTERACTIVE} --rm -v "${ROOT_DIR}":/app ${IMAGE_GIT_CLIFF} "$@"
         SUITE_EXIT_CODE=$?
         ;;
     clean)

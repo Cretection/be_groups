@@ -56,7 +56,8 @@ foreach (['Documentation/guides.xml', 'Documentation/Localization.de_DE/guides.x
 $date = '\d{4}-\d{2}-\d{2}';
 $quotedVersion = preg_quote($version, '/');
 $changelogs = [
-    'CHANGELOG.md' => '/^## \[' . $quotedVersion . '\] - ' . $date . '$/m',
+    // git-cliff writes the heading as "## [1.2.0](link to the comparison) - date"
+    'CHANGELOG.md' => '/^## \[' . $quotedVersion . '\](\([^)]*\))? - ' . $date . '$/m',
     'Documentation/Changelog/Index.rst' => '/^' . $quotedVersion . ' \(' . $date . '\)$/m',
     'Documentation/Localization.de_DE/Changelog/Index.rst' => '/^' . $quotedVersion . ' \(' . $date . '\)$/m',
 ];

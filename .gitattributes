@@ -15,6 +15,7 @@
 /.gitattributes export-ignore
 /.github/ export-ignore
 /.gitignore export-ignore
+/cliff.toml export-ignore
 /Build/ export-ignore
 /CODING_GUIDELINES.de.md export-ignore
 /CODING_GUIDELINES.md export-ignore

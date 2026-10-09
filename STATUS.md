@@ -1,6 +1,6 @@
 # Arbeitsstand be_groups-Relaunch
 
-Stand: **2026-10-08** · Branch **`relaunch`** (gepusht, CI grün) · Ziel: **1.0.0 für TYPO3 14.3 LTS**
+Stand: **2026-10-09** · Branch **`relaunch`**, wird zu `dev` (CI grün) · Ziel: **1.0.0 für TYPO3 14.3 LTS**
 
 Dieses Dokument ist der Einstiegspunkt, um die Arbeit fortzusetzen. Das Konzept steht in [`RELAUNCH.md`](RELAUNCH.md), die verbindlichen Regeln für den Code in [`CODING_GUIDELINES.de.md`](CODING_GUIDELINES.de.md) bzw. [`CODING_GUIDELINES.md`](CODING_GUIDELINES.md).
 
@@ -118,6 +118,7 @@ Dieses Dokument ist der Einstiegspunkt, um die Arbeit fortzusetzen. Das Konzept 
 | Testabdeckung | 94,09 % der Zeilen in `Classes/` (1.530 von 1.626), Unit- und Functional-Tests (SQLite) zusammengeführt, PHP 8.5 mit Xdebug (2026-10-08). Ziel laut `CODING_GUIDELINES.md` §13: mindestens 90 %; die CI prüft das im Job `coverage` (`-s coverageMerge`, `-s coverageCheck`). Der Bericht enthält auch `Configuration/` und `ext_localconf.php` (0 %, weil TYPO3 sie vor der Messung lädt); sie bleiben in `<source>`, damit Notices und Deprecations dort die Tests scheitern lassen. Größte Lücken: `BackendGroupRepository` (28 Zeilen), `BackendUserRepository` (13), `GroupConverter` (11). |
 | Mutationsproben | 11 gezielte Mutanten in Prüfung und Modell, dazu Gegenproben aller Korrekturen vom 2026-10-08 (u. a. MariaDB mit `clearCacheCmd`, Platzhalter, `TCAdefaults`, gespeicherte Listen, Override-Vergleich): alle von Tests erkannt |
 | Mutationstests | Infection 0.35.4 über `Classes/Domain` und `Classes/DataHandling` mit Unit- und Functional-Tests (2026-10-08, Stand `4dd5839`): 1.342 Mutanten, 1.082 getötet, 3 Fehler, 2 Timeouts, 255 überlebt, MSI **81 %** (Ziel 80 %), 1 h 27 min. Danach geschlossen: Lücken in den Regeln (`8be8dab`) und im Abgleich des Modells mit dem Core für Dateifreigaben und Dateioperationen (`a4abc2d`); kein Fehler im Code gefunden. Nachlauf nur für die Regel-Engine (`DataHandling/`, Stand `8be8dab`): 364 Mutanten, 297 getötet, 67 überlebt, MSI **81,6 %** (Ziel 80 % laut `RELAUNCH.md` §8.1); alle gezielten Mutanten (u. a. `trim` des Typs, abgeschaltete klassische Gruppen, Platzhalter späterer Gruppen, Ausdruck für unsichere Werte) werden erkannt. Die Überlebenden im Modell, die beide Seiten des Vorher-nachher-Vergleichs gleich verändern (z. B. `array_values`, `intExplode(…, false)` mit nachgelagertem Filter), können keine Rechteänderung verdecken. |
+| Changelog | git-cliff 2.14.2 (`cliff.toml`, `runTests.sh -s changelog`), 2026-10-09 gegen die Historie und an einem simulierten Release getestet: `[FEATURE]` → Added, `[BUGFIX]` → Fixed, `[SECURITY]` → Security, `[!!!]` → Breaking changes, `[TASK]`/`[DOCS]`/Commits ohne Präfix fehlen; `Changelog: changed\|added\|removed\|deprecated\|fixed\|security\|skip` als letzte Zeile im Commit überschreibt. `--prepend` setzt den Eintrag über die bestehenden, Überschriften tragen den Vergleichslink. CI prüft die Konfiguration im Job `static`. |
 | E2E-Tests | 32 Tests grün (2026-10-08, `-s e2e`, Playwright 1.63, TYPO3 14.3.7): Modul (Listen, Filter, Sortierung, Inkonsistenzen, Vorrang im TSconfig, Bearbeiten-Links), Formulare aller Bausteintypen und der Rolle, Ablehnung „Rolle in Rolle“ und „Baustein am Benutzer“ samt Sudo-Mode, Präfixe im Core-Modul „Users“; axe (WCAG 2.2 AA) im hellen und im dunklen Theme, eine Prüfung der Textfarbe stellt sicher, dass der dunkle Lauf wirklich dunkel ist. Gegenprobe: ein Bild ohne Alt-Text im Modul lässt beide axe-Tests scheitern. |
 | Barrierefreiheit | axe-core 4.13 (WCAG 2.2 AA) per Playwright 1.63 in hellem und dunklem Theme: 0 Verstöße in Modul, Rollen- und Bausteinformular und überschriebenen Users-Templates. Offene „needs review“-Hinweise betreffen das Modulmenü des Core. Bedienung nur über native Links und Buttons, keine eigenen Widgets. |
 | Release-Probe | Release 1.0.0 in einer Kopie simuliert: `setVersion.php`, Changelogs, `checkReleaseVersion.php`, annotierter Tag, `git archive`; `tailor create-artefact` validiert das Paket. Kein Upload ins TER. |
@@ -131,7 +132,7 @@ Dieses Dokument ist der Einstiegspunkt, um die Arbeit fortzusetzen. Das Konzept 
 ## 4. Schnellstart: lokal weiterarbeiten
 
 ```bash
-git checkout relaunch
+git checkout dev
 composer install                      # installiert die Werkzeuge nach .Build/
 
 composer check:static                 # alle statischen Prüfungen
@@ -188,7 +189,7 @@ Das andere DDEV-Projekt gehört zu einem **anderen Projekt**. Deshalb zuerst ein
 
 ```bash
 ddev snapshot --name vor-be-groups                       # Zurück mit: ddev snapshot restore vor-be-groups
-git clone -b relaunch ~/Developer/GitHub.com/Cretection/be_groups packages/be_groups
+git clone -b dev ~/Developer/GitHub.com/Cretection/be_groups packages/be_groups
 ddev composer config repositories.be-groups path "packages/be_groups"
 ddev composer require "cretection/be-groups:@dev"
 ddev typo3 extension:setup && ddev typo3 cache:flush
@@ -241,7 +242,11 @@ Beim Ändern von Typ oder Rollenzusammensetzung fragt TYPO3 nach dem Passwort. D
 **Zugänge, die Jonathan einrichtet:**
 - **GitHub, SSH-Schlüssel:** ✅ Gepusht wird nur als `Cretection` mit dem Secretive-Schlüssel `cretection@github.com` (Host `github.com-cretection`, eingetragen am 2026-10-08). Optional verhindert `IdentitiesOnly yes` im Host-Eintrag einen Rückfall auf den 8devs-Schlüssel, falls GitHub den Schlüssel einmal ablehnt (derzeit nicht gesetzt).
 - **GitHub, eigenständiges Repo:** ✅ Am 2026-10-09 aus dem Fork-Netz von `AOEpeople/be_groups` (archiviert) gelöst. Als Fork erschien das Repo nicht in der GitHub-Suche, und Dependabot lief nicht. Die Versionsupdates von Dependabot starten, sobald `.github/dependabot.yml` mit dem Merge auf `main` liegt (Dependabot liest nur den Standard-Branch). Unter „Advanced Security“ empfohlen: Malware alerts und Dependabot security updates an; Private vulnerability reporting aus, weil `SECURITY.md` Meldungen an das TYPO3 Security Team leitet. Offen: Beschreibung unter „About“ (noch die alte, neu wie in `composer.json`), Website-Link, Social-Preview-Bild.
-- **GitHub, Branch-Schutz:** ✅ Eingerichtet am 2026-10-09. Ruleset `main` (Settings → Rules → Rulesets): aktiv, ohne Bypass, Ziel „Default branch“. Regeln: Löschen und Force-Push sperren, Pull Request vor dem Merge (0 Freigaben, da allein), Status-Check `Required checks` von GitHub Actions (per API geprüft), Branch aktuell vor dem Merge. Der Job `required` fasst alle Pflicht-Jobs zusammen, ohne `typo3-next` und `mutation`. Keine signierten Commits und keine lineare Historie verlangen: Die Commits sind nicht signiert, und `relaunch` kommt per Merge-Commit nach `main`.
+- **GitHub, Branch-Modell (Entscheidung von Jonathan, 2026-10-09):** `dev` wird der Standard-Branch und nimmt alle Änderungen und Dependabot-PRs auf, `main` ist der Release-Branch. Es enthält nur Veröffentlichtes und wird bei einem Release per Fast-Forward auf den geprüften Stand von `dev` vorgezogen (`git push origin origin/dev:main`), danach der Tag. docs.typo3.org rendert `main` und Tags, nicht `dev`. Dependabot, der Wochenlauf der Mutationstests und der Knopf „Run workflow“ brauchen die Dateien auf dem Standard-Branch, deshalb geht das erst mit `dev` als Standard. Umstellung (Jonathan):
+  1. *Settings → Branches*: `relaunch` in `dev` umbenennen; *Settings → General → Default branch*: auf `dev` stellen. Lokal: `git fetch origin && git branch -m relaunch dev && git branch -u origin/dev dev && git remote set-head origin -a`.
+  2. Ruleset `main` (id 24783350): Ziel von „Default branch“ auf `main` ändern, die Regel „Require a pull request“ entfernen, der Rest bleibt (Löschen, Force-Push, Status-Check `Required checks` aktuell). Ein Push von `dev` nach `main` ist erlaubt, weil der Check auf diesem Commit schon bestanden hat.
+  3. Neues Ruleset `dev`: Ziel „Default branch“, Löschen und Force-Push sperren, sonst nichts. Der Check `Required checks` wird erst später auch für `dev` verlangt (dann nur noch über Pull Requests).
+  Bis dahin gilt: Der Check `Required checks` und das Ruleset `main` sind eingerichtet (2026-10-09, per API geprüft).
 - **TER:** einen Token (`tailor ter:token:create`) als Secret `TYPO3_API_TOKEN` in der GitHub-Environment `ter` für den Release-Workflow (M4). Der Extension-Key `be_groups` gehört bereits `cretection` (TER-API, geprüft am 2026-10-08; letzte Version 0.0.9 für TYPO3 11).
 - **docs.typo3.org:** den Webhook für das Rendering der Doku.
 - **Crowdin (E15):** Im TYPO3-Slack, Kanal `#typo3-localization-team`, die Aufnahme von `be_groups` beantragen (Name der Extension, E-Mail-Adresse für die Einladung). Danach im Repo die Secrets `CROWDIN_PROJECT_ID` und `CROWDIN_PERSONAL_TOKEN` anlegen (Token-Rechte laut [Doku](https://docs.typo3.org/permalink/t3coreapi:crowdin-extension-integration)), die deutschen Übersetzungen als „existing translations“ hochladen (`zip translations.zip Resources/Private/Language/*.*.xlf Resources/Private/Language/Modules/*.*.xlf`) und freigeben. Den Link zum Projekt in `CONTRIBUTING*.md` eintragen.
@@ -260,9 +265,9 @@ Beim Ändern von Typ oder Rollenzusammensetzung fragt TYPO3 nach dem Passwort. D
 ## 7. Nächste Aufgaben (Reihenfolge)
 
 1. **Nach dem ersten CI-Lauf** (✅ grün am 2026-10-08; gepusht von Jonathan als `Cretection` per SSH mit dem Secretive-Schlüssel, Remote `git@github.com-cretection:Cretection/be_groups.git`). Vor jedem Push alle Commits auf Hinweise auf LLMs prüfen.
-   - Den Job `mutation` einmal über „Actions → CI → Run workflow“ auf `relaunch` starten.
+   - Den Job `mutation` einmal über „Actions → CI → Run workflow“ auf `dev` starten (der Knopf erscheint erst, wenn `dev` der Standard-Branch ist).
    - Die Pipeline beobachten, besonders die Container-Images und den Job `typo3-next`. Der Runner `ubuntu-26.04` ist seit dem 2026-09-17 allgemein verfügbar; `actionlint` 1.7.12 kennt das Label noch nicht (falscher Alarm).
-   - ✅ Branch-Schutz eingerichtet (2026-10-09, Abschnitt 6). Ab jetzt kommt alles per Pull Request nach `main`, auch `relaunch` (Merge-Commit).
+   - ✅ Branch-Schutz eingerichtet (2026-10-09, Abschnitt 6). Das Branch-Modell (`dev` Standard, `main` Release) steht in Abschnitt 6.
    - Die Testabdeckung wird zusammengeführt und geprüft (Job `coverage`, siehe Abschnitt 3).
 2. **Klicktest von Jonathan** in `begroups-test` (Abschnitt 5, aktuelles Szenario). Befunde zuerst als Test reproduzieren, dann beheben.
    - Sichtprüfung am 2026-10-08 abgeschlossen: alle Typ-Formulare, Ablehnungen im Formular (Rolle in Rolle, Baustein am Benutzer) mit Titel und uid in der Meldung, Typ-Auswahl bei abgeschalteten klassischen Gruppen (neue Gruppen starten als Rolle, bestehende klassische Gruppen behalten „Classic“), Rollenformular mit über 3.000 Gruppen in der Auswahl (Aufbau etwa 1 s).
@@ -278,7 +283,7 @@ Beim Ändern von Typ oder Rollenzusammensetzung fragt TYPO3 nach dem Passwort. D
    - Credits mit Michael Klapper abstimmen, Übersetzungen (Entscheidung c), TER-Token und Webhooks (Abschnitt 6).
    - Starter-Set: am 2026-10-08 mit dem echten Core-Befehl in `begroups-test` geprüft (siehe Abschnitt 1). Automatisch geht das nicht: `setup:begroups:default` lässt sich in Functional Tests nicht instanziieren, weil seine Abhängigkeiten den Failsafe-Modus des Install-Tools verlangen. `SplitCoreDefaultGroupsTest` bildet deshalb die Inserts des Core nach (Stand 14.3.7); bei neuen Core-Versionen den Live-Test wiederholen.
    - Vor dem Wechsel auf TYPO3 15: Tests an das typisierungsfreie `get()` des Testing-Frameworks anpassen (siehe Abschnitt 3).
-   - Release nach den Schritten in `CONTRIBUTING.md`: `php Build/Scripts/setVersion.php 1.0.0`, Changelogs datieren, `php Build/Scripts/checkReleaseVersion.php 1.0.0`, Merge nach `main`, annotierter Tag `1.0.0`. Vorabversionen (`1.0.0-rc1`) gehen nur zu Packagist.
+   - Release nach den Schritten in `CONTRIBUTING.md`: `php Build/Scripts/setVersion.php 1.0.0`, in `CHANGELOG.md` aus `## [Unreleased](…)` die Überschrift `## [1.0.0](https://github.com/Cretection/be_groups/compare/0.0.9...1.0.0) - JJJJ-MM-TT` machen (der Eintrag für 1.0.0 ist von Hand geschrieben, git-cliff gilt ab 1.0.1), Changelogs des Handbuchs datieren, `php Build/Scripts/checkReleaseVersion.php 1.0.0`, `main` auf `dev` vorziehen, annotierter Tag `1.0.0`. Vorabversionen (`1.0.0-rc1`) gehen nur zu Packagist.
    - Möglich: deutsche Screenshots (deutsches Sprachpaket im Testsystem); bisher zeigen beide Handbücher englische Oberflächen.
 
 **Vor jedem Release:**

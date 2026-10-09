@@ -104,9 +104,43 @@ Resolves: #123
   verwendet.
 - Commit-Nachrichten sind Englisch.
 
-## Pull Requests
+### Das Changelog entsteht aus den Commits
 
-1. Einen Branch von `main` anlegen und einen Pull Request gegen `main`
+`CHANGELOG.md` wird nicht von Hand gepflegt. [git-cliff](https://git-cliff.org/)
+erzeugt den Eintrag eines Releases aus den Commit-Nachrichten (`cliff.toml`),
+**die Betreffzeile eines Commits ist also eine Zeile des Changelogs**. Sie wird
+für die Leser des Changelogs geschrieben („Show the TSconfig precedence of
+roles in the module“), nicht für den Reviewer. Das Changelog nennt, was für
+Anwender zählt, eine Zeile pro Commit:
+
+| Präfix | Abschnitt im Changelog |
+|---|---|
+| `[!!!]` | Breaking changes |
+| `[SECURITY]` | Security |
+| `[FEATURE]` | Added |
+| `[BUGFIX]` | Fixed |
+| `[TASK]`, `[DOCS]` | nicht aufgeführt (Werkzeuge, Tests, Dokumentation, Abhängigkeiten) |
+
+Commits ohne eines dieser Präfixe werden ebenfalls nicht aufgeführt. Eine
+letzte Zeile im Text des Commits überschreibt den Abschnitt:
+
+```
+Changelog: changed
+```
+
+Die Werte sind `added`, `changed`, `deprecated`, `removed`, `fixed` und
+`security`, zum Beispiel für ein `[TASK]`, das das Verhalten ändert.
+`Changelog: skip` blendet einen Commit aus, zum Beispiel die Korrektur eines
+Features, das noch nicht veröffentlicht ist.
+
+## Branches und Pull Requests
+
+`dev` ist der Standard-Branch. Alle Änderungen kommen dorthin, und auch
+Dependabot schlägt seine Updates dagegen vor. `main` enthält nur veröffentlichte
+Versionen: Bei einem Release wird es auf den geprüften Stand von `dev`
+vorgezogen, und niemand committet darauf.
+
+1. Einen Branch von `dev` anlegen und einen Pull Request gegen `dev`
    öffnen.
 2. Pull Requests fokussiert halten: ein Thema pro Pull Request.
 3. Jede Fehlerbehebung beginnt mit einem Test, der den Fehler nachstellt.
@@ -128,8 +162,8 @@ Ein Pull Request ist fertig, wenn:
       Backend-Themes in hell und dunkel und mit axe geprüft sind.
 - [ ] Schreibzugriffe den DataHandler nutzen; Sudo-Mode und Rechte sind
       getestet.
-- [ ] `CHANGELOG.md` einen Eintrag hat und die Commit-Nachricht dem Format
-      oben folgt.
+- [ ] Die Commit-Nachrichten dem Format oben folgen; ihre Betreffzeilen sind
+      die Einträge des Changelogs.
 - [ ] Eine zweite Person den Pull Request geprüft hat.
 
 ## Übersetzungen
@@ -142,7 +176,7 @@ Alle anderen Sprachen werden im
 [Crowdin-Projekt von TYPO3](https://docs.typo3.org/permalink/t3coreapi:crowdin-extension-integration)
 übersetzt und kommen als Sprachpakete in TYPO3-Installationen (Admin Tools >
 Maintenance > Manage Languages). Der Workflow `Crowdin` lädt die englischen
-Labels nach jeder Änderung auf `main` hoch (`.crowdin.yml`). Die deutschen
+Labels nach jeder Änderung auf `dev` hoch (`.crowdin.yml`). Die deutschen
 Übersetzungen in diesem Repository haben Vorrang vor dem Sprachpaket, weil
 TYPO3 zuerst die Datei neben der Quelle liest.
 
@@ -164,27 +198,35 @@ Handbücher; zwischen zwei Releases trägt sie das Suffix `-dev` (zum Beispiel
    Abruf startet er im Reiter „Actions“ („Run workflow“). Auch die Jobs
    `typo3-next` und `e2e` müssen grün sein.
 
-2. Das Release in einem Pull Request vorbereiten:
+2. Das Release in einem Pull Request gegen `dev` vorbereiten:
 
    ```bash
    php Build/Scripts/setVersion.php 1.2.0
+   # Vorschau, dann den Eintrag oben in CHANGELOG.md schreiben
+   Build/Scripts/runTests.sh -s changelog -- --unreleased --tag 1.2.0
+   Build/Scripts/runTests.sh -s changelog -- --unreleased --tag 1.2.0 --prepend CHANGELOG.md
    ```
 
-   Danach in `CHANGELOG.md` aus `## [Unreleased]` den Abschnitt
-   `## [1.2.0] - JJJJ-MM-TT` machen und dem Eintrag in beiden Changelogs des
-   Handbuchs (`Documentation/Changelog/` und
-   `Documentation/Localization.de_DE/Changelog/`) die Überschrift
-   `1.2.0 (JJJJ-MM-TT)` geben. Das Ergebnis prüfen:
+   Den erzeugten Eintrag lesen und die Formulierungen bei Bedarf verbessern.
+   Dem Eintrag in beiden Changelogs des Handbuchs (`Documentation/Changelog/`
+   und `Documentation/Localization.de_DE/Changelog/`) die Überschrift
+   `1.2.0 (JJJJ-MM-TT)` und eine kurze Zusammenfassung dessen geben, was für
+   Anwender zählt. Das Ergebnis prüfen:
 
    ```bash
    php Build/Scripts/checkReleaseVersion.php 1.2.0
    ```
 
-3. Nach dem Merge den Commit auf `main` mit einem annotierten Tag versehen und
-   ihn pushen. Die Nachricht des Tags wird zum Upload-Kommentar im TER:
+3. Nach dem Merge des Pull Requests und einer grünen Pipeline auf `dev` `main`
+   auf diesen Stand vorziehen. Das Ruleset von `main` erlaubt nur einen
+   Fast-Forward und akzeptiert den Push, weil die Prüfungen auf genau diesem
+   Commit bestanden haben. Dann den Commit mit einem annotierten Tag versehen
+   und den Tag pushen. Die Nachricht des Tags wird zum Upload-Kommentar im TER:
 
    ```bash
-   git tag -a 1.2.0 -m "Kurze Zusammenfassung des Releases"
+   git fetch origin
+   git push origin origin/dev:main
+   git tag -a 1.2.0 -m "Kurze Zusammenfassung des Releases" origin/dev
    git push origin 1.2.0
    ```
 
@@ -194,9 +236,9 @@ Handbücher; zwischen zwei Releases trägt sie das Suffix `-dev` (zum Beispiel
    Composer-Paket (`export-ignore` in `.gitattributes`). Packagist und
    docs.typo3.org aktualisieren sich über ihre Webhooks.
 
-4. Die nächste Version beginnen, z. B. mit
-   `php Build/Scripts/setVersion.php 1.2.1-dev`, und in `CHANGELOG.md` einen
-   neuen Abschnitt `## [Unreleased]` anlegen.
+4. Die nächste Version mit einem Pull Request gegen `dev` beginnen, z. B. mit
+   `php Build/Scripts/setVersion.php 1.2.1-dev`. In `CHANGELOG.md` muss kein
+   Abschnitt angelegt werden: Der nächste Eintrag entsteht aus den Commits.
 
 Tags von Vorabversionen wie `1.2.0-rc1` werden nicht ins TER hochgeladen, das
 nur Versionen wie `1.2.0` annimmt; Packagist bietet sie trotzdem an.

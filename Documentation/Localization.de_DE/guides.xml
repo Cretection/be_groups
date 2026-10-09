@@ -10,7 +10,7 @@
         project-contact="mailto:info@cretection.it"
         project-repository="https://github.com/Cretection/be_groups"
         project-issues="https://github.com/Cretection/be_groups/issues"
-        edit-on-github-branch="main"
+        edit-on-github-branch="dev"
         edit-on-github="Cretection/be_groups"
         typo3-core-preferred="stable"
         interlink-shortcode="cretection/be-groups"

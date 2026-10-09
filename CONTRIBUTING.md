@@ -103,9 +103,42 @@ Resolves: #123
 - `Resolves: #123` is optional and references a GitHub issue.
 - The Gerrit lines of the TYPO3 core (`Change-Id`, `Releases:`) are not used.
 
-## Pull requests
+### The changelog is written by the commits
 
-1. Create a branch from `main` and open a pull request against `main`.
+`CHANGELOG.md` is not edited by hand. [git-cliff](https://git-cliff.org/)
+generates the entry of a release from the commit messages (`cliff.toml`), so
+**the subject of a commit is a line of the changelog**. Write it for the
+readers of the changelog ("Show the TSconfig precedence of roles in the
+module"), not for the reviewer. The changelog lists what matters to users, one
+line per commit:
+
+| Prefix | Section of the changelog |
+|---|---|
+| `[!!!]` | Breaking changes |
+| `[SECURITY]` | Security |
+| `[FEATURE]` | Added |
+| `[BUGFIX]` | Fixed |
+| `[TASK]`, `[DOCS]` | not listed (tooling, tests, documentation, dependencies) |
+
+Commits without one of these prefixes are not listed either. A last line in
+the body of the commit overrides the section:
+
+```
+Changelog: changed
+```
+
+The values are `added`, `changed`, `deprecated`, `removed`, `fixed` and
+`security`, for example for a `[TASK]` that changes the behavior. `Changelog:
+skip` hides a commit, for example the fix of a feature that has not been
+released yet.
+
+## Branches and pull requests
+
+`dev` is the default branch. All changes go there, and Dependabot proposes its
+updates against it. `main` only holds released versions: at a release it is
+moved forward to the tested state of `dev`, and nobody commits to it.
+
+1. Create a branch from `dev` and open a pull request against `dev`.
 2. Keep pull requests focused: one topic per pull request.
 3. Every bug fix starts with a test that reproduces the bug.
 4. The pipeline must be green and the pull request must be reviewed before it
@@ -125,8 +158,8 @@ A pull request is done when:
 - [ ] UI changes are checked for keyboard operation, all backend themes in
       light and dark mode, and with axe.
 - [ ] Writes use the DataHandler; sudo mode and permissions are tested.
-- [ ] `CHANGELOG.md` has an entry, and the commit message follows the format
-      above.
+- [ ] The commit messages follow the format above; their subjects are the
+      entries of the changelog.
 - [ ] A second person reviewed the pull request.
 
 ## Translations
@@ -139,7 +172,7 @@ All other languages are translated in the
 [Crowdin project of TYPO3](https://docs.typo3.org/permalink/t3coreapi:crowdin-extension-integration)
 and reach TYPO3 installations as language packs (Admin Tools > Maintenance >
 Manage Languages). The workflow `Crowdin` uploads the English labels after
-every change on `main` (`.crowdin.yml`). German translations in this
+every change on `dev` (`.crowdin.yml`). German translations in this
 repository have precedence over the language pack, as TYPO3 reads the file
 next to the source first.
 
@@ -160,27 +193,35 @@ reads as the stability of the extension.
    demand in the Actions tab ("Run workflow"). The jobs `typo3-next` and `e2e`
    have to be green as well.
 
-2. Prepare the release in a pull request:
+2. Prepare the release in a pull request against `dev`:
 
    ```bash
    php Build/Scripts/setVersion.php 1.2.0
+   # Preview, then write the entry on top of CHANGELOG.md
+   Build/Scripts/runTests.sh -s changelog -- --unreleased --tag 1.2.0
+   Build/Scripts/runTests.sh -s changelog -- --unreleased --tag 1.2.0 --prepend CHANGELOG.md
    ```
 
-   Then turn `## [Unreleased]` in `CHANGELOG.md` into `## [1.2.0] - YYYY-MM-DD`
-   and give the entry in both changelogs of the manual
-   (`Documentation/Changelog/` and `Documentation/Localization.de_DE/Changelog/`)
-   the heading `1.2.0 (YYYY-MM-DD)`. Check the result:
+   Read the generated entry and improve the wording where needed. Give the
+   entry in both changelogs of the manual (`Documentation/Changelog/` and
+   `Documentation/Localization.de_DE/Changelog/`) the heading
+   `1.2.0 (YYYY-MM-DD)` and a short summary of what matters to users. Check
+   the result:
 
    ```bash
    php Build/Scripts/checkReleaseVersion.php 1.2.0
    ```
 
-3. After the pull request is merged, tag the commit on `main` with an
-   annotated tag and push it. The message of the tag becomes the upload
-   comment in the TER:
+3. After the pull request is merged and the pipeline on `dev` is green, move
+   `main` forward to this state. The ruleset of `main` forbids anything else
+   than a fast-forward, and it accepts the push because the checks have passed
+   on this very commit. Then tag it with an annotated tag and push the tag.
+   The message of the tag becomes the upload comment in the TER:
 
    ```bash
-   git tag -a 1.2.0 -m "Short summary of the release"
+   git fetch origin
+   git push origin origin/dev:main
+   git tag -a 1.2.0 -m "Short summary of the release" origin/dev
    git push origin 1.2.0
    ```
 
@@ -190,8 +231,9 @@ reads as the stability of the extension.
    files as the Composer package (`export-ignore` in `.gitattributes`).
    Packagist and docs.typo3.org update through their webhooks.
 
-4. Start the next version, e.g. `php Build/Scripts/setVersion.php 1.2.1-dev`,
-   and add a new section `## [Unreleased]` to `CHANGELOG.md`.
+4. Start the next version with a pull request against `dev`, e.g.
+   `php Build/Scripts/setVersion.php 1.2.1-dev`. There is no section to open
+   in `CHANGELOG.md`: the next entry is generated from the commits.
 
 Tags of pre-releases such as `1.2.0-rc1` are not uploaded to the TER, which
 only accepts versions like `1.2.0`; Packagist offers them anyway.

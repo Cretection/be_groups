@@ -13,7 +13,7 @@ on:
   push:
     branches:
       - main
-      - relaunch
+      - dev
   pull_request:
   workflow_dispatch:
   schedule:
@@ -65,6 +65,8 @@ jobs:
         run: Build/Scripts/runTests.sh -b docker -p 8.2 -s xliffNormalize -n
       - name: Shellcheck runTests.sh
         run: Build/Scripts/runTests.sh -b docker -s shellcheck
+      - name: Check the configuration of the changelog (git-cliff)
+        run: Build/Scripts/runTests.sh -b docker -s changelog -- --unreleased --tag 0.0.0 --output /dev/null
 
   unit:
     name: Unit tests (PHP ${{ matrix.php-version }}, ${{ matrix.composer-dependencies }} dependencies)
@@ -291,8 +293,8 @@ jobs:
           if-no-files-found: error
 
   required:
-    # The only check the ruleset of "main" requires: it fails unless every job above passed
-    # that has to pass, so the ruleset does not need to change with the matrices. Not part
+    # The only check the rulesets of "main" and "dev" require: it fails unless every job above
+    # passed that has to pass, so the rulesets do not need to change with the matrices. Not part
     # of it: "typo3-next" (allowed to fail) and "mutation" (only scheduled or manual).
     name: Required checks
     if: always()

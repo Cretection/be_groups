@@ -7,7 +7,7 @@ and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html) for its public API
 (see `CODING_GUIDELINES.md` §3.6).
 
-## [Unreleased]
+## [Unreleased](https://github.com/Cretection/be_groups/compare/0.0.9...HEAD)
 
 Relaunch for TYPO3 14.3 LTS (version 1.0.0).
 
@@ -111,7 +111,7 @@ Relaunch for TYPO3 14.3 LTS (version 1.0.0).
 - The extension setting `explicitAllow` (without effect since TYPO3 12).
 - The extension setting `onlyShowMetaGroup` (successor: `allowClassicGroups`).
 
-## [0.0.9] - 2022-06-03
+## [0.0.9](https://github.com/Cretection/be_groups/releases/tag/0.0.9) - 2022-06-03
 
 Last release of the revival for TYPO3 11.
 
@@ -155,6 +155,3 @@ Last release of the revival for TYPO3 11.
   user experience.
 - 2012-07-04: Initial release – "create new" icon on the field `subgroup`,
   only META groups selectable in be_users, META groups hidden in be_groups.
-
-[Unreleased]: https://github.com/Cretection/be_groups/compare/0.0.9...HEAD
-[0.0.9]: https://github.com/Cretection/be_groups/releases/tag/0.0.9

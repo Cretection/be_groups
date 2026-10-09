@@ -1,6 +1,6 @@
 # Backend Group Kinds (`be_groups`)
 
-[![CI](https://github.com/Cretection/be_groups/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/Cretection/be_groups/actions/workflows/ci.yml)
+[![CI](https://github.com/Cretection/be_groups/actions/workflows/ci.yml/badge.svg?branch=dev)](https://github.com/Cretection/be_groups/actions/workflows/ci.yml)
 [![TYPO3 14](https://img.shields.io/badge/TYPO3-14.3_LTS-orange.svg)](https://get.typo3.org/version/14)
 [![Latest Stable Version](https://poser.pugx.org/cretection/be-groups/v)](https://packagist.org/packages/cretection/be-groups)
 [![TER](https://img.shields.io/badge/TER-be__groups-orange.svg)](https://extensions.typo3.org/extension/be_groups)

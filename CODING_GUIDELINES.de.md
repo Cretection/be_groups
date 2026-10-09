@@ -398,6 +398,7 @@ final readonly class DeriveRoleCompositionTca
 | Integritätsprüfungen | Eindeutigkeit der Exception-Codes, finale Testklassen, keine Annotationen, XLIFF-Integrität und -Normalisierung | aus dem [Core] kopiert, Pfade angepasst |
 | Frontend | ESLint (Core), Stylelint 17 (tea), `tsc`, prüft ob der Build aktuell ist | [Core][tea] |
 | Doku | `render-guides` (gepinnt) mit `--fail-on-log` | [CGL] |
+| Changelog | git-cliff (`cliff.toml`, Image in `runTests.sh` gepinnt), TYPO3-Commit-Präfixe als Eingabe | [Projekt] |
 
 **CI-Matrix in GitHub Actions** (`runTests.sh -b docker`, denn Podman ist auf GitHub-Runnern unzuverlässig):
 - **Unit:** PHP 8.2–8.5 mit den niedrigsten und höchsten Abhängigkeiten.
@@ -436,12 +437,12 @@ final readonly class DeriveRoleCompositionTca
   - Im Imperativ, höchstens 72 Zeichen, Englisch.
   - Dazu ein Rumpf mit dem *Warum*.
   - Die Gerrit-Pflichtzeilen des Core (`Change-Id`, `Releases:`) gelten für uns **nicht**. [CGL][Projekt]
-- **Branches:** `main` ist geschützt, Änderungen kommen nur über Pull Requests mit grüner Pipeline und Review (Definition of Done in `RELAUNCH.md` §8.2).
+- **Branches:** `dev` ist der Standard-Branch und das Ziel aller Änderungen. `main` enthält nur veröffentlichte Versionen; es wird bei einem Release (Fast-Forward) auf den geprüften Stand von `dev` vorgezogen und nie direkt beschrieben. Beide sind geschützt, der Pflicht-Check heißt `Required checks` (CONTRIBUTING.de.md, „Branches und Pull Requests“). docs.typo3.org rendert `main` und die Tags, das Handbuch zeigt also nur veröffentlichte Versionen. [Projekt]
 - **Historie:** Sie bleibt erhalten, also kein Squash der Historie von 2012 bis 2022.
 - **Releases:**
   - Semantic Versioning, die Version steht in `composer.json` unter `extra.typo3/cms.version` und muss zum Tag passen.
   - Ein Tag löst die GitHub Action aus (tailor → TER), Packagist aktualisiert sich automatisch.
-  - `CHANGELOG.md` und `Documentation/Changelog` werden gepflegt.
+  - `CHANGELOG.md` entsteht aus den Commit-Nachrichten mit git-cliff (`cliff.toml`, `runTests.sh -s changelog`): Die Betreffzeile eines `[FEATURE]`-, `[BUGFIX]`-, `[SECURITY]`- oder `[!!!]`-Commits ist eine Zeile des Changelogs, `[TASK]` und `[DOCS]` werden nicht aufgeführt. Die Changelogs des Handbuchs (`Documentation/Changelog`, Englisch und Deutsch) werden pro Release von Hand geschrieben. [Projekt]
 - **Lizenz:** `GPL-2.0-or-later` in `composer.json` und im Lizenzkopf, wie vom TYPO3 Core vorgegeben (Entscheidung E6 in `RELAUNCH.md`).
 
 ---
