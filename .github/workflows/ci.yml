@@ -92,7 +92,7 @@ jobs:
         run: Build/Scripts/runTests.sh -b docker -p ${{ matrix.php-version }} -s unit
 
   functional:
-    name: Functional tests (PHP ${{ matrix.php-version }}, ${{ matrix.dbms }} ${{ matrix.dbms-version }} ${{ matrix.driver }})
+    name: Functional tests (PHP ${{ matrix.php-version }}, ${{ matrix.dbms }}${{ matrix.dbms-version && format(' {0}', matrix.dbms-version) || '' }}${{ matrix.driver && format(' {0}', matrix.driver) || '' }})
     runs-on: ubuntu-26.04
     timeout-minutes: 30
     strategy:
@@ -289,3 +289,28 @@ jobs:
             .Build/logs/clover.xml
             .Build/logs/coverage.txt
           if-no-files-found: error
+
+  required:
+    # The only check the ruleset of "main" requires: it fails unless every job above passed
+    # that has to pass, so the ruleset does not need to change with the matrices. Not part
+    # of it: "typo3-next" (allowed to fail) and "mutation" (only scheduled or manual).
+    name: Required checks
+    if: always()
+    needs:
+      - static
+      - unit
+      - functional
+      - docs
+      - e2e
+      - coverage
+    runs-on: ubuntu-26.04
+    timeout-minutes: 5
+    steps:
+      - name: Check that all required jobs passed
+        env:
+          RESULTS: ${{ join(needs.*.result, ' ') }}
+        run: |
+          echo "Results: ${RESULTS}"
+          for result in ${RESULTS}; do
+            [ "${result}" = success ] || exit 1
+          done

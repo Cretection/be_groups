@@ -239,8 +239,8 @@ Beim Ändern von Typ oder Rollenzusammensetzung fragt TYPO3 nach dem Passwort. D
 | – | Mit Michael Klapper | Namensnennung (ohne/mit Firma), Link und E-Mail-Adresse, ob er die Credits-Seite gegenliest, optional ein Blick auf das Konzept. Bis zur Freigabe wird nur sein Name genannt. |
 
 **Zugänge, die Jonathan einrichtet:**
-- **GitHub, SSH-Schlüssel:** ✅ Gepusht wird nur als `Cretection` mit dem Secretive-Schlüssel `cretection@github.com` (Host `github.com-cretection`, eingetragen am 2026-10-08). `IdentitiesOnly yes` im Host-Eintrag verhindert den Rückfall auf den 8devs-Schlüssel.
-- **GitHub:** Branch-Schutz für `main` mit Pflichtprüfungen, sobald die Pipeline einmal gelaufen ist.
+- **GitHub, SSH-Schlüssel:** ✅ Gepusht wird nur als `Cretection` mit dem Secretive-Schlüssel `cretection@github.com` (Host `github.com-cretection`, eingetragen am 2026-10-08). Optional verhindert `IdentitiesOnly yes` im Host-Eintrag einen Rückfall auf den 8devs-Schlüssel, falls GitHub den Schlüssel einmal ablehnt (derzeit nicht gesetzt).
+- **GitHub, Branch-Schutz:** Ruleset `main` (Settings → Rules → Rulesets → New branch ruleset): aktiv, ohne Bypass, Ziel „Default branch“. Regeln: Löschen und Force-Push sperren, Pull Request vor dem Merge (0 Freigaben, da allein), Status-Check `Required checks` von GitHub Actions, Branch aktuell vor dem Merge. Der Job `required` fasst alle Pflicht-Jobs zusammen, ohne `typo3-next` und `mutation`. Keine signierten Commits und keine lineare Historie verlangen: Die Commits sind nicht signiert, und `relaunch` kommt per Merge-Commit nach `main`.
 - **TER:** einen Token (`tailor ter:token:create`) als Secret `TYPO3_API_TOKEN` in der GitHub-Environment `ter` für den Release-Workflow (M4). Der Extension-Key `be_groups` gehört bereits `cretection` (TER-API, geprüft am 2026-10-08; letzte Version 0.0.9 für TYPO3 11).
 - **docs.typo3.org:** den Webhook für das Rendering der Doku.
 - **Crowdin (E15):** Im TYPO3-Slack, Kanal `#typo3-localization-team`, die Aufnahme von `be_groups` beantragen (Name der Extension, E-Mail-Adresse für die Einladung). Danach im Repo die Secrets `CROWDIN_PROJECT_ID` und `CROWDIN_PERSONAL_TOKEN` anlegen (Token-Rechte laut [Doku](https://docs.typo3.org/permalink/t3coreapi:crowdin-extension-integration)), die deutschen Übersetzungen als „existing translations“ hochladen (`zip translations.zip Resources/Private/Language/*.*.xlf Resources/Private/Language/Modules/*.*.xlf`) und freigeben. Den Link zum Projekt in `CONTRIBUTING*.md` eintragen.
@@ -261,7 +261,7 @@ Beim Ändern von Typ oder Rollenzusammensetzung fragt TYPO3 nach dem Passwort. D
 1. **Nach dem ersten CI-Lauf** (✅ grün am 2026-10-08; gepusht von Jonathan als `Cretection` per SSH mit dem Secretive-Schlüssel, Remote `git@github.com-cretection:Cretection/be_groups.git`). Vor jedem Push alle Commits auf Hinweise auf LLMs prüfen.
    - Den Job `mutation` einmal über „Actions → CI → Run workflow“ auf `relaunch` starten.
    - Die Pipeline beobachten, besonders die Container-Images und den Job `typo3-next`. Der Runner `ubuntu-26.04` ist seit dem 2026-09-17 allgemein verfügbar; `actionlint` 1.7.12 kennt das Label noch nicht (falscher Alarm).
-   - Danach den Branch-Schutz einrichten.
+   - Danach den Branch-Schutz einrichten (Abschnitt 6), sobald der Check `Required checks` einmal gelaufen ist.
    - Die Testabdeckung wird zusammengeführt und geprüft (Job `coverage`, siehe Abschnitt 3).
 2. **Klicktest von Jonathan** in `begroups-test` (Abschnitt 5, aktuelles Szenario). Befunde zuerst als Test reproduzieren, dann beheben.
    - Sichtprüfung am 2026-10-08 abgeschlossen: alle Typ-Formulare, Ablehnungen im Formular (Rolle in Rolle, Baustein am Benutzer) mit Titel und uid in der Meldung, Typ-Auswahl bei abgeschalteten klassischen Gruppen (neue Gruppen starten als Rolle, bestehende klassische Gruppen behalten „Classic“), Rollenformular mit über 3.000 Gruppen in der Auswahl (Aufbau etwa 1 s).
