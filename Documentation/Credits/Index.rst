@@ -25,6 +25,9 @@ groups that only aggregate other groups. Michael Klapper's concept from
 2012 is the model TYPO3 recommends today – this relaunch turns it into real
 group kinds for current TYPO3 versions.
 
+Version 1.0 is a complete rewrite: the code is new. The idea, the name and
+the first implementation of 2012 are Michael Klapper's.
+
 The relaunch for TYPO3 14 happens with Michael Klapper's explicit consent.
 Thank you, Michael!
 

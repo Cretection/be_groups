@@ -81,8 +81,9 @@ see [SECURITY.md](SECURITY.md).
 
 be_groups was invented by **[Michael Klapper](https://github.com/michaelklapper)**, who developed it in 2012 at
 morphodo / AOE. His concept of building blocks and META groups is the model
-the official TYPO3 documentation recommends today. The relaunch for TYPO3 14
-happens with his explicit consent – thank you, Michael!
+the official TYPO3 documentation recommends today. Version 1.0 is a complete
+rewrite, the idea and the name are his. The relaunch for TYPO3 14 happens
+with his explicit consent – thank you, Michael!
 
 Thanks also to Christian Zenker, Tomas Norre Mikkelsen, Stefan Rotsch,
 Dragan Tomic, Jonathan Klauck and Martin Tepper, who maintained the extension
@@ -167,7 +168,8 @@ vertraulich melden, siehe [SECURITY.md](SECURITY.md).
 
 be_groups wurde von **[Michael Klapper](https://github.com/michaelklapper)** erfunden, der die Extension 2012 bei
 morphodo / AOE entwickelt hat. Sein Konzept aus Bausteinen und META-Gruppen
-ist das Modell, das die offizielle TYPO3-Dokumentation heute empfiehlt. Der
+ist das Modell, das die offizielle TYPO3-Dokumentation heute empfiehlt. Version
+1.0 ist komplett neu geschrieben, die Idee und der Name stammen von ihm. Der
 Relaunch für TYPO3 14 erfolgt mit seiner ausdrücklichen Zustimmung – danke,
 Michael!
 

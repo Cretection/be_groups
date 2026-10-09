@@ -25,6 +25,9 @@ die nur andere Gruppen zusammenfassen. Michael Klappers Konzept von 2012 ist
 das Modell, das TYPO3 heute empfiehlt – dieser Relaunch macht daraus echte
 Gruppentypen für aktuelle TYPO3-Versionen.
 
+Version 1.0 ist komplett neu geschrieben: Der Code ist neu. Die Idee, der Name
+und die erste Umsetzung von 2012 stammen von Michael Klapper.
+
 Der Relaunch für TYPO3 14 erfolgt mit Michael Klappers ausdrücklicher
 Zustimmung. Danke, Michael!
 
