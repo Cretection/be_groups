@@ -32,7 +32,7 @@ Dieses Dokument ist der Einstiegspunkt, um die Arbeit fortzusetzen. Das Konzept 
   - **Barrierefreiheit** (2026-10-08, M4): axe-core 4.13 nach WCAG 2.2 AA in hellem und dunklem Theme. Modul, Rollen- und Bausteinformular und die überschriebenen Templates des Users-Moduls haben 0 Verstöße; der einzige Fund (Zielgröße der Benutzer-Links) ist behoben (`9320b38`).
   - **Laufzeit** (2026-10-08, M4): bei 1.000 Gruppen und 5.000 Benutzern `classify` 24 s statt 199 s, `split --all` 100 s statt über 10 Minuten.
 - **Testbasis:** Alle Prüfungen sind grün, auf allen Datenbanken, mit PHP 8.2 und 8.5, auf TYPO3 14.3 und 15-dev (Stand je Zeile in Abschnitt 3).
-- **Nächster Schritt:** der Rest von M4: Klicktest, Credits, Crowdin, Release (Abschnitt 7). Der erste Lauf des Jobs `mutation` auf GitHub ist grün (2026-10-09, [Lauf 37924063344](https://github.com/Cretection/be_groups/actions/runs/37924063344), `dev` auf `dfa1a62`): Covered Code MSI 82 % bei Minimum 80 %, 1.111 Mutanten erkannt, 240 abgedeckte nicht.
+- **Nächster Schritt:** der Rest von M4: Klicktest, Crowdin, Release (Abschnitt 7). Der erste Lauf des Jobs `mutation` auf GitHub ist grün (2026-10-09, [Lauf 37924063344](https://github.com/Cretection/be_groups/actions/runs/37924063344), `dev` auf `dfa1a62`): Covered Code MSI 82 % bei Minimum 80 %, 1.111 Mutanten erkannt, 240 abgedeckte nicht.
 
 ---
 
@@ -99,7 +99,7 @@ Dieses Dokument ist der Einstiegspunkt, um die Arbeit fortzusetzen. Das Konzept 
 | M1 Kern | ✅ erledigt. Die eigenen PSR-14-Events sind nach M2 verschoben. |
 | M2 Übersicht | 🟡 teilweise. Fertig: Modul ohne Bearbeitung, `begroups:audit` mit Event, `ModifyKindOfNewGroupEvent`. Typ als Präfix überall (Entscheidung g). Verworfen: Typ-Filter im Users-Modul (E12). Die Matrix-Bearbeitung kommt mit 1.1 (E2, 2026-10-08). |
 | M3 Umstieg | ✅ erledigt: `begroups:classify`, `begroups:split`, Starter-Set über den Core-Befehl (E13). |
-| M4 Härtung und Release | 🟡 teilweise. Fertig: Sicherheitsprüfung, Performance-Benchmark, Barrierefreiheit (axe, jetzt als E2E-Test), Screenshots, Release-Workflow, Testabdeckung und Mutationstests, Übersetzungsweg (E15), CI auf GitHub mit Branch-Schutz. Offen: Credits mit Michael Klapper, Crowdin-Projekt beantragen, Release. |
+| M4 Härtung und Release | 🟡 teilweise. Fertig: Sicherheitsprüfung, Performance-Benchmark, Barrierefreiheit (axe, jetzt als E2E-Test), Screenshots, Release-Workflow, Testabdeckung und Mutationstests, Übersetzungsweg (E15), CI auf GitHub mit Branch-Schutz. Offen: Crowdin-Projekt beantragen, Release (Credits sind abgestimmt, optional liest Michael Klapper sie gegen). |
 
 ---
 
@@ -237,7 +237,7 @@ Beim Ändern von Typ oder Rollenzusammensetzung fragt TYPO3 nach dem Passwort. D
 | – | Infection und E2E-Tests | ✅ Entschieden von Jonathan (2026-10-08): beide vor 1.0. Umgesetzt als `-s mutation` und `-s e2e`. |
 | – | PHP-Versionen | ✅ Vorgabe von Jonathan (2026-10-08): die volle Spanne, die TYPO3 14 erlaubt (PHP 8.2 bis 8.5). Werkzeuge mit höheren Anforderungen (Infection braucht PHP 8.3) laufen nur als PHAR im Container und werden keine Abhängigkeit. |
 | g | Präfixe in Listen | ✅ Entschieden von Jonathan (2026-10-08): Der Typ erscheint überall automatisch als Präfix vor dem Titel („META: Redakteur“), Titel enthalten keinen Typ. Umgesetzt (`f208342`), inklusive Core-Modul „Users“ per abgesichertem Template-Override. |
-| – | Mit Michael Klapper | Namensnennung (ohne/mit Firma), Link und E-Mail-Adresse, ob er die Credits-Seite gegenliest, optional ein Blick auf das Konzept. Bis zur Freigabe wird nur sein Name genannt. |
+| – | Mit Michael Klapper | ✅ Die Erlaubnis für den Relaunch hat Jonathan (Stand 2026-10-09, kein Nachweis im Repo nötig). Credits: Name mit morphodo / AOE, Link auf `github.com/michaelklapper`, keine E-Mail-Adresse, Hinweis „1.0 komplett neu geschrieben, Idee und Name von ihm“. Optional: er liest die Credits-Seite gegen; das blockiert 1.0.0 nicht. |
 
 **Zugänge, die Jonathan einrichtet:**
 - **GitHub, SSH-Schlüssel:** ✅ Gepusht wird nur als `Cretection` mit dem Secretive-Schlüssel `cretection@github.com` (Host `github.com-cretection`, eingetragen am 2026-10-08). Optional verhindert `IdentitiesOnly yes` im Host-Eintrag einen Rückfall auf den 8devs-Schlüssel, falls GitHub den Schlüssel einmal ablehnt (derzeit nicht gesetzt).
@@ -280,7 +280,7 @@ Beim Ändern von Typ oder Rollenzusammensetzung fragt TYPO3 nach dem Passwort. D
    - **Idee von Jonathan:** Die Vorschläge der Assistenten (`classify`/`split --dry-run`) auch im Modul „Rollen & Bausteine“ anzeigen.
    - **Zu prüfen:** Nach dem Massentest blieben 143 Rollen in Rollen. Ein Assistent könnte sie durch ihre Bausteine ersetzen. Das ändert aber die Mitgliedschaft in der inneren Rolle, die Seiten besitzen, Workspace-Mitglied sein oder in TSconfig-Bedingungen stehen kann. Ob und mit welchen Vorbedingungen das geht, ist **offen**.
 4. **M4 (Rest):**
-   - Credits mit Michael Klapper abstimmen, Übersetzungen (Entscheidung c), TER-Token und Webhooks (Abschnitt 6).
+   - Übersetzungen (Entscheidung c), TER-Token und Webhooks (Abschnitt 6). Die Credits mit Michael Klapper sind erledigt (Abschnitt 6).
    - Starter-Set: am 2026-10-08 mit dem echten Core-Befehl in `begroups-test` geprüft (siehe Abschnitt 1). Automatisch geht das nicht: `setup:begroups:default` lässt sich in Functional Tests nicht instanziieren, weil seine Abhängigkeiten den Failsafe-Modus des Install-Tools verlangen. `SplitCoreDefaultGroupsTest` bildet deshalb die Inserts des Core nach (Stand 14.3.7); bei neuen Core-Versionen den Live-Test wiederholen.
    - Vor dem Wechsel auf TYPO3 15: Tests an das typisierungsfreie `get()` des Testing-Frameworks anpassen (siehe Abschnitt 3).
    - Release nach den Schritten in `CONTRIBUTING.md`: `php Build/Scripts/setVersion.php 1.0.0`, in `CHANGELOG.md` aus `## [Unreleased](…)` die Überschrift `## [1.0.0](https://github.com/Cretection/be_groups/compare/0.0.9...1.0.0) - JJJJ-MM-TT` machen (der Eintrag für 1.0.0 ist von Hand geschrieben, git-cliff gilt ab 1.0.1), Changelogs des Handbuchs datieren, `php Build/Scripts/checkReleaseVersion.php 1.0.0`, `main` auf `dev` vorziehen, annotierter Tag `1.0.0`. Vorabversionen (`1.0.0-rc1`) gehen nur zu Packagist.
