@@ -79,7 +79,7 @@ see [SECURITY.md](SECURITY.md).
 
 ### Credits
 
-be_groups was invented by **Michael Klapper**, who developed it in 2012 at
+be_groups was invented by **[Michael Klapper](https://github.com/michaelklapper)**, who developed it in 2012 at
 morphodo / AOE. His concept of building blocks and META groups is the model
 the official TYPO3 documentation recommends today. The relaunch for TYPO3 14
 happens with his explicit consent – thank you, Michael!
@@ -165,7 +165,7 @@ vertraulich melden, siehe [SECURITY.md](SECURITY.md).
 
 ### Credits
 
-be_groups wurde von **Michael Klapper** erfunden, der die Extension 2012 bei
+be_groups wurde von **[Michael Klapper](https://github.com/michaelklapper)** erfunden, der die Extension 2012 bei
 morphodo / AOE entwickelt hat. Sein Konzept aus Bausteinen und META-Gruppen
 ist das Modell, das die offizielle TYPO3-Dokumentation heute empfiehlt. Der
 Relaunch für TYPO3 14 erfolgt mit seiner ausdrücklichen Zustimmung – danke,

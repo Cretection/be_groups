@@ -11,8 +11,9 @@ Credits & Geschichte
 Die Idee und ihr Erfinder
 =========================
 
-be_groups wurde von **Michael Klapper** erfunden. 2012 entwickelte er bei
-morphodo / AOE die Idee, Backend-Benutzergruppen in Bausteine mit genau
+be_groups wurde von **Michael Klapper**
+(`michaelklapper auf GitHub <https://github.com/michaelklapper>`__) erfunden.
+2012 entwickelte er bei morphodo / AOE die Idee, Backend-Benutzergruppen in Bausteine mit genau
 einer Aufgabe aufzuteilen und diese zu „META“-Gruppen zusammenzusetzen – und
 setzte sie um: die Gruppentypen, die META-Zusammensetzung, die Beschränkung
 von Backend-Benutzern auf META-Gruppen, Upgrade-Wizards und die erste
@@ -68,7 +69,7 @@ Mitwirkende
 
 Danke an alle, die über die Jahre zu be_groups beigetragen haben:
 
-*   Michael Klapper – ursprünglicher Autor
+*   `Michael Klapper <https://github.com/michaelklapper>`__ – ursprünglicher Autor
 *   Christian Zenker
 *   Tomas Norre Mikkelsen
 *   Stefan Rotsch

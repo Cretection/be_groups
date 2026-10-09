@@ -11,8 +11,9 @@ Credits & History
 The idea and its inventor
 =========================
 
-be_groups was invented by **Michael Klapper**. In 2012, while working at
-morphodo / AOE, he developed the idea of splitting backend user groups into
+be_groups was invented by **Michael Klapper**
+(`michaelklapper on GitHub <https://github.com/michaelklapper>`__).
+In 2012, while working at morphodo / AOE, he developed the idea of splitting backend user groups into
 building blocks with exactly one purpose and composing them into
 "META" groups – and implemented it: the group kinds, the META composition,
 the restriction of backend users to META groups, update wizards and the
@@ -67,7 +68,7 @@ Contributors
 
 Thank you to everybody who contributed to be_groups over the years:
 
-*   Michael Klapper – original author
+*   `Michael Klapper <https://github.com/michaelklapper>`__ – original author
 *   Christian Zenker
 *   Tomas Norre Mikkelsen
 *   Stefan Rotsch
