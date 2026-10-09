@@ -32,7 +32,7 @@ Dieses Dokument ist der Einstiegspunkt, um die Arbeit fortzusetzen. Das Konzept 
   - **Barrierefreiheit** (2026-10-08, M4): axe-core 4.13 nach WCAG 2.2 AA in hellem und dunklem Theme. Modul, Rollen- und Bausteinformular und die überschriebenen Templates des Users-Moduls haben 0 Verstöße; der einzige Fund (Zielgröße der Benutzer-Links) ist behoben (`9320b38`).
   - **Laufzeit** (2026-10-08, M4): bei 1.000 Gruppen und 5.000 Benutzern `classify` 24 s statt 199 s, `split --all` 100 s statt über 10 Minuten.
 - **Testbasis:** Alle Prüfungen sind grün, auf allen Datenbanken, mit PHP 8.2 und 8.5, auf TYPO3 14.3 und 15-dev (Stand je Zeile in Abschnitt 3).
-- **Nächster Schritt:** Branch-Schutz für `main` und der erste Lauf des Jobs `mutation` auf GitHub (Abschnitt 7). Danach der Rest von M4: Klicktest, Credits, Crowdin, Release.
+- **Nächster Schritt:** der erste Lauf des Jobs `mutation` auf GitHub (Abschnitt 7). Danach der Rest von M4: Klicktest, Credits, Crowdin, Release.
 
 ---
 
@@ -99,7 +99,7 @@ Dieses Dokument ist der Einstiegspunkt, um die Arbeit fortzusetzen. Das Konzept 
 | M1 Kern | ✅ erledigt. Die eigenen PSR-14-Events sind nach M2 verschoben. |
 | M2 Übersicht | 🟡 teilweise. Fertig: Modul ohne Bearbeitung, `begroups:audit` mit Event, `ModifyKindOfNewGroupEvent`. Typ als Präfix überall (Entscheidung g). Verworfen: Typ-Filter im Users-Modul (E12). Die Matrix-Bearbeitung kommt mit 1.1 (E2, 2026-10-08). |
 | M3 Umstieg | ✅ erledigt: `begroups:classify`, `begroups:split`, Starter-Set über den Core-Befehl (E13). |
-| M4 Härtung und Release | 🟡 teilweise. Fertig: Sicherheitsprüfung, Performance-Benchmark, Barrierefreiheit (axe, jetzt als E2E-Test), Screenshots, Release-Workflow, Testabdeckung und Mutationstests, Übersetzungsweg (E15). Offen: Credits mit Michael Klapper, Crowdin-Projekt beantragen, erster CI-Lauf, Release. |
+| M4 Härtung und Release | 🟡 teilweise. Fertig: Sicherheitsprüfung, Performance-Benchmark, Barrierefreiheit (axe, jetzt als E2E-Test), Screenshots, Release-Workflow, Testabdeckung und Mutationstests, Übersetzungsweg (E15), CI auf GitHub mit Branch-Schutz. Offen: Credits mit Michael Klapper, Crowdin-Projekt beantragen, Release. |
 
 ---
 
@@ -240,7 +240,8 @@ Beim Ändern von Typ oder Rollenzusammensetzung fragt TYPO3 nach dem Passwort. D
 
 **Zugänge, die Jonathan einrichtet:**
 - **GitHub, SSH-Schlüssel:** ✅ Gepusht wird nur als `Cretection` mit dem Secretive-Schlüssel `cretection@github.com` (Host `github.com-cretection`, eingetragen am 2026-10-08). Optional verhindert `IdentitiesOnly yes` im Host-Eintrag einen Rückfall auf den 8devs-Schlüssel, falls GitHub den Schlüssel einmal ablehnt (derzeit nicht gesetzt).
-- **GitHub, Branch-Schutz:** Ruleset `main` (Settings → Rules → Rulesets → New branch ruleset): aktiv, ohne Bypass, Ziel „Default branch“. Regeln: Löschen und Force-Push sperren, Pull Request vor dem Merge (0 Freigaben, da allein), Status-Check `Required checks` von GitHub Actions, Branch aktuell vor dem Merge. Der Job `required` fasst alle Pflicht-Jobs zusammen, ohne `typo3-next` und `mutation`. Keine signierten Commits und keine lineare Historie verlangen: Die Commits sind nicht signiert, und `relaunch` kommt per Merge-Commit nach `main`.
+- **GitHub, eigenständiges Repo:** ✅ Am 2026-10-09 aus dem Fork-Netz von `AOEpeople/be_groups` (archiviert) gelöst. Als Fork erschien das Repo nicht in der GitHub-Suche, und Dependabot lief nicht. Die Versionsupdates von Dependabot starten, sobald `.github/dependabot.yml` mit dem Merge auf `main` liegt (Dependabot liest nur den Standard-Branch). Unter „Advanced Security“ empfohlen: Malware alerts und Dependabot security updates an; Private vulnerability reporting aus, weil `SECURITY.md` Meldungen an das TYPO3 Security Team leitet. Offen: Beschreibung unter „About“ (noch die alte, neu wie in `composer.json`), Website-Link, Social-Preview-Bild.
+- **GitHub, Branch-Schutz:** ✅ Eingerichtet am 2026-10-09. Ruleset `main` (Settings → Rules → Rulesets): aktiv, ohne Bypass, Ziel „Default branch“. Regeln: Löschen und Force-Push sperren, Pull Request vor dem Merge (0 Freigaben, da allein), Status-Check `Required checks` von GitHub Actions (per API geprüft), Branch aktuell vor dem Merge. Der Job `required` fasst alle Pflicht-Jobs zusammen, ohne `typo3-next` und `mutation`. Keine signierten Commits und keine lineare Historie verlangen: Die Commits sind nicht signiert, und `relaunch` kommt per Merge-Commit nach `main`.
 - **TER:** einen Token (`tailor ter:token:create`) als Secret `TYPO3_API_TOKEN` in der GitHub-Environment `ter` für den Release-Workflow (M4). Der Extension-Key `be_groups` gehört bereits `cretection` (TER-API, geprüft am 2026-10-08; letzte Version 0.0.9 für TYPO3 11).
 - **docs.typo3.org:** den Webhook für das Rendering der Doku.
 - **Crowdin (E15):** Im TYPO3-Slack, Kanal `#typo3-localization-team`, die Aufnahme von `be_groups` beantragen (Name der Extension, E-Mail-Adresse für die Einladung). Danach im Repo die Secrets `CROWDIN_PROJECT_ID` und `CROWDIN_PERSONAL_TOKEN` anlegen (Token-Rechte laut [Doku](https://docs.typo3.org/permalink/t3coreapi:crowdin-extension-integration)), die deutschen Übersetzungen als „existing translations“ hochladen (`zip translations.zip Resources/Private/Language/*.*.xlf Resources/Private/Language/Modules/*.*.xlf`) und freigeben. Den Link zum Projekt in `CONTRIBUTING*.md` eintragen.
@@ -261,11 +262,11 @@ Beim Ändern von Typ oder Rollenzusammensetzung fragt TYPO3 nach dem Passwort. D
 1. **Nach dem ersten CI-Lauf** (✅ grün am 2026-10-08; gepusht von Jonathan als `Cretection` per SSH mit dem Secretive-Schlüssel, Remote `git@github.com-cretection:Cretection/be_groups.git`). Vor jedem Push alle Commits auf Hinweise auf LLMs prüfen.
    - Den Job `mutation` einmal über „Actions → CI → Run workflow“ auf `relaunch` starten.
    - Die Pipeline beobachten, besonders die Container-Images und den Job `typo3-next`. Der Runner `ubuntu-26.04` ist seit dem 2026-09-17 allgemein verfügbar; `actionlint` 1.7.12 kennt das Label noch nicht (falscher Alarm).
-   - Danach den Branch-Schutz einrichten (Abschnitt 6), sobald der Check `Required checks` einmal gelaufen ist.
+   - ✅ Branch-Schutz eingerichtet (2026-10-09, Abschnitt 6). Ab jetzt kommt alles per Pull Request nach `main`, auch `relaunch` (Merge-Commit).
    - Die Testabdeckung wird zusammengeführt und geprüft (Job `coverage`, siehe Abschnitt 3).
 2. **Klicktest von Jonathan** in `begroups-test` (Abschnitt 5, aktuelles Szenario). Befunde zuerst als Test reproduzieren, dann beheben.
    - Sichtprüfung am 2026-10-08 abgeschlossen: alle Typ-Formulare, Ablehnungen im Formular (Rolle in Rolle, Baustein am Benutzer) mit Titel und uid in der Meldung, Typ-Auswahl bei abgeschalteten klassischen Gruppen (neue Gruppen starten als Rolle, bestehende klassische Gruppen behalten „Classic“), Rollenformular mit über 3.000 Gruppen in der Auswahl (Aufbau etwa 1 s).
-   - Vorschlag: Das Modul zeigt die Bausteine einer Rolle nach Typ gruppiert, nicht in der gespeicherten Reihenfolge, die den TSconfig-Vorrang bestimmt. Die Reihenfolge zusätzlich anzeigen (**Entscheidung offen**).
+   - Vorschlag: Das Modul zeigt die Bausteine einer Rolle nach Typ gruppiert, nicht in der gespeicherten Reihenfolge, die den TSconfig-Vorrang bestimmt. Die Reihenfolge zusätzlich anzeigen. ✅ Entschieden von Jonathan (2026-10-08): ja, nur wo sie zählt. Umgesetzt (`f8d5d29`): „Vorrang im TSconfig“ ab zwei sichtbaren TSconfig-Bausteinen.
    - Hinweis zur Testumgebung: `backend:user:create` legt Benutzer ohne `workspace_perms` an. Mit EXT:workspaces sehen sie dann kein Modul; das Backend-Formular setzt den Standardwert 1. Für den Testbenutzer `editor` ist der Wert gesetzt.
 3. **Für Version 1.1** (Rest von M2, nicht Teil von 1.0):
    - **Matrix-Bearbeitung** im Modul: Rollen × Bausteine. Geschrieben wird ausschließlich über den DataHandler (AJAX-Route mit `methods: POST`), mit Sudo-Mode und Barrierefreiheit (Tastatur, ARIA-Grid). Alle Themes hell und dunkel. ✅ Entschieden von Jonathan (2026-10-08): **Version 1.1** (E2), weil sie das ganze Frontend-Tooling voraussetzt und das Bearbeiten über die normalen Formulare geht.
