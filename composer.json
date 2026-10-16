@@ -49,7 +49,7 @@
 		"rector/rector": "2.6.7",
 		"saschaegerer/phpstan-typo3": "3.1.0",
 		"seld/jsonlint": "1.12.1",
-		"spaze/phpstan-disallowed-calls": "4.14.0",
+		"spaze/phpstan-disallowed-calls": "4.15.0",
 		"ssch/typo3-rector": "3.16.0",
 		"symfony/yaml": "^7.4 || ^8.0",
 		"typo3/cms-beuser": "^14.3",
