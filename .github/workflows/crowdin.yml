@@ -36,7 +36,7 @@ jobs:
           persist-credentials: false
       - name: Upload the sources (TYPO3 supports only one Crowdin branch, "main", whatever the Git branch)
         if: env.CROWDIN_PROJECT_ID != '' && env.CROWDIN_PERSONAL_TOKEN != ''
-        uses: crowdin/github-action@9af557de76d70c480f88065d336f445a362f402b # v3.1.0
+        uses: crowdin/github-action@9c23991700c0ec5256fd41089b9d9d7d540e424e # v3.3.0
         with:
           config: '.crowdin.yml'
           project_id: ${{ env.CROWDIN_PROJECT_ID }}
