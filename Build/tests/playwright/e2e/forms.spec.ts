@@ -64,6 +64,7 @@ test.describe('Forms of groups', () => {
     await expect(available).toHaveAttribute('size', '17');
     // The stored order of the building blocks is their TSconfig precedence
     await expect(backend.contentFrame.locator('select[multiple][data-formengine-input-name$="[subgroup]"] option')).toHaveText([
+      /PG: Content pages/,
       /ACL: Content editing/,
       /ACL: Page properties/,
       /ACL: Media/,
@@ -74,6 +75,7 @@ test.describe('Forms of groups', () => {
       /L: English/,
       /TS: Clear page cache/,
       /TS: Editor defaults/,
+      /WS: Drafts/,
     ]);
   });
 
