@@ -83,8 +83,8 @@ transaction, which is only committed if
     building blocks, and the owner group of new pages apart from the new
     page permission group.
 
-Otherwise – for example because another extension changes data while
-saving – the transaction is rolled back and the group stays unchanged. This
+Otherwise – for example because another extension changes a group or a user
+while saving – the transaction is rolled back and the group stays unchanged. This
 also applies to database errors; the result names the errors the
 DataHandler logged, as the system log is rolled back as well. On
 PostgreSQL, the result only names the aborted transaction. Cache commands of
@@ -101,6 +101,11 @@ Limits of the verification:
     blocks. Groups that listeners of the core event
     ``AfterGroupsResolvedEvent`` add at runtime (e.g. single sign-on) are not
     known to the verification.
+*   Only groups and users are compared. What another extension changes in
+    other tables while a group is converted – for example making a new
+    building block a workspace member or the owner group of pages – is
+    committed with the conversion, even if it grants the users of the group
+    more.
 *   The transaction covers the database connection of :sql:`be_groups`: if
     :sql:`sys_log`, :sql:`sys_history` or :sql:`sys_refindex` are mapped to
     another connection, their entries of a rolled back conversion remain.

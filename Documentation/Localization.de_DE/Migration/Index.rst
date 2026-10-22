@@ -87,9 +87,9 @@ einer Transaktion umgestellt, die nur abgeschlossen wird, wenn
     auf die neuen Bausteine und die Eigentümergruppe neuer Seiten bis auf die
     neue Seitenrechte-Gruppe.
 
-Andernfalls – zum Beispiel, weil eine andere Extension beim Speichern Daten
-ändert – wird die Transaktion zurückgerollt und die Gruppe bleibt
-unverändert. Das gilt auch für Datenbankfehler; das Ergebnis nennt die vom
+Andernfalls – zum Beispiel, weil eine andere Extension beim Speichern eine
+Gruppe oder einen Benutzer ändert – wird die Transaktion zurückgerollt und
+die Gruppe bleibt unverändert. Das gilt auch für Datenbankfehler; das Ergebnis nennt die vom
 DataHandler protokollierten Fehler, da auch das Systemprotokoll
 zurückgerollt wird. Unter PostgreSQL nennt das Ergebnis nur die
 abgebrochene Transaktion. Cache-Befehle aus dem Page-TSconfig
@@ -106,6 +106,11 @@ Grenzen der Prüfung:
     die neuen Bausteine. Gruppen, die Listener des Core-Events
     ``AfterGroupsResolvedEvent`` zur Laufzeit ergänzen (etwa Single
     Sign-on), kennt die Prüfung nicht.
+*   Verglichen werden nur Gruppen und Benutzer. Was eine andere Extension
+    beim Umstellen einer Gruppe in anderen Tabellen ändert – zum Beispiel
+    einen neuen Baustein zum Workspace-Mitglied oder zur Eigentümergruppe von
+    Seiten machen –, wird mit der Umstellung gespeichert, auch wenn es den
+    Benutzern der Gruppe mehr gewährt.
 *   Die Transaktion umfasst die Datenbankverbindung von :sql:`be_groups`:
     Sind :sql:`sys_log`, :sql:`sys_history` oder :sql:`sys_refindex` einer
     anderen Verbindung zugeordnet, bleiben deren Einträge einer

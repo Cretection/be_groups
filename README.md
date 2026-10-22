@@ -45,8 +45,9 @@ kinds with a guided user interface instead of naming conventions.
   block is used – sortable, filterable and with markers for inconsistencies.
 - **Assistants** for existing installations: `begroups:classify` proposes a
   kind for every classic group, `begroups:split` splits mixed groups into
-  building blocks and a role that keeps the uid – verified and rolled back
-  if any effective permission would change.
+  building blocks and a role that keeps the uid – verified for every user
+  and rolled back if a group, a user or the permissions TYPO3 resolves from
+  them would change.
 - **Consistency check** `begroups:audit` with exit codes and JSON output for
   deployments and monitoring, extensible through a PSR-14 event.
 
@@ -132,8 +133,9 @@ Gruppentypen mit geführter Oberfläche statt Namenskonventionen.
   wird – sortier- und filterbar, mit Markierung von Inkonsistenzen.
 - **Assistenten** für bestehende Installationen: `begroups:classify` schlägt
   für jede klassische Gruppe einen Typ vor, `begroups:split` teilt gemischte
-  Gruppen in Bausteine und eine Rolle auf, die die uid behält – geprüft und
-  zurückgerollt, falls sich ein wirksames Recht ändern würde.
+  Gruppen in Bausteine und eine Rolle auf, die die uid behält – für jeden
+  Benutzer geprüft und zurückgerollt, falls sich eine Gruppe, ein Benutzer
+  oder die Rechte ändern würden, die TYPO3 aus ihnen auflöst.
 - **Konsistenzprüfung** `begroups:audit` mit Exit-Codes und JSON-Ausgabe für
   Deployments und Monitoring, erweiterbar über ein PSR-14-Event.
 

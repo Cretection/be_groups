@@ -147,6 +147,8 @@ final class ManualTest extends UnitTestCase
             'German: only fields of a former kind are information' => ['Localization.de_DE/', 'geleerte Felder eines früheren Typs als Information'],
             'English: the event only decides without a kind' => ['', 'only dispatched for new groups without a kind'],
             'German: the event only decides without a kind' => ['Localization.de_DE/', 'nur für neue Gruppen ohne Typ ausgelöst'],
+            'English: the assistants roll back any change of other extensions' => ['', 'because another extension changes data while saving'],
+            'German: the assistants roll back any change of other extensions' => ['Localization.de_DE/', 'weil eine andere Extension beim Speichern Daten ändert'],
         ];
     }
 
