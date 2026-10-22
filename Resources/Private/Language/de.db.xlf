@@ -112,8 +112,8 @@
         <target>Bausteine</target>
       </trans-unit>
       <trans-unit id="be_groups.subgroup.role.description" approved="yes">
-        <source>Select the building blocks this role consists of, in the order of their TSconfig precedence. Users with this role receive all permissions of the selected building blocks. Roles and classic groups cannot be added.</source>
-        <target>Wählen Sie die Bausteine, aus denen diese Rolle besteht, in der Reihenfolge ihres TSconfig-Vorrangs. Benutzer mit dieser Rolle erhalten alle Rechte der gewählten Bausteine. Rollen und klassische Gruppen können nicht hinzugefügt werden.</target>
+        <source>Select the building blocks this role consists of; users with this role receive all their permissions. Later building blocks override the TSconfig of earlier ones, and the first one becomes the owner group of the pages created by users who have this role as their first role: put a page permission group of this role first. "Languages" and "Category mount" building blocks restrict: without one in any of their roles, users may edit all languages and see all categories. Roles, classic groups and groups with an unknown kind cannot be added.</source>
+        <target>Wählen Sie die Bausteine, aus denen diese Rolle besteht; Benutzer mit dieser Rolle erhalten alle ihre Rechte. Spätere Bausteine überschreiben das TSconfig früherer, und der erste wird zur Eigentümergruppe der Seiten, die Benutzer mit dieser Rolle als erster Rolle anlegen: Stellen Sie eine Seitenrechte-Gruppe dieser Rolle an den Anfang. Bausteine vom Typ „Sprachen“ und „Kategorie-Freigabe“ schränken ein: Ohne einen solchen Baustein in einer ihrer Rollen dürfen Benutzer alle Sprachen bearbeiten und sehen alle Kategorien. Rollen, klassische Gruppen und Gruppen mit unbekanntem Typ können nicht hinzugefügt werden.</target>
       </trans-unit>
       <trans-unit id="be_users.usergroup.description" approved="yes">
         <source>Assign roles. Building blocks are not assigned to users directly but combined in roles; assigning them here is rejected when saving.</source>

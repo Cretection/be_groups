@@ -85,7 +85,7 @@
         <source>Building blocks</source>
       </trans-unit>
       <trans-unit id="be_groups.subgroup.role.description">
-        <source>Select the building blocks this role consists of, in the order of their TSconfig precedence. Users with this role receive all permissions of the selected building blocks. Roles and classic groups cannot be added.</source>
+        <source>Select the building blocks this role consists of; users with this role receive all their permissions. Later building blocks override the TSconfig of earlier ones, and the first one becomes the owner group of the pages created by users who have this role as their first role: put a page permission group of this role first. "Languages" and "Category mount" building blocks restrict: without one in any of their roles, users may edit all languages and see all categories. Roles, classic groups and groups with an unknown kind cannot be added.</source>
       </trans-unit>
       <trans-unit id="be_users.usergroup.description">
         <source>Assign roles. Building blocks are not assigned to users directly but combined in roles; assigning them here is rejected when saving.</source>
