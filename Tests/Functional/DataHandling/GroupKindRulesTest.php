@@ -462,6 +462,40 @@ final class GroupKindRulesTest extends FunctionalTestCase
         self::assertSame('1,2', $this->getRecord('be_groups', 6)['subgroup']);
     }
 
+    /**
+     * A group whose kind is not configured (any more) is neither a role nor a building block, so it is
+     * not changed: it keeps its permissions and stored subgroups, but gets no new subgroups (R3).
+     */
+    #[Test]
+    public function groupsWithAnUnknownKindGetNoSubgroupsAdded(): void
+    {
+        $this->get(ConnectionPool::class)->getConnectionForTable('be_groups')
+            ->update('be_groups', ['tx_begroups_kind' => 'my_uninstalled_kind', 'subgroup' => '2'], ['uid' => 3]);
+
+        $this->writeGroup(3, ['subgroup' => '2,1,7', 'groupMods' => 'web_layout']);
+
+        $group = $this->getRecord('be_groups', 3);
+        self::assertSame('2', $group['subgroup']);
+        self::assertSame('web_layout', $group['groupMods']);
+        self::assertSame('{record}: Groups with an unknown kind cannot get subgroups. Rejected groups: {groups}', $this->getLastExtensionLogEntry()['details']);
+        self::assertSame("\u{2068}ACL: ACL editing\u{2069} [1], \u{2068}META: R other\u{2069} [7]", $this->getRejectedGroupsOfLastLogEntry());
+
+        $this->writeGroup(3, ['title' => 'FO read only (renamed)']);
+
+        self::assertSame('2', $this->getRecord('be_groups', 3)['subgroup']);
+    }
+
+    #[Test]
+    public function aGroupWithAnUnknownKindGetsSubgroupsWhenItBecomesARole(): void
+    {
+        $this->get(ConnectionPool::class)->getConnectionForTable('be_groups')
+            ->update('be_groups', ['tx_begroups_kind' => 'my_uninstalled_kind'], ['uid' => 3]);
+
+        $this->writeGroup(3, ['tx_begroups_kind' => 'role', 'subgroup' => '1,2']);
+
+        self::assertSame('1,2', $this->getRecord('be_groups', 3)['subgroup']);
+    }
+
     #[Test]
     public function dataOfOtherExtensionsIsNotTouched(): void
     {

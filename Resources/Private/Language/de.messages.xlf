@@ -39,6 +39,14 @@
         <source>Only building blocks can be added to a role. These groups have not been added: %2$s</source>
         <target>Einer Rolle können nur Bausteine hinzugefügt werden. Diese Gruppen wurden nicht hinzugefügt: %2$s</target>
       </trans-unit>
+      <trans-unit id="rules.subgroupsOfUnknownKindRejected.title" approved="yes">
+        <source>Groups not added</source>
+        <target>Gruppen nicht hinzugefügt</target>
+      </trans-unit>
+      <trans-unit id="rules.subgroupsOfUnknownKindRejected.message" approved="yes">
+        <source>The kind of this group is unknown, so it cannot get subgroups. Choose a kind first. These groups have not been added: %2$s</source>
+        <target>Der Typ dieser Gruppe ist unbekannt, deshalb kann sie keine Untergruppen bekommen. Wählen Sie zuerst einen Typ. Diese Gruppen wurden nicht hinzugefügt: %2$s</target>
+      </trans-unit>
       <trans-unit id="rules.usergroupsRejected.title" approved="yes">
         <source>Groups not assigned</source>
         <target>Gruppen nicht zugewiesen</target>

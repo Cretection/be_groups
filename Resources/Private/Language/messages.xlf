@@ -30,6 +30,12 @@
       <trans-unit id="rules.subgroupsRejected.message">
         <source>Only building blocks can be added to a role. These groups have not been added: %2$s</source>
       </trans-unit>
+      <trans-unit id="rules.subgroupsOfUnknownKindRejected.title">
+        <source>Groups not added</source>
+      </trans-unit>
+      <trans-unit id="rules.subgroupsOfUnknownKindRejected.message">
+        <source>The kind of this group is unknown, so it cannot get subgroups. Choose a kind first. These groups have not been added: %2$s</source>
+      </trans-unit>
       <trans-unit id="rules.usergroupsRejected.title">
         <source>Groups not assigned</source>
       </trans-unit>

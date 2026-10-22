@@ -39,7 +39,8 @@ use TYPO3\CMS\Core\Utility\MathUtility;
  *
  * R1: A group carries permissions only in the fields its kind displays.
  * R2: A role only gets building blocks added.
- * R3: Building blocks have no subgroups (follows from R1).
+ * R3: Only roles and classic groups have subgroups: building blocks follow from R1, groups
+ *     of an unknown kind keep the stored ones but get no new ones.
  * R4: Users only get roles assigned (and "classic" groups while they are allowed).
  *
  * Relations that are already stored are never removed by R2 and R4, so switching off
@@ -155,6 +156,22 @@ final class GroupKindRules
                 $id,
                 'rules.subgroupsRejected',
                 'Only building blocks can be added to a role. Rejected groups: {groups}',
+                $kind,
+            );
+        } elseif (!$this->kindRegistry->isKind($kind)) {
+            // R3: a group of an unknown kind is neither a role nor a building block. The rules do not
+            // change it, so it keeps its stored subgroups, but it gets no new ones until it has a kind.
+            $this->rejectAddedRelations(
+                $incomingFieldArray,
+                'subgroup',
+                $currentRecord?->get('subgroup') ?? '',
+                static fn(?string $memberKind): bool => false,
+                [],
+                $dataHandler,
+                self::GROUPS_TABLE,
+                $id,
+                'rules.subgroupsOfUnknownKindRejected',
+                'Groups with an unknown kind cannot get subgroups. Rejected groups: {groups}',
                 $kind,
             );
         }
