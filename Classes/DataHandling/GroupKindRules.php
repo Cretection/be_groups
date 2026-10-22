@@ -419,7 +419,7 @@ final class GroupKindRules
         $stored = RelationList::fromStoredValue($storedValue);
         $uid = $this->getUid($id);
         if ($uid !== null) {
-            $stored = $this->relationsEmptiedByImport->getStoredRelations($table, $uid, $fieldName, $stored, $incoming, $dataHandler->isImporting);
+            $stored = $this->relationsEmptiedByImport->getStoredRelations($table, $uid, $fieldName, $stored, $incoming, $this->getDefaultRelations($table, $fieldName), $dataHandler->isImporting);
         }
         $addedEntries = $incoming->getEntriesMissingIn($stored);
         $kinds = $this->resolveKinds($addedEntries, $dataHandler);
@@ -476,6 +476,17 @@ final class GroupKindRules
             }
         }
         return is_scalar($value) ? (string)$value : '';
+    }
+
+    /**
+     * The TCA default of a relation field, which EXT:impexp writes into the field when it empties it
+     * (Import::getReferenceDefaultValue()).
+     */
+    private function getDefaultRelations(string $table, string $fieldName): RelationList
+    {
+        $schema = $this->tcaSchemaFactory->has($table) ? $this->tcaSchemaFactory->get($table) : null;
+        $default = $schema !== null && $schema->hasField($fieldName) ? $schema->getField($fieldName)->getDefaultValue() : null;
+        return RelationList::fromValue(is_scalar($default) ? (string)$default : '');
     }
 
     /**
