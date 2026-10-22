@@ -55,7 +55,8 @@ final class ClassifyCommand extends Command
                 . 'combines other groups or is assigned to users directly (role), or that only owns pages (page group) '
                 . 'changes its kind. Groups that need to be split are listed for begroups:split, the others need a '
                 . 'decision of an administrator. '
-                . 'Effective permissions never change: every change is verified and rolled back otherwise.',
+                . 'The permissions TYPO3 grants through the groups never change: every change is verified and rolled '
+                . 'back otherwise (see "Limits of the verification" in the manual).',
             );
     }
 

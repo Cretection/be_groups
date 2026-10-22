@@ -68,7 +68,8 @@ final class SplitCommand extends Command
                 . 'containing its former subgroups followed by the building blocks, so the precedence of TSconfig stays '
                 . 'the same. If the group would be the owner group of the pages its users create (it has no active '
                 . 'subgroups), a new page group without permissions becomes its first member and takes over this task. '
-                . 'Effective permissions never change: every split is verified for all users and rolled back otherwise.',
+                . 'The permissions TYPO3 grants through the groups never change: every split is verified for all users '
+                . 'and rolled back otherwise (see "Limits of the verification" in the manual).',
             );
     }
 

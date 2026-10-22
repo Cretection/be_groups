@@ -112,8 +112,11 @@ Only the configured kinds are valid: the items of the field
 no such item – for example the kind of an uninstalled extension, or a value
 written by SQL – is neither a role nor a building block. TYPO3 shows such a
 group in the full form of the core, so every value in effect stays visible,
-and the rules empty none of them. The group keeps its stored subgroups, but
-gets no new ones until a kind is chosen (R3). It cannot be added to a role or
+and the rules empty none of them. They do not restrict its permission fields
+either: values entered in the form are saved and take effect wherever the
+group is still a member, so choose a kind before you edit such a group. The
+group keeps its stored subgroups, but gets no new ones until a kind is chosen
+(R3). It cannot be added to a role or
 assigned to a user: the forms of roles and users list it under a heading of
 its own, and the module lists it separately.
 

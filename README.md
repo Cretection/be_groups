@@ -35,7 +35,7 @@ kinds with a guided user interface instead of naming conventions.
 - **Backend users only get roles** (classic groups can stay allowed while
   converting).
 - **What is not visible does not apply:** permission fields that do not
-  belong to a kind are cleared on every save – in the backend, via the
+  belong to the kind of the group are cleared on every save – in the backend, via the
   DataHandler API and by import or sync tools. The rules never drop stored
   assignments and never touch other data on the group.
 - **Core native:** only one additional field (`tx_begroups_kind`). TYPO3
@@ -122,8 +122,8 @@ Gruppentypen mit geführter Oberfläche statt Namenskonventionen.
   nach Typ gruppiert.
 - **Backend-Benutzer bekommen nur Rollen** (während der Umstellung
   einstellbar).
-- **Was nicht sichtbar ist, wirkt nicht:** Rechtefelder, die nicht zu einem
-  Typ gehören, werden bei jedem Speichern geleert – im Backend, über die
+- **Was nicht sichtbar ist, wirkt nicht:** Rechtefelder, die nicht zum Typ
+  der Gruppe gehören, werden bei jedem Speichern geleert – im Backend, über die
   DataHandler-API und durch Import- oder Sync-Werkzeuge. Die Regeln
   verwerfen nie gespeicherte Zuweisungen, andere Daten der Gruppe bleiben
   unberührt.

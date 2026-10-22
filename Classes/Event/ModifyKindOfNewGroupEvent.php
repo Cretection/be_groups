@@ -16,10 +16,12 @@ declare(strict_types=1);
 namespace Cretection\BeGroups\Event;
 
 /**
- * Dispatched when a new group is saved without a kind, e.g. by an import or a synchronisation
- * tool. Listeners can choose the kind from the values of the record, for example from a prefix
- * of the title. A kind that is not configured is ignored and the default kind is kept. All rules
- * apply to the chosen kind, including whether classic groups may be created.
+ * Dispatched when a new group is saved without a valid kind, e.g. by an import or a synchronisation
+ * tool: the record sets no kind, an empty one or one that is not configured (that value is ignored,
+ * logged and not part of the record). A configured kind is never replaced. Listeners can choose
+ * the kind from the values of the record, for example from a prefix of the title. A kind that is
+ * not configured is ignored and the default kind is kept. All rules apply to the chosen kind,
+ * including whether classic groups may be created.
  *
  * Public API.
  */

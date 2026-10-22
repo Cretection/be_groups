@@ -115,8 +115,11 @@ Wert, der kein solcher Eintrag ist – zum Beispiel der Typ einer
 deinstallierten Extension oder ein per SQL geschriebener Wert –, ist weder
 Rolle noch Baustein. TYPO3 zeigt eine solche Gruppe im vollständigen
 Formular des Core, sodass jeder wirksame Wert sichtbar bleibt, und die Regeln
-leeren keinen davon. Die Gruppe behält ihre gespeicherten Untergruppen,
-bekommt aber keine neuen, bis ein Typ gewählt ist (R3). Sie kann keiner
+leeren keinen davon. Sie schränken auch ihre Rechtefelder nicht ein: Im
+Formular eingetragene Werte werden gespeichert und wirken überall, wo die
+Gruppe noch Mitglied ist. Wählen Sie deshalb einen Typ, bevor Sie eine solche
+Gruppe bearbeiten. Die Gruppe behält ihre gespeicherten Untergruppen, bekommt
+aber keine neuen, bis ein Typ gewählt ist (R3). Sie kann keiner
 Rolle hinzugefügt und keinem Benutzer zugewiesen werden: Die Formulare von
 Rollen und Benutzern listen sie unter einer eigenen Überschrift, und das
 Modul führt sie gesondert auf.
