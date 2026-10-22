@@ -53,11 +53,11 @@ Eine Rolle zusammenstellen
 Das Feld :guilabel:`Bausteine` einer Rolle ist die zweispaltige Auswahlliste
 des Core. Die verfügbaren Gruppen sind nach Typ gruppiert; Rollen und
 klassische Gruppen stehen in eigenen Gruppen und sind als nicht zulässig
-gekennzeichnet. Wird eine davon hinzugefügt, wird das beim Speichern der
-Rolle abgelehnt. Die Reihenfolge der gewählten Bausteine bleibt erhalten. Sie
-zählt doppelt: Spätere Bausteine überschreiben das TSconfig früherer, und der
-erste wird zur Eigentümergruppe der Seiten, die Benutzer mit dieser Rolle als
-erster Rolle anlegen.
+gekennzeichnet. Wird eine davon oder eine Gruppe mit unbekanntem Typ
+hinzugefügt, wird das beim Speichern der Rolle abgelehnt. Die Reihenfolge der
+gewählten Bausteine bleibt erhalten. Sie zählt doppelt: Spätere Bausteine
+überschreiben das TSconfig früherer, und der erste wird zur Eigentümergruppe
+der Seiten, die Benutzer mit dieser Rolle als erster Rolle anlegen.
 
 ..  figure:: /Images/RoleForm.png
     :alt: Formular der Rolle „META: Content manager“ mit ihren Bausteinen links und den verfügbaren Gruppen rechts, nach Typ gruppiert
@@ -151,7 +151,14 @@ Seitenbaum-Einstiegspunkt als ``DBM: Redakteure``.
         - Workspace
 
 Klassische Gruppen und Gruppen mit unbekanntem Typ haben kein Präfix. Typen
-anderer Extensions verwenden ihre Bezeichnung.
+anderer Extensions verwenden ihre Bezeichnung. Eine Gruppe ohne Titel
+erscheint zum Beispiel als ``DBM: [Kein Titel]``.
+
+Listen, die TYPO3 aus dem TCA aufbaut – die Datensatzlisten und die
+Gruppenfelder der Formulare –, sortieren Gruppen nach Typ (in der Reihenfolge
+der Typ-Kennungen) und dann nach Titel, damit die Gruppen eines Typs
+zusammen stehen. Manche Core-Module sortieren stattdessen nach Titel, zum
+Beispiel :guilabel:`Benutzer` und :guilabel:`Berechtigungen`.
 
 ..  figure:: /Images/UsersModuleGroups.png
     :alt: Liste der Backend-Benutzergruppen im Core-Modul Benutzer, jeder Titel mit dem Präfix seines Typs
@@ -171,7 +178,7 @@ Abschnitt den Typ nicht schon nennt.
     Das Core-Modul :guilabel:`Benutzer` gibt die Titel selbst aus. Die
     Extension überschreibt daher diejenigen seiner Templates, die
     Gruppentitel ausgeben, mit Kopien der Templates von TYPO3 14.3, in denen
-    sich nur die Titel unterscheiden. Die Kopien werden nur verwendet,
+    sich nur die Titel und die Icons der Gruppen unterscheiden. Die Kopien werden nur verwendet,
     solange die Templates des Core unverändert sind: Ändert ein TYPO3-Update
     eines davon, verwendet das Modul wieder die Templates des Core und zeigt
     die Titel ohne Präfix, bis eine neue Version dieser Extension die Kopien
@@ -224,7 +231,9 @@ dem Modul *Benutzer*. Es ändert nichts, sondern zeigt:
     Das Modul folgt dem hellen und dem dunklen Theme des Backends.
 
 Rollen lassen sich nach Titel oder Anzahl der Benutzer sortieren, Bausteine
-nach Titel oder Verwendung. Bausteine lassen sich nach Typ filtern; die
+nach Titel oder Verwendung. Titel und Benutzernamen werden alphabetisch für
+die Sprache des Redakteurs sortiert. Bausteine lassen sich nach Typ filtern.
+Ein Haken zeigt die gewählte Sortierung und den gewählten Typ, und die
 Auswahl bleibt pro Benutzer gespeichert.
 
 Einträge, die nicht dem Rollenmodell folgen, sind markiert: Rollen mit
@@ -237,8 +246,9 @@ aufgeführt sind, mit „deaktiviert“ markiert; TYPO3 wendet sie nicht an.
 
 Ein Mitglied einer Rolle, das kein Baustein ist, ist mit „kein Baustein“
 markiert und wird mit seinem Typ angezeigt, zum Beispiel ``META: Redakteure``
-für eine Rolle in einer Rolle. TYPO3 gewährt seine Rechte weiterhin; ersetzen
-Sie es durch Bausteine, die dasselbe gewähren. Solche Rollen bleiben nach dem
+für eine Rolle in einer Rolle. Wie die Zeile der Rolle erklärt, gewährt TYPO3
+seine Rechte weiterhin; ersetzen Sie es durch Bausteine, die dasselbe
+gewähren. Solche Rollen bleiben nach dem
 Umstellen mit den Assistenten häufig übrig, siehe :ref:`migration-vanilla`.
 
 Typen anderer Extensions werden mit ihrer eigenen Bezeichnung und ihrem
@@ -280,8 +290,9 @@ Konsistenzprüfung. Sie liest alle Gruppen und Benutzer und ändert nichts:
         - Befund
     *   - ``unknown-kind``
         - ``error``
-        - Der Typ der Gruppe ist nicht konfiguriert, zum Beispiel der Typ
-          einer deinstallierten Extension. Wählen Sie einen Typ.
+        - Die Gruppe hat keinen Typ, oder ihr Typ ist nicht konfiguriert oder
+          hat kein eigenes Formular, zum Beispiel der Typ einer
+          deinstallierten Extension. Wählen Sie einen Typ.
     *   - ``classic-group``
         - ``warning``
         - Eine klassische Gruppe. Teilen Sie sie in Bausteine und eine Rolle
@@ -299,7 +310,8 @@ Konsistenzprüfung. Sie liest alle Gruppen und Benutzer und ändert nichts:
           bis die Gruppe erneut gespeichert wird.
     *   - ``role-missing-member``
         - ``error``
-        - Eine Rolle enthält eine Gruppe, die es nicht (mehr) gibt.
+        - Eine Rolle enthält eine Gruppe, die es nicht gibt oder die
+          gelöscht ist.
     *   - ``role-invalid-member``
         - ``error``
         - Eine Rolle enthält eine Rolle, eine klassische Gruppe oder eine
@@ -315,9 +327,10 @@ Konsistenzprüfung. Sie liest alle Gruppen und Benutzer und ändert nichts:
           entfernen Sie sie im Benutzer-Datensatz. Wie neue Benutzer ohne sie
           angelegt werden, steht unter :ref:`concept-limitations`. Mit
           EXT:workspaces zählt auch der Zugriff auf die
-          Live-Arbeitsumgebung (:sql:`workspace_perms`); vergeben Sie ihn
-          stattdessen mit einem Baustein vom Typ „Workspace“, siehe
-          :ref:`concept-combination`.
+          Live-Arbeitsumgebung (:sql:`workspace_perms`); Benutzer, die vor der
+          Installation von EXT:workspaces angelegt wurden, haben ihn.
+          Vergeben Sie ihn stattdessen mit einem Baustein vom Typ
+          „Workspace“, siehe :ref:`concept-combination`.
     *   - ``unassigned-fields``
         - ``warning``
         - Eine Rolle oder ein Baustein hat Werte in Feldern anderer
@@ -330,7 +343,9 @@ Konsistenzprüfung. Sie liest alle Gruppen und Benutzer und ändert nichts:
           enthalten Duplikate oder Einträge, die TYPO3 und das
           Backend-Formular unterschiedlich lesen, etwa ``be_groups_5`` oder
           ``05``. Speichern im Backend kann Gruppen hinzufügen oder
-          entfernen; prüfen Sie sie vorher.
+          entfernen; prüfen Sie sie vorher. Leerzeichen, leere Einträge und
+          ``0`` werden nicht gemeldet: TYPO3 und das Formular ignorieren sie
+          gleichermaßen.
     *   - ``user-ignores-group-mounts``
         - ``warning``
         - Das Feld :guilabel:`Freigaben aus Gruppen` (:sql:`options`) eines
@@ -348,6 +363,8 @@ Optionen:
     Gibt das Ergebnis als JSON aus (``errors``, ``warnings`` und
     ``findings`` mit ``severity``, ``identifier``, ``table``, ``uid``,
     ``title`` und ``message``), für Monitoring und Weiterverarbeitung.
+    ``title`` ist der Titel, wie das Backend ihn zeigt, bei Gruppen mit dem
+    Präfix ihres Typs, oder der Benutzername.
 
 ``--fail-on-warnings``
     Behandelt Warnungen beim Exit-Code wie Fehler.
@@ -367,7 +384,8 @@ Monitoring einsetzen:
     *   - ``1``
         - Fehler gefunden, oder Warnungen mit ``--fail-on-warnings``.
     *   - ``2``
-        - Ungültiger Wert für ``--format``. Unbekannte Optionen lehnt die
+        - Ungültiger Wert für ``--format``; die Meldung geht auf die
+          Fehlerausgabe, nicht in das JSON. Unbekannte Optionen lehnt die
           Konsole mit Exit-Code ``1`` ab.
 
 ..  code-block:: bash

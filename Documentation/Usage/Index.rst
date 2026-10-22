@@ -49,11 +49,12 @@ Composing a role
 
 The field :guilabel:`Building blocks` of a role is the side-by-side list of
 the core. The available groups are grouped by kind; roles and classic groups
-appear in groups of their own, marked as not allowed. Adding one of them is
-rejected when the role is saved. The order of the selected building blocks
-is kept. It matters twice: later building blocks override the TSconfig of
-earlier ones, and the first one becomes the owner group of the pages created
-by users who have this role as their first role.
+appear in groups of their own, marked as not allowed. Adding one of them, or
+a group with an unknown kind, is rejected when the role is saved. The order
+of the selected building blocks is kept. It matters twice: later building
+blocks override the TSconfig of earlier ones, and the first one becomes the
+owner group of the pages created by users who have this role as their first
+role.
 
 ..  figure:: /Images/RoleForm.png
     :alt: Form of the role "META: Content manager" with its building blocks on the left and the available groups, grouped by kind, on the right
@@ -142,7 +143,14 @@ called "Editors" appears as ``META: Editors``, its page tree entry point as
         - Workspace
 
 Classic groups and groups with an unknown kind have no prefix. Kinds of other
-extensions use their label.
+extensions use their label. A group without a title is shown as, for example,
+``DBM: [No title]``.
+
+Lists that TYPO3 builds from the TCA – the record lists and the group fields
+of the forms – sort groups by kind (in the order of the kind identifiers)
+and then by title, so the groups of one kind stay together. Some core
+modules sort by title instead, for example :guilabel:`Users` and
+:guilabel:`Permissions`.
 
 ..  figure:: /Images/UsersModuleGroups.png
     :alt: List of backend user groups in the core module Users, each title with the prefix of its kind
@@ -160,7 +168,8 @@ already name the kind.
 
     The core module :guilabel:`Users` prints the titles itself. The extension
     therefore overrides those of its templates that print group titles, with
-    copies of the templates of TYPO3 14.3 in which only the titles differ.
+    copies of the templates of TYPO3 14.3 in which only the titles and the
+    icons of the groups differ.
     The copies are only used while the templates of the core are unchanged:
     if a TYPO3 update changes one of them, the module uses the templates of
     the core again and shows the titles without prefix until a new version
@@ -213,8 +222,9 @@ next to the *Users* module. It is read-only and shows:
     The module follows the light and the dark theme of the backend.
 
 Roles can be sorted by title or by number of users, building blocks by title
-or by usage. Building blocks can be filtered by kind; the selection is kept
-per user.
+or by usage. Titles and usernames are sorted alphabetically for the language
+of the editor. Building blocks can be filtered by kind. A check mark shows
+the selected sorting and kind, and the selection is kept per user.
 
 Entries that do not follow the role model are marked: roles containing
 groups that are no building blocks or no longer exist, building blocks that
@@ -226,9 +236,10 @@ listed; TYPO3 does not apply them.
 
 A member of a role that is no building block is marked "not a building
 block" and shown with its kind, for example ``META: Editors`` for a role
-within a role. TYPO3 still grants its permissions; replace it with building
-blocks that grant the same. Converting groups with the assistants often
-leaves such roles, see :ref:`migration-vanilla`.
+within a role. As the row of the role explains, TYPO3 still grants its
+permissions; replace it with building blocks that grant the same. Converting
+groups with the assistants often leaves such roles, see
+:ref:`migration-vanilla`.
 
 Kinds added by other extensions are shown with their own label and icon.
 
@@ -268,8 +279,9 @@ consistency check. It reads all groups and users and changes nothing:
         - Finding
     *   - ``unknown-kind``
         - ``error``
-        - The kind of the group is not configured, for example the kind of an
-          uninstalled extension. Choose a kind.
+        - The group has no kind, or its kind is not configured or has no form
+          of its own, for example the kind of an uninstalled extension. Choose
+          a kind.
     *   - ``classic-group``
         - ``warning``
         - A classic group. Split it into building blocks and a role.
@@ -286,7 +298,7 @@ consistency check. It reads all groups and users and changes nothing:
           in effect until the group is saved again.
     *   - ``role-missing-member``
         - ``error``
-        - A role contains a group that does not exist (any more).
+        - A role contains a group that does not exist or is deleted.
     *   - ``role-invalid-member``
         - ``error``
         - A role contains a role, a classic group or a group with an unknown
@@ -301,7 +313,8 @@ consistency check. It reads all groups and users and changes nothing:
           (core default of :sql:`file_permissions`); clear them in the user
           record. To create new users without them, see
           :ref:`concept-limitations`. With EXT:workspaces, access to the live
-          workspace (:sql:`workspace_perms`) counts as well; grant it with a
+          workspace (:sql:`workspace_perms`) counts as well; users created
+          before EXT:workspaces was installed have it. Grant it with a
           "Workspace" building block instead, see
           :ref:`concept-combination`.
     *   - ``unassigned-fields``
@@ -315,7 +328,8 @@ consistency check. It reads all groups and users and changes nothing:
         - The subgroups of a group or the groups of a user contain duplicates
           or entries that TYPO3 and the backend form read differently, such
           as ``be_groups_5`` or ``05``. Saving the record in the backend can
-          add or remove groups; check them first.
+          add or remove groups; check them first. Spaces, empty entries and
+          ``0`` are not reported: TYPO3 and the form ignore them alike.
     *   - ``user-ignores-group-mounts``
         - ``warning``
         - The field :guilabel:`Mount from groups` (:sql:`options`) of a user
@@ -330,7 +344,9 @@ Options:
 ``--format=json``
     Prints the result as JSON (``errors``, ``warnings`` and ``findings``
     with ``severity``, ``identifier``, ``table``, ``uid``, ``title`` and
-    ``message``) for monitoring and further processing.
+    ``message``) for monitoring and further processing. The ``title`` is the
+    title as the backend shows it, for groups with the prefix of their kind,
+    or the username.
 
 ``--fail-on-warnings``
     Treats warnings like errors when it comes to the exit code.
@@ -350,7 +366,8 @@ monitoring:
     *   - ``1``
         - Errors found, or warnings with ``--fail-on-warnings``.
     *   - ``2``
-        - Invalid value of ``--format``. Unknown options are rejected by the
+        - Invalid value of ``--format``; the message goes to the error
+          output, not into the JSON. Unknown options are rejected by the
           console with exit code ``1``.
 
 ..  code-block:: bash
