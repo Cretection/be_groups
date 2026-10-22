@@ -205,7 +205,7 @@ final class GroupKindRulesTest extends FunctionalTestCase
         $this->writeUser(2, ['usergroup' => '5,1']);
 
         $logEntry = $this->getLastExtensionLogEntry();
-        self::assertSame('{record}: Only roles can be assigned to users. Rejected groups: {groups}', $logEntry['details']);
+        self::assertSame('{record}: Only roles and classic groups can be assigned to users. Rejected groups: {groups}', $logEntry['details']);
         self::assertSame("\u{2068}editor\u{2069} [2]", $logEntry['data']['record'] ?? null);
     }
 
@@ -603,7 +603,7 @@ final class GroupKindRulesTest extends FunctionalTestCase
         $this->writeUser(2, ['usergroup' => '5,1']);
 
         self::assertSame(
-            [['error' => 1, 'details' => '{record}: Only roles can be assigned to users. Rejected groups: {groups}']],
+            [['error' => 1, 'details' => '{record}: Only roles and classic groups can be assigned to users. Rejected groups: {groups}']],
             $this->getExtensionLogEntries(),
         );
         self::assertSame("\u{2068}ACL: ACL editing\u{2069} [1]", $this->getRejectedGroupsOfLastLogEntry());

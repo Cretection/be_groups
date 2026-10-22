@@ -31,7 +31,7 @@ test.describe('Rules when saving', () => {
     await available.locator('option', { hasText: 'DBM: Website' }).click();
     await backend.save();
     await expect(backend.contentFrame.getByText('Groups not assigned')).toBeVisible();
-    await expect(backend.contentFrame.getByText(/\u2068anna\u2069 \[\d+\]: Only roles can be assigned to users\. These groups have not been assigned: \u2068DBM: Website\u2069 \[\d+\]/)).toBeVisible();
+    await expect(backend.contentFrame.getByText(/\u2068anna\u2069 \[\d+\]: Only roles and classic groups can be assigned to users\. These groups have not been assigned: \u2068DBM: Website\u2069 \[\d+\]/)).toBeVisible();
     await expect(backend.contentFrame.locator('select[multiple][data-formengine-input-name$="[usergroup]"] option')).toHaveText([/META: Content manager/]);
   });
 });

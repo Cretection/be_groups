@@ -47,6 +47,14 @@
         <source>Only roles can be assigned to users. These groups have not been assigned: %2$s</source>
         <target>Benutzern können nur Rollen zugewiesen werden. Diese Gruppen wurden nicht zugewiesen: %2$s</target>
       </trans-unit>
+      <trans-unit id="rules.usergroupsRejectedWithClassicGroups.title" approved="yes">
+        <source>Groups not assigned</source>
+        <target>Gruppen nicht zugewiesen</target>
+      </trans-unit>
+      <trans-unit id="rules.usergroupsRejectedWithClassicGroups.message" approved="yes">
+        <source>Only roles and classic groups can be assigned to users. These groups have not been assigned: %2$s</source>
+        <target>Benutzern können nur Rollen und klassische Gruppen zugewiesen werden. Diese Gruppen wurden nicht zugewiesen: %2$s</target>
+      </trans-unit>
     </body>
   </file>
 </xliff>

@@ -36,6 +36,12 @@
       <trans-unit id="rules.usergroupsRejected.message">
         <source>Only roles can be assigned to users. These groups have not been assigned: %2$s</source>
       </trans-unit>
+      <trans-unit id="rules.usergroupsRejectedWithClassicGroups.title">
+        <source>Groups not assigned</source>
+      </trans-unit>
+      <trans-unit id="rules.usergroupsRejectedWithClassicGroups.message">
+        <source>Only roles and classic groups can be assigned to users. These groups have not been assigned: %2$s</source>
+      </trans-unit>
     </body>
   </file>
 </xliff>

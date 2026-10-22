@@ -335,8 +335,10 @@ final class GroupKindRules
             $dataHandler,
             self::USERS_TABLE,
             $id,
-            'rules.usergroupsRejected',
-            'Only roles can be assigned to users. Rejected groups: {groups}',
+            $classicGroupsAllowed ? 'rules.usergroupsRejectedWithClassicGroups' : 'rules.usergroupsRejected',
+            $classicGroupsAllowed
+                ? 'Only roles and classic groups can be assigned to users. Rejected groups: {groups}'
+                : 'Only roles can be assigned to users. Rejected groups: {groups}',
             $this->getRecordType(self::USERS_TABLE, $incomingFieldArray),
         );
     }

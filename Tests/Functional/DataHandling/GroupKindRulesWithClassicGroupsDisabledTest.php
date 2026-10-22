@@ -188,6 +188,10 @@ final class GroupKindRulesWithClassicGroupsDisabledTest extends FunctionalTestCa
         $this->writeUser(1, ['usergroup' => '6,5']);
 
         self::assertSame('6', $this->getRecord('be_users', 1)['usergroup']);
+        self::assertSame(
+            [['error' => 1, 'details' => '{record}: Only roles can be assigned to users. Rejected groups: {groups}']],
+            $this->getExtensionLogEntries(),
+        );
     }
 
     /**
