@@ -19,6 +19,7 @@ use Cretection\BeGroups\Configuration\ExtensionSettings;
 use Cretection\BeGroups\DataHandling\RelationList;
 use Cretection\BeGroups\Domain\Kind\GroupKind;
 use Cretection\BeGroups\Domain\Kind\KindFieldResolver;
+use Cretection\BeGroups\Domain\Kind\KindPrefix;
 use Cretection\BeGroups\Domain\Kind\KindRegistry;
 use Cretection\BeGroups\Domain\Repository\BackendGroupRepository;
 use Cretection\BeGroups\Domain\Repository\BackendUserRepository;
@@ -60,6 +61,7 @@ final readonly class PermissionAudit
         private ExtensionSettings $extensionSettings,
         private EventDispatcherInterface $eventDispatcher,
         private TcaSchemaFactory $tcaSchemaFactory,
+        private KindPrefix $kindPrefix,
     ) {}
 
     /**
@@ -68,13 +70,16 @@ final readonly class PermissionAudit
     public function run(): array
     {
         $groups = [];
+        // The titles of the groups as the backend shows them: with the prefix of their kind.
+        $titles = [];
         foreach ($this->backendGroupRepository->findAll() as $group) {
             $groups[$group->getUid()] = $group;
+            $titles[$group->getUid()] = $this->kindPrefix->prefixTitle($group->get(GroupKind::FIELD_NAME), $group->get('title'));
         }
 
         $findings = [];
-        foreach ($groups as $group) {
-            $findings = [...$findings, ...$this->checkGroup($group, $groups), ...$this->checkList(self::GROUPS_TABLE, $group, 'subgroup', $group->get('title'))];
+        foreach ($groups as $uid => $group) {
+            $findings = [...$findings, ...$this->checkGroup($group, $groups, $titles), ...$this->checkList(self::GROUPS_TABLE, $group, 'subgroup', $titles[$uid])];
         }
         $userPermissionFields = $this->getUserPermissionFields();
         foreach ($this->backendUserRepository->findAllForAudit($userPermissionFields) as $user) {
@@ -82,7 +87,7 @@ final readonly class PermissionAudit
                 // Administrators have all permissions; the role model does not apply to them.
                 continue;
             }
-            $findings = [...$findings, ...$this->checkUser($user, $groups, $userPermissionFields), ...$this->checkList(self::USERS_TABLE, $user, 'usergroup', $user->get('username'))];
+            $findings = [...$findings, ...$this->checkUser($user, $groups, $titles, $userPermissionFields), ...$this->checkList(self::USERS_TABLE, $user, 'usergroup', $user->get('username'))];
         }
 
         $event = new AfterAuditFindingsCollectedEvent($findings);
@@ -98,12 +103,13 @@ final readonly class PermissionAudit
 
     /**
      * @param array<int, DatabaseRow> $groups all non-deleted groups, indexed by uid
+     * @param array<int, string> $titles the titles of these groups with the prefix of their kind
      * @return list<AuditFinding>
      */
-    private function checkGroup(DatabaseRow $group, array $groups): array
+    private function checkGroup(DatabaseRow $group, array $groups, array $titles): array
     {
         $kind = $group->get(GroupKind::FIELD_NAME);
-        $title = $this->describe($group->get('title'), $group->get('hidden') === '1');
+        $title = $this->describe($titles[$group->getUid()], $group->get('hidden') === '1');
         $finding = fn(AuditSeverity $severity, string $identifier, string $message): AuditFinding
             => new AuditFinding($severity, $identifier, self::GROUPS_TABLE, $group->getUid(), $title, $message);
 
@@ -124,7 +130,10 @@ final readonly class PermissionAudit
         $members = self::readGroupList($group->get('subgroup'));
         $isBuildingBlock = $this->kindRegistry->isBuildingBlock($kind);
         if ($isBuildingBlock && $members !== []) {
-            $findings[] = $finding(AuditSeverity::Error, 'building-block-with-subgroups', sprintf('Building blocks must not have subgroups, but it has: %s.', implode(', ', $members)));
+            $findings[] = $finding(AuditSeverity::Error, 'building-block-with-subgroups', sprintf(
+                'Building blocks must not have subgroups, but it has: %s.',
+                implode(', ', array_map(static fn(int $uid): string => 'group ' . self::nameGroup($uid, $titles), $members)),
+            ));
         }
 
         $foreignFields = [];
@@ -162,14 +171,23 @@ final readonly class PermissionAudit
             foreach ($members as $memberUid) {
                 $member = $groups[$memberUid] ?? null;
                 if ($member === null) {
-                    $findings[] = $finding(AuditSeverity::Error, 'role-missing-member', sprintf('The role contains group %d, which does not exist.', $memberUid));
-                } elseif (!$this->kindRegistry->isBuildingBlock($member->get(GroupKind::FIELD_NAME))) {
-                    $findings[] = $finding(
-                        AuditSeverity::Error,
-                        'role-invalid-member',
-                        sprintf('The role contains group %d "%s", which is no building block.', $memberUid, $member->get('title')),
-                    );
+                    $findings[] = $finding(AuditSeverity::Error, 'role-missing-member', sprintf('The role contains group %d, which does not exist or is deleted.', $memberUid));
+                    continue;
                 }
+                $memberKind = $member->get(GroupKind::FIELD_NAME);
+                if ($this->kindRegistry->isBuildingBlock($memberKind)) {
+                    continue;
+                }
+                $memberName = self::nameGroup($memberUid, $titles);
+                $findings[] = $finding(
+                    AuditSeverity::Error,
+                    'role-invalid-member',
+                    sprintf('The role contains %s; only building blocks belong in a role.', match (true) {
+                        !$this->kindRegistry->isKind($memberKind) => sprintf('group %s of the unknown kind "%s"', $memberName, $memberKind),
+                        $memberKind === GroupKind::Role->value => 'the role ' . $memberName,
+                        default => 'the classic group ' . $memberName,
+                    }),
+                );
             }
         }
         return $findings;
@@ -177,10 +195,11 @@ final readonly class PermissionAudit
 
     /**
      * @param array<int, DatabaseRow> $groups all non-deleted groups, indexed by uid
+     * @param array<int, string> $titles the titles of these groups with the prefix of their kind
      * @param list<string> $userPermissionFields
      * @return list<AuditFinding>
      */
-    private function checkUser(DatabaseRow $user, array $groups, array $userPermissionFields): array
+    private function checkUser(DatabaseRow $user, array $groups, array $titles, array $userPermissionFields): array
     {
         $title = $this->describe($user->get('username'), $user->get('disable') === '1');
         $finding = fn(AuditSeverity $severity, string $identifier, string $message): AuditFinding
@@ -193,7 +212,7 @@ final readonly class PermissionAudit
                 $findings[] = $finding(
                     AuditSeverity::Error,
                     'user-building-block',
-                    sprintf('The building block %d "%s" is assigned directly; assign it through a role.', $groupUid, $group->get('title')),
+                    sprintf('The building block %s is assigned directly; assign it through a role.', self::nameGroup($groupUid, $titles)),
                 );
             }
         }
@@ -274,6 +293,16 @@ final readonly class PermissionAudit
     private static function readGroupList(string $list): array
     {
         return array_values(array_unique(array_filter(GeneralUtility::intExplode(',', $list, true), static fn(int $uid): bool => $uid > 0)));
+    }
+
+    /**
+     * Names a group by its uid and title, e.g. '3 "META: Editors"', or by its uid only if it does not exist.
+     *
+     * @param array<int, string> $titles
+     */
+    private static function nameGroup(int $uid, array $titles): string
+    {
+        return isset($titles[$uid]) ? sprintf('%d "%s"', $uid, $titles[$uid]) : (string)$uid;
     }
 
     private function describe(string $title, bool $disabled): string

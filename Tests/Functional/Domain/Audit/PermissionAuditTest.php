@@ -79,15 +79,32 @@ final class PermissionAuditTest extends FunctionalTestCase
         }
 
         self::assertStringContainsString('"3"', $messages['be_groups:5'][0]);
-        self::assertStringContainsString(': 1.', $messages['be_groups:6'][0]);
+        self::assertStringEndsWith(': group 1 "ACL: ACL ok".', $messages['be_groups:6'][0]);
         self::assertStringEndsWith(': TSconfig. Saving the group removes them.', $messages['be_groups:7'][0]);
-        self::assertStringContainsString('group 4 "Classic"', $messages['be_groups:8'][0]);
-        self::assertStringContainsString('group 99, which does not exist', $messages['be_groups:8'][1]);
-        self::assertStringContainsString('group 3 "Role ok"', $messages['be_groups:8'][2]);
+        self::assertStringContainsString('the classic group 4 "Classic";', $messages['be_groups:8'][0]);
+        self::assertStringContainsString('group 99, which does not exist or is deleted', $messages['be_groups:8'][1]);
+        self::assertStringContainsString('the role 3 "META: Role ok";', $messages['be_groups:8'][2]);
         self::assertStringEndsWith(': groupMods. Saving the group removes them.', $messages['be_groups:9'][0]);
-        self::assertStringContainsString('building block 1 "ACL ok"', $messages['be_users:3'][0]);
+        self::assertStringContainsString('building block 1 "ACL: ACL ok"', $messages['be_users:3'][0]);
         self::assertStringContainsString(': file_permissions.', $messages['be_users:4'][0]);
         self::assertStringContainsString(': allowed_languages.', $messages['be_users:7'][0]);
+    }
+
+    #[Test]
+    public function namesTheUnknownKindOfMembers(): void
+    {
+        $this->importCSVDataSet(__DIR__ . '/Fixtures/AuditData.csv');
+        $this->getConnectionPool()->getConnectionForTable('be_groups')->update('be_groups', ['subgroup' => '1,5'], ['uid' => 3]);
+
+        $messages = [];
+        foreach ($this->get(PermissionAudit::class)->run() as $finding) {
+            $messages[$finding->table . ':' . $finding->uid][] = $finding->message;
+        }
+
+        self::assertSame(
+            ['The role contains group 5 "Unknown kind" of the unknown kind "3"; only building blocks belong in a role.'],
+            $messages['be_groups:3'],
+        );
     }
 
     #[Test]
@@ -149,7 +166,11 @@ final class PermissionAuditTest extends FunctionalTestCase
             $titles[$finding->table . ':' . $finding->uid] = $finding->title;
         }
 
-        self::assertSame('ACL hidden (disabled)', $titles['be_groups:11']);
+        // Groups are named as the backend shows them: with the prefix of their kind.
+        self::assertSame('ACL: ACL hidden (disabled)', $titles['be_groups:11']);
+        self::assertSame('META: Role with duplicates', $titles['be_groups:12']);
+        self::assertSame('Unknown kind', $titles['be_groups:5']);
+        self::assertSame('Classic', $titles['be_groups:4']);
         self::assertArrayNotHasKey('be_groups:10', $titles);
         self::assertArrayNotHasKey('be_users:1', $titles);
         self::assertArrayNotHasKey('be_users:6', $titles);

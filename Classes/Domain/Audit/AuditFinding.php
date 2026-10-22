@@ -26,7 +26,7 @@ final readonly class AuditFinding
      * @param string $identifier a stable machine-readable identifier, e.g. "role-invalid-member"
      * @param string $table the table of the affected record ("be_groups" or "be_users")
      * @param int $uid the uid of the affected record
-     * @param string $title the title or username of the affected record
+     * @param string $title the title of the affected record as the backend shows it (groups with the prefix of their kind), or the username
      * @param string $message an English explanation for administrators
      */
     public function __construct(
