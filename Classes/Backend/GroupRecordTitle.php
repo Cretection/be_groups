@@ -18,18 +18,24 @@ namespace Cretection\BeGroups\Backend;
 use Cretection\BeGroups\Domain\Kind\GroupKind;
 use Cretection\BeGroups\Domain\Kind\KindPrefix;
 use Symfony\Component\DependencyInjection\Attribute\Autoconfigure;
+use TYPO3\CMS\Core\Localization\LanguageService;
+use TYPO3\CMS\Core\Localization\LanguageServiceFactory;
 
 /**
  * The title of backend groups wherever TYPO3 shows it (lists, relation fields, record forms),
- * with the prefix of the kind, e.g. "META: Editors" (label_userFunc of be_groups).
+ * with the prefix of the kind, e.g. "META: Editors" (label_userFunc of be_groups). A group
+ * without title is shown like in the core, e.g. "META: [No title]".
  *
  * @internal
  */
 #[Autoconfigure(public: true)]
 final readonly class GroupRecordTitle
 {
+    private const NO_TITLE_LABEL = 'core.core:labels.no_title';
+
     public function __construct(
         private KindPrefix $kindPrefix,
+        private LanguageServiceFactory $languageServiceFactory,
     ) {}
 
     /**
@@ -38,7 +44,19 @@ final readonly class GroupRecordTitle
     public function render(array &$parameters): void
     {
         $row = is_array($parameters['row'] ?? null) ? $parameters['row'] : [];
-        $parameters['title'] = $this->kindPrefix->prefixTitle(self::getValue($row, GroupKind::FIELD_NAME), self::getValue($row, 'title'));
+        $kind = self::getValue($row, GroupKind::FIELD_NAME);
+        $title = self::getValue($row, 'title');
+        // The core shows "[No title]" for an empty title, but not behind a prefix ("DBM: ").
+        if (trim($title) === '' && $this->kindPrefix->getPrefix($kind) !== '') {
+            $title = '[' . $this->getLanguageService()->sL(self::NO_TITLE_LABEL) . ']';
+        }
+        $parameters['title'] = $this->kindPrefix->prefixTitle($kind, $title);
+    }
+
+    private function getLanguageService(): LanguageService
+    {
+        $languageService = $GLOBALS['LANG'] ?? null;
+        return $languageService instanceof LanguageService ? $languageService : $this->languageServiceFactory->create('default');
     }
 
     /**

@@ -22,6 +22,7 @@ use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
 use TYPO3\CMS\Backend\Utility\BackendUtility;
+use TYPO3\CMS\Core\Localization\LanguageServiceFactory;
 use TYPO3\TestingFramework\Core\Functional\FunctionalTestCase;
 
 #[CoversClass(GroupRecordTitle::class)]
@@ -57,5 +58,31 @@ final class GroupRecordTitleTest extends FunctionalTestCase
     public function showsTheKindAsPrefixOfTheTitle(mixed $kind, string $expectedTitle): void
     {
         self::assertSame($expectedTitle, BackendUtility::getRecordTitle('be_groups', ['uid' => 1, 'title' => 'Editors', 'tx_begroups_kind' => $kind]));
+    }
+
+    /**
+     * @return array<string, array{string, string, string}>
+     */
+    public static function untitledGroupDataProvider(): array
+    {
+        return [
+            'role' => ['role', '', 'META: [No title]'],
+            'page tree mount with a title of spaces' => ['db_mount', '  ', 'DBM: [No title]'],
+            'classic' => ['classic', '', '[No title]'],
+            'kind that is not configured' => ['3', '', '[No title]'],
+        ];
+    }
+
+    /**
+     * The prefix must not hide that a group has no title: the core shows "[No title]" for
+     * records without title.
+     */
+    #[Test]
+    #[DataProvider('untitledGroupDataProvider')]
+    public function showsNoTitleBehindThePrefixOfAnUntitledGroup(string $kind, string $title, string $expectedTitle): void
+    {
+        $GLOBALS['LANG'] = $this->get(LanguageServiceFactory::class)->create('default');
+
+        self::assertSame($expectedTitle, BackendUtility::getRecordTitle('be_groups', ['uid' => 1, 'title' => $title, 'tx_begroups_kind' => $kind]));
     }
 }
