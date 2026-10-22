@@ -128,6 +128,24 @@ final class OverviewControllerTest extends FunctionalTestCase
     }
 
     #[Test]
+    public function marksTheSelectedSortingAndKindWithACheckIcon(): void
+    {
+        $this->setUpBackendUserWithLanguage(1);
+
+        $html = $this->renderModule();
+
+        self::assertSame(2, substr_count($html, 'data-identifier="actions-check"'));
+        self::assertMatchesRegularExpression('#aria-current="true"\s*><span [^>]*data-identifier="actions-check"(?:(?!</a>).)*\bTitle</a>#s', $html);
+        self::assertMatchesRegularExpression('#aria-current="true"\s*><span [^>]*data-identifier="actions-check"(?:(?!</a>).)*\bAll kinds</a>#s', $html);
+
+        $html = $this->renderModule(['sorting' => OverviewBuilder::SORT_USAGE, 'kind' => 'acl']);
+
+        self::assertSame(2, substr_count($html, 'data-identifier="actions-check"'));
+        self::assertMatchesRegularExpression('#aria-current="true"\s*><span [^>]*data-identifier="actions-check"(?:(?!</a>).)*\bUsage</a>#s', $html);
+        self::assertMatchesRegularExpression('#aria-current="true"\s*><span [^>]*data-identifier="actions-check"(?:(?!</a>).)*\bAccess rights</a>#s', $html);
+    }
+
+    #[Test]
     public function explainsMembersThatAreNoBuildingBlocksInTheText(): void
     {
         $this->setUpBackendUserWithLanguage(1);

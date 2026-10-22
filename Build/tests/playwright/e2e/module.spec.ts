@@ -52,6 +52,9 @@ test.describe('Module "Roles & Building Blocks"', () => {
     const filter = frame.getByRole('group', { name: 'Building blocks of kind' });
     await filter.getByRole('link', { name: 'File mount' }).click();
     await expect(filter.getByRole('link', { name: 'File mount' })).toHaveAttribute('aria-current', 'true');
+    // The selected kind is marked by an icon, not only by a slightly darker background
+    await expect(filter.getByRole('link', { name: 'File mount' }).locator('[data-identifier="actions-check"]')).toBeVisible();
+    await expect(filter.locator('[data-identifier="actions-check"]')).toHaveCount(1);
     await expect(frame.getByRole('heading', { level: 3 })).toHaveText([/File mount/]);
     await expect(frame.getByRole('table', { name: /File mount/ }).getByRole('rowheader')).toHaveText([/Documents/, /Images/]);
   });
@@ -61,6 +64,8 @@ test.describe('Module "Roles & Building Blocks"', () => {
     await sorting.getByRole('link', { name: 'Usage' }).click();
     await expect(sorting.getByRole('link', { name: 'Usage' })).toHaveAttribute('aria-current', 'true');
     await expect(sorting.getByRole('link', { name: 'Title' })).toHaveAttribute('aria-current', 'false');
+    await expect(sorting.getByRole('link', { name: 'Usage' }).locator('[data-identifier="actions-check"]')).toBeVisible();
+    await expect(sorting.getByRole('link', { name: 'Title' }).locator('[data-identifier="actions-check"]')).toHaveCount(0);
   });
 
   test('lists classic groups separately', async ({ backend }) => {

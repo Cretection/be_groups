@@ -37,7 +37,7 @@
                         href="{f:be.uri(route: moduleIdentifier, parameters: {sorting: sortingOption, kind: kindFilter})}"
                         class="btn btn-default {f:if(condition: '{sorting} == {sortingOption}', then: 'active')}"
                         aria-current="{f:if(condition: '{sorting} == {sortingOption}', then: 'true', else: 'false')}"
-                    ><f:translate key="sorting.{sortingOption}" domain="be_groups.modules.overview" /></a>
+                    ><f:if condition="{sorting} == {sortingOption}"><core:icon identifier="actions-check" size="small" /> </f:if><f:translate key="sorting.{sortingOption}" domain="be_groups.modules.overview" /></a>
                 </f:for>
             </div>
 
@@ -47,13 +47,13 @@
                     href="{f:be.uri(route: moduleIdentifier, parameters: {sorting: sorting, kind: ''})}"
                     class="btn btn-default {f:if(condition: '!{kindFilter}', then: 'active')}"
                     aria-current="{f:if(condition: '!{kindFilter}', then: 'true', else: 'false')}"
-                ><f:translate key="filter.all" domain="be_groups.modules.overview" /></a>
+                ><f:if condition="!{kindFilter}"><core:icon identifier="actions-check" size="small" /> </f:if><f:translate key="filter.all" domain="be_groups.modules.overview" /></a>
                 <f:for each="{overview.buildingBlockKinds}" as="kindDefinition">
                     <a
                         href="{f:be.uri(route: moduleIdentifier, parameters: {sorting: sorting, kind: kindDefinition.value})}"
                         class="btn btn-default {f:if(condition: '{kindFilter} == {kindDefinition.value}', then: 'active')}"
                         aria-current="{f:if(condition: '{kindFilter} == {kindDefinition.value}', then: 'true', else: 'false')}"
-                    >{kindDefinition.label}</a>
+                    ><f:if condition="{kindFilter} == {kindDefinition.value}"><core:icon identifier="actions-check" size="small" /> </f:if>{kindDefinition.label}</a>
                 </f:for>
             </div>
         </div>
