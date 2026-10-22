@@ -57,6 +57,9 @@ by users who have this role as their first role.
     :alt: Form of the role "META: Content manager" with its building blocks on the left and the available groups, grouped by kind, on the right
 
     A role lists its building blocks; the available groups are grouped by kind.
+    The example is not a complete role: it starts with an "Access rights"
+    building block and has no "Workspace" building block. Check your own roles
+    as described below.
 
 A role can combine many building blocks: the extension enlarges the field
 :sql:`subgroup` to 2048 characters.

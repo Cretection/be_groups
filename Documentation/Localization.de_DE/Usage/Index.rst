@@ -61,7 +61,9 @@ erster Rolle anlegen.
     :alt: Formular der Rolle „META: Content manager“ mit ihren Bausteinen links und den verfügbaren Gruppen rechts, nach Typ gruppiert
 
     Eine Rolle listet ihre Bausteine; die verfügbaren Gruppen sind nach Typ
-    gruppiert.
+    gruppiert. Das Beispiel ist keine vollständige Rolle: Es beginnt mit einem
+    Baustein vom Typ „Zugriffsrechte“ und hat keinen Baustein vom Typ
+    „Workspace“. Prüfen Sie eigene Rollen wie unten beschrieben.
 
 Eine Rolle kann viele Bausteine kombinieren: Die Extension vergrößert das
 Feld :sql:`subgroup` auf 2048 Zeichen.
