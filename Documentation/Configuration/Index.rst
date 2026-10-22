@@ -8,6 +8,8 @@ Configuration
 
 System maintainers configure the extension in :guilabel:`System > Settings >
 Extension Configuration > be_groups`; TYPO3 asks for their password first.
+The option is on the tab :guilabel:`Basic` under
+:guilabel:`Enable features`.
 
 ..  _configuration-allowClassicGroups:
 
@@ -27,14 +29,17 @@ Allow classic groups
         installation.
 
     Disabled
-        *   The form no longer offers the kind "Classic (all settings)",
-            except for groups that already are classic. New groups start as
+        *   Neither the form nor the wizard :guilabel:`Create new record`
+            offers the kind "Classic (all settings)" any more, except the
+            form of groups that already are classic. New groups start as
             "Role".
         *   No new classic groups can be created and no group can become
             classic – neither in the form nor through the DataHandler API. A
             group created through the API without a kind is rejected,
             because it would be classic by default.
-        *   Backend users can only get roles assigned.
+        *   Backend users can only get roles assigned. The form of a user
+            lists the classic groups under "Classic groups (disabled, cannot
+            be assigned)".
         *   The consistency check ``begroups:audit`` reports remaining
             classic groups as error ``classic-group-disabled``, see
             :ref:`usage-audit`.

@@ -8,7 +8,10 @@ Konfiguration
 
 Systemverantwortliche konfigurieren die Extension unter
 :guilabel:`System > Einstellungen > Extension Configuration > be_groups`;
-TYPO3 fragt dabei zuerst nach ihrem Passwort.
+TYPO3 fragt dabei zuerst nach ihrem Passwort. TYPO3 zeigt dieses Formular
+für jede Extension auf Englisch: Die Option heißt dort
+:guilabel:`Allow classic groups` und steht auf dem Reiter :guilabel:`Basic`
+unter :guilabel:`Enable features`.
 
 ..  _configuration-allowClassicGroups:
 
@@ -29,14 +32,18 @@ Klassische Gruppen erlauben
         bestehenden Installation nötig.
 
     Deaktiviert
-        *   Das Formular bietet den Typ „Klassisch (alle Einstellungen)“
-            nicht mehr an, außer für Gruppen, die bereits klassisch sind.
-            Neue Gruppen beginnen als „Rolle“.
+        *   Weder das Formular noch der Assistent für neue Datensätze bietet
+            den Typ „Klassisch (alle Einstellungen)“ noch an, außer im
+            Formular von Gruppen, die bereits klassisch sind. Neue Gruppen
+            beginnen als „Rolle“.
         *   Es können keine neuen klassischen Gruppen angelegt werden, und
             keine Gruppe kann klassisch werden – weder im Formular noch über
             die DataHandler-API. Eine über die API ohne Typ angelegte Gruppe
             wird abgelehnt, weil sie standardmäßig klassisch wäre.
-        *   Backend-Benutzern können nur Rollen zugewiesen werden.
+        *   Backend-Benutzern können nur Rollen zugewiesen werden. Das
+            Formular eines Benutzers listet die klassischen Gruppen unter
+            „Klassische Gruppen (abgeschaltet, können nicht zugewiesen
+            werden)“.
         *   Die Konsistenzprüfung ``begroups:audit`` meldet verbliebene
             klassische Gruppen als Fehler ``classic-group-disabled``, siehe
             :ref:`usage-audit`.
