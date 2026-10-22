@@ -311,8 +311,15 @@ Rechtefelder anderer Extensions
     Assistenten stellen Gruppen mit Werten darin nicht um.
 
 Abgelehnte Datensätze bei Importen
-    Lehnt eine Regel einen Datensatz ab, zum Beispiel eine klassische Gruppe
-    bei abgeschalteten klassischen Gruppen, ist das im Systemprotokoll
-    sichtbar, aber nicht in der Fehlerliste des DataHandlers, die
-    Import-Werkzeuge üblicherweise auswerten. Führen Sie nach Importen die
-    Konsistenzprüfung aus, siehe :ref:`usage-audit`.
+    Lehnt eine Regel einen Datensatz oder eine Verknüpfung ab, zum Beispiel
+    eine klassische Gruppe bei abgeschalteten klassischen Gruppen, speichert
+    der DataHandler den Rest und meldet keinen Fehler. Die Ablehnung steht
+    weder in der Fehlerliste des DataHandlers, die Import-Werkzeuge
+    üblicherweise auswerten, noch in den gespeicherten Daten; auch die
+    Konsistenzprüfung kann sie deshalb nicht finden. Prüfen Sie nach einem
+    Import das Systemprotokoll (:guilabel:`Verwaltung > Protokoll`): Jede
+    Ablehnung ist ein Eintrag zur Tabelle :sql:`be_groups` oder
+    :sql:`be_users`. Skripte finden diese Einträge in :sql:`sys_log` mit
+    ``type`` 4 und ``error`` 1. Die Konsistenzprüfung (siehe
+    :ref:`usage-audit`) findet Daten, die am DataHandler vorbei geschrieben
+    wurden, zum Beispiel per SQL.

@@ -289,7 +289,13 @@ Permission fields of other extensions
     groups that have values in them.
 
 Rejected records during imports
-    When a rule rejects a record, for example a classic group while classic
-    groups are disabled, this is visible in the system log, but not in the
-    error list of the DataHandler that import tools usually evaluate. Run
-    the consistency check after imports, see :ref:`usage-audit`.
+    When a rule rejects a record or a relation, for example a classic group
+    while classic groups are disabled, the DataHandler stores the rest and
+    reports no error. The rejection is neither in the error list of the
+    DataHandler that import tools usually evaluate nor in the stored data, so
+    the consistency check cannot find it either. After an import, check the
+    system log (:guilabel:`Administration > Log`): every rejection is an
+    entry for the table :sql:`be_groups` or :sql:`be_users`. Scripts find
+    these entries in :sql:`sys_log` with ``type`` 4 and ``error`` 1. The
+    consistency check (see :ref:`usage-audit`) finds data written around the
+    DataHandler, for example by SQL.
