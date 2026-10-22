@@ -485,7 +485,19 @@ final class GroupKindRules
             return mb_strimwidth($entry, 0, 64, '…');
         }
         $title = $this->backendGroupRepository->findFieldsByUid($uid, ['title'])?->get('title') ?? '';
-        return $title === '' ? (string)$uid : sprintf('%s [%d]', mb_strimwidth($this->kindPrefix->prefixTitle($kind, $title), 0, 100, '…'), $uid);
+        return $title === '' ? (string)$uid : sprintf('%s [%d]', $this->isolateTitle($this->kindPrefix->prefixTitle($kind, $title)), $uid);
+    }
+
+    /**
+     * Shortens a title for a message and isolates it from the text around it (FIRST STRONG ISOLATE
+     * to POP DIRECTIONAL ISOLATE), so that bidirectional formatting characters in the title, e.g. a
+     * right-to-left override, cannot reorder the uid or the titles that follow it. Isolates of the
+     * title itself are removed, as a stray one could end the isolation early.
+     */
+    private function isolateTitle(string $title): string
+    {
+        $title = preg_replace('/[\x{2066}-\x{2069}]/u', '', $title) ?? $title;
+        return "\u{2068}" . mb_strimwidth($title, 0, 100, '…') . "\u{2069}";
     }
 
     /**

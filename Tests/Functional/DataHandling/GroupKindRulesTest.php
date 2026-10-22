@@ -221,7 +221,7 @@ final class GroupKindRulesTest extends FunctionalTestCase
         ]);
 
         self::assertSame('5,6', $this->getRecord('be_users', 2)['usergroup']);
-        self::assertMatchesRegularExpression('/^ACL: ACL new \\[\\d+\\]$/', $this->getRejectedGroupsOfLastLogEntry());
+        self::assertMatchesRegularExpression('/^\\x{2068}ACL: ACL new\\x{2069} \\[\\d+\\]$/u', $this->getRejectedGroupsOfLastLogEntry());
     }
 
     #[Test]
@@ -477,7 +477,7 @@ final class GroupKindRulesTest extends FunctionalTestCase
         );
 
         self::assertSame('5,1', $this->getRecord('be_groups', 7)['subgroup']);
-        self::assertSame('Classic default language [9]', $this->getRejectedGroupsOfLastLogEntry());
+        self::assertSame("\u{2068}Classic default language\u{2069} [9]", $this->getRejectedGroupsOfLastLogEntry());
     }
 
     #[Test]
@@ -539,7 +539,7 @@ final class GroupKindRulesTest extends FunctionalTestCase
             [['error' => 1, 'details' => 'Only roles can be assigned to users. Rejected groups: {groups}']],
             $this->getExtensionLogEntries(),
         );
-        self::assertSame('ACL: ACL editing [1]', $this->getRejectedGroupsOfLastLogEntry());
+        self::assertSame("\u{2068}ACL: ACL editing\u{2069} [1]", $this->getRejectedGroupsOfLastLogEntry());
     }
 
     #[Test]
@@ -560,7 +560,31 @@ final class GroupKindRulesTest extends FunctionalTestCase
         $this->writeGroup(6, ['subgroup' => '1,2,7,99']);
 
         self::assertSame('1,2', $this->getRecord('be_groups', 6)['subgroup']);
-        self::assertSame('META: R other [7], 99', $this->getRejectedGroupsOfLastLogEntry());
+        self::assertSame("\u{2068}META: R other\u{2069} [7], 99", $this->getRejectedGroupsOfLastLogEntry());
+    }
+
+    /**
+     * @return array<string, array{string}>
+     */
+    public static function bidirectionalTitleDataProvider(): array
+    {
+        return [
+            'right-to-left override' => ["R \u{202E}other"],
+            'right-to-left override after the end of an isolate' => ["R \u{2069}\u{202E}other"],
+        ];
+    }
+
+    #[Test]
+    #[DataProvider('bidirectionalTitleDataProvider')]
+    public function titlesOfRejectedGroupsAreIsolatedFromTheRestOfTheMessage(string $title): void
+    {
+        // A right-to-left override in a title must not reverse its uid and the groups that follow it.
+        $this->get(ConnectionPool::class)->getConnectionForTable('be_groups')
+            ->update('be_groups', ['title' => $title], ['uid' => 7]);
+
+        $this->writeGroup(6, ['subgroup' => '1,2,7,5']);
+
+        self::assertSame("\u{2068}META: R \u{202E}other\u{2069} [7], \u{2068}Classic all-in-one\u{2069} [5]", $this->getRejectedGroupsOfLastLogEntry());
     }
 
     /**
