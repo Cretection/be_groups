@@ -63,7 +63,7 @@ final readonly class OverviewBuilder
                 $row->get('hidden') !== '0',
                 isset($definitions['kind:' . $kind]) ? $definitions['kind:' . $kind]->iconIdentifier : self::FALLBACK_ICON,
             );
-            $members[$row->getUid()] = RelationList::fromStoredValue($row->get('subgroup'))->getUids();
+            $members[$row->getUid()] = $this->readSubgroups($row->get('subgroup'));
         }
 
         $usersByGroup = [];
@@ -145,6 +145,18 @@ final readonly class OverviewBuilder
             $buildingBlockKinds,
             $issueCount,
         );
+    }
+
+    /**
+     * The subgroups in the order TYPO3 applies them. A group listed twice counts at its last position
+     * (BackendUserAuthentication::fetchGroupData()), which decides the precedence of TSconfig.
+     *
+     * @return list<int>
+     */
+    private function readSubgroups(string $storedList): array
+    {
+        // Read backwards, the first occurrence that RelationList keeps is the last one of the stored list
+        return array_reverse(RelationList::fromStoredValue(implode(',', array_reverse(explode(',', $storedList))))->getUids());
     }
 
     /**

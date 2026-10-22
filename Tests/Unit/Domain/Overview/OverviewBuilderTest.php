@@ -210,6 +210,26 @@ final class OverviewBuilderTest extends UnitTestCase
     }
 
     #[Test]
+    public function tsconfigPrecedenceCountsADuplicateAtItsLastPositionLikeTypo3(): void
+    {
+        // Only SQL or a synchronisation tool stores a list like this; the DataHandler removes duplicates
+        $overview = $this->subject->build(
+            [
+                $this->group(1, 'TS show', 'tsconfig'),
+                $this->group(2, 'TS hide', 'tsconfig'),
+                $this->group(3, 'R duplicate', 'role', '1,2,1'),
+            ],
+            [],
+            [new KindDefinition('role', 'Role', 'status-user-group-backend'), new KindDefinition('tsconfig', 'TSconfig', 'actions-code')],
+            OverviewBuilder::SORT_TITLE,
+            '',
+        );
+
+        // BackendUserAuthentication::fetchGroupData() keeps the last occurrence, so "TS show" is applied last and wins
+        self::assertSame(['TS hide', 'TS show'], array_map(static fn(GroupItem $group): string => $group->title, $this->findRole($overview, 'R duplicate')->tsconfigPrecedence));
+    }
+
+    #[Test]
     public function groupsAreHiddenUnlessTheirHiddenFlagIsZeroLikeInTypo3(): void
     {
         // The HiddenRestriction of TYPO3 only lets "hidden = 0" pass
