@@ -93,6 +93,16 @@ test.describe('Module "Roles & Building Blocks"', () => {
     await expect(frame.getByRole('heading', { level: 1 })).toHaveText('META: Content manager');
   });
 
+  test('creates a building block of the chosen kind', async ({ backend }) => {
+    const docHeader = backend.contentFrame.locator('.module-docheader');
+    await docHeader.getByRole('button', { name: 'New building block' }).click();
+    await docHeader.getByRole('link', { name: 'File mount' }).click();
+    // The form of the kind opens right away, without changing the kind (which saves the record)
+    await expect(backend.contentFrame.getByRole('heading', { level: 1 })).toHaveText(/File mount/);
+    await expect(backend.field('file_mountpoints').first()).toBeAttached();
+    await expect(backend.field('groupMods')).toHaveCount(0);
+  });
+
   test('keeps the lines of the rows of roles 24 px apart', async ({ backend }) => {
     const frame = backend.contentFrame;
     for (const role of ['Content manager', 'Team lead']) {
@@ -134,6 +144,13 @@ test.describe('Module "Roles & Building Blocks"', () => {
   });
 
   test('meets WCAG 2.2 AA @a11y', async ({ backend }) => {
+    await backend.expectAccessible();
+  });
+
+  test('meets WCAG 2.2 AA with the kinds of new building blocks open @a11y', async ({ backend }) => {
+    const docHeader = backend.contentFrame.locator('.module-docheader');
+    await docHeader.getByRole('button', { name: 'New building block' }).click();
+    await expect(docHeader.getByRole('link', { name: 'File mount' })).toBeVisible();
     await backend.expectAccessible();
   });
 });

@@ -84,10 +84,11 @@ final readonly class OverviewController
             $kindFilter = is_string($requestedKind) && $this->kindRegistry->isBuildingBlock($requestedKind) ? $requestedKind : '';
         }
 
+        $kindDefinitions = $this->getTranslatedKindDefinitions();
         $overview = $this->overviewBuilder->build(
             $this->backendGroupRepository->findAllForOverview(),
             $this->backendUserRepository->findAllForOverview(),
-            $this->getTranslatedKindDefinitions(),
+            $kindDefinitions,
             $sorting,
             $kindFilter,
             $this->getLocale(),
@@ -98,7 +99,7 @@ final readonly class OverviewController
 
         $view = $this->moduleTemplateFactory->create($request);
         $view->setTitle($this->translate('title'));
-        $this->registerDocHeaderButtons($view, $returnUrl, $sorting, $kindFilter);
+        $this->registerDocHeaderButtons($view, $returnUrl, $sorting, $kindFilter, $kindDefinitions);
 
         return $view->assignMultiple([
             'overview' => $overview,
@@ -111,23 +112,37 @@ final readonly class OverviewController
         ])->renderResponse('Overview/Index');
     }
 
-    private function registerDocHeaderButtons(ModuleTemplate $view, string $returnUrl, string $sorting, string $kindFilter): void
+    /**
+     * @param list<KindDefinition> $kindDefinitions
+     */
+    private function registerDocHeaderButtons(ModuleTemplate $view, string $returnUrl, string $sorting, string $kindFilter, array $kindDefinitions): void
     {
         $buttonBar = $view->getDocHeaderComponent()->getButtonBar();
         $buttonBar->addButton(
             $this->componentFactory->createLinkButton()
-                ->setHref($this->buildNewGroupUri(GroupKind::Role, $returnUrl))
+                ->setHref($this->buildNewGroupUri(GroupKind::Role->value, $returnUrl))
                 ->setTitle($this->translate('button.newRole'))
                 ->setShowLabelText(true)
                 ->setIcon($this->iconFactory->getIcon('actions-plus', IconSize::SMALL)),
         );
-        $buttonBar->addButton(
-            $this->componentFactory->createLinkButton()
-                ->setHref($this->buildNewGroupUri(GroupKind::AccessControl, $returnUrl))
-                ->setTitle($this->translate('button.newBuildingBlock'))
-                ->setShowLabelText(true)
-                ->setIcon($this->iconFactory->getIcon('actions-plus', IconSize::SMALL)),
-        );
+        // A new building block starts with its kind: changing the kind in the form saves the record first
+        $newBuildingBlock = $this->componentFactory->createDropDownButton()
+            ->setLabel($this->translate('button.newBuildingBlock'))
+            ->setShowLabelText(true)
+            ->setIcon($this->iconFactory->getIcon('actions-plus', IconSize::SMALL));
+        foreach ($kindDefinitions as $definition) {
+            if ($this->kindRegistry->isBuildingBlock($definition->value)) {
+                $newBuildingBlock->addItem(
+                    $this->componentFactory->createDropDownItem()
+                        ->setHref($this->buildNewGroupUri($definition->value, $returnUrl))
+                        ->setLabel($definition->label)
+                        ->setIcon($this->iconFactory->getIcon($definition->iconIdentifier, IconSize::SMALL)),
+                );
+            }
+        }
+        if ($newBuildingBlock->getItems() !== []) {
+            $buttonBar->addButton($newBuildingBlock);
+        }
         $view->getDocHeaderComponent()->setShortcutContext(
             self::MODULE_IDENTIFIER,
             $this->translate('title'),
@@ -135,11 +150,11 @@ final readonly class OverviewController
         );
     }
 
-    private function buildNewGroupUri(GroupKind $kind, string $returnUrl): string
+    private function buildNewGroupUri(string $kind, string $returnUrl): string
     {
         return (string)$this->uriBuilder->buildUriFromRoute('record_edit', [
             'edit' => ['be_groups' => [0 => 'new']],
-            'defVals' => ['be_groups' => [GroupKind::FIELD_NAME => $kind->value]],
+            'defVals' => ['be_groups' => [GroupKind::FIELD_NAME => $kind]],
             'returnUrl' => $returnUrl,
         ]);
     }

@@ -128,6 +128,22 @@ final class OverviewControllerTest extends FunctionalTestCase
     }
 
     #[Test]
+    public function offersANewBuildingBlockOfEveryKind(): void
+    {
+        $this->setUpBackendUserWithLanguage(1);
+
+        $html = $this->renderModule();
+
+        // The form starts with the kind, as changing the kind of a group saves it
+        $newGroupOfKind = static fn(string $kind): string => 'edit%5Bbe_groups%5D%5B0%5D=new&amp;defVals%5Bbe_groups%5D%5Btx_begroups_kind%5D=' . $kind . '&amp;';
+        self::assertStringContainsString($newGroupOfKind('role'), $html);
+        foreach (['acl', 'page_group', 'db_mount', 'file_mount', 'file_operations', 'category_mount', 'language', 'tsconfig'] as $kind) {
+            self::assertStringContainsString($newGroupOfKind($kind), $html, $kind);
+        }
+        self::assertStringNotContainsString($newGroupOfKind('classic'), $html);
+    }
+
+    #[Test]
     public function marksTheSelectedSortingAndKindWithACheckIcon(): void
     {
         $this->setUpBackendUserWithLanguage(1);
