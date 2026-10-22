@@ -28,8 +28,8 @@ use TYPO3\CMS\Core\Schema\TcaSchemaFactory;
  * its form displays ("what is not visible must not apply").
  *
  * Only permission fields are managed: the permission fields of the core and every field
- * that is shown in the form of a role or building block. Other data on be_groups, such as
- * identifiers of synchronisation tools, is never touched.
+ * that is shown in the form of a role or building block, unless the forms of all kinds show
+ * it. Other data on be_groups, such as identifiers of synchronisation tools, is never touched.
  *
  * @internal
  */
@@ -159,8 +159,9 @@ final readonly class KindFieldResolver
     }
 
     /**
-     * Fields that only the form of classic groups shows: fields of other extensions that belong to
-     * no kind, e.g. because the extension is loaded before this one. R1 cannot manage them, so
+     * Fields of other extensions that belong to no kind: fields that only the form of classic groups
+     * shows (the extension is loaded before this one) and fields that the forms of all kinds show
+     * (the extension added them to every type, the classic one included). R1 cannot manage them, so
      * groups of other kinds must not carry values in them (see the documentation for developers).
      *
      * @return list<string>
@@ -251,9 +252,10 @@ final readonly class KindFieldResolver
     private function findManagedFields(TcaSchema $schema): array
     {
         $managedFieldNames = array_fill_keys(self::CORE_PERMISSION_FIELDS, true);
+        $fieldsOfAllKinds = $this->findFieldsShownByAllKinds($schema);
         foreach ($this->kindRegistry->getDefinitions() as $definition) {
             if ($this->isRestrictedKind($definition->value)) {
-                $managedFieldNames += $this->getAllowedFieldNames($schema->getSubSchema($definition->value));
+                $managedFieldNames += array_diff_key($this->getAllowedFieldNames($schema->getSubSchema($definition->value)), $fieldsOfAllKinds);
             }
         }
 
@@ -264,6 +266,26 @@ final readonly class KindFieldResolver
             }
         }
         return $fields;
+    }
+
+    /**
+     * The fields that the forms of all kinds of this extension show. Roles and page groups have no
+     * permission fields of their own (but the subgroups of a role), so such a field is assigned to no
+     * kind: another extension has added it to every type (addToAllTCAtypes() without a list of types).
+     * Only the kinds of this extension count, so kinds of other extensions cannot hide such a field.
+     *
+     * @return array<string, true>
+     */
+    private function findFieldsShownByAllKinds(TcaSchema $schema): array
+    {
+        $fieldNames = null;
+        foreach (GroupKind::cases() as $kind) {
+            if ($this->isRestrictedKind($kind->value)) {
+                $allowedFields = $this->getAllowedFieldNames($schema->getSubSchema($kind->value));
+                $fieldNames = $fieldNames === null ? $allowedFields : array_intersect_key($fieldNames, $allowedFields);
+            }
+        }
+        return $fieldNames ?? [];
     }
 
     /**

@@ -45,7 +45,7 @@ final class PermissionAuditWithUnassignedFieldsTest extends FunctionalTestCase
 
         self::assertCount(1, $findings);
         self::assertSame(
-            'Fields that belong to no kind have values, which the form of the kind "acl" does not show: tx_test_permission. If they grant permissions, assign these fields to a kind.',
+            'Fields that belong to no kind have values, so the kind "acl" does not restrict them: tx_test_permission. If they grant permissions, assign these fields to a kind.',
             $findings[0]->message,
         );
     }

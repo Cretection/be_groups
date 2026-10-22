@@ -153,6 +153,7 @@ final readonly class PermissionAudit
             );
         }
 
+        // Only the form of classic groups shows these fields, or the forms of all kinds do
         $unassignedFields = array_values(array_filter(
             $this->kindFieldResolver->getUnassignedFieldNames(),
             fn(string $fieldName): bool => !$this->kindFieldResolver->isEmptyValue($fieldName, $group->get($fieldName)),
@@ -162,7 +163,7 @@ final readonly class PermissionAudit
                 AuditSeverity::Warning,
                 'unassigned-fields',
                 sprintf(
-                    'Fields that belong to no kind have values, which the form of the kind "%s" does not show: %s. If they grant permissions, assign these fields to a kind.',
+                    'Fields that belong to no kind have values, so the kind "%s" does not restrict them: %s. If they grant permissions, assign these fields to a kind.',
                     $kind,
                     implode(', ', $unassignedFields),
                 ),
