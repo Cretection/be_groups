@@ -406,7 +406,10 @@ e2e() {
     ${CONTAINER_BIN} run ${CONTAINER_COMMON_PARAMS} --name e2e-setup-${SUFFIX} -e XDEBUG_MODE=off \
         -e COMPOSER_CACHE_DIR=${ROOT_DIR}/.cache/composer -e COMPOSER_HOME=${ROOT_DIR}/.cache/composer-home \
         ${IMAGE_PHP} Build/Scripts/setupE2E.sh || return 1
-    if [ ! -e "${ROOT_DIR}/Build/node_modules/.bin/playwright" ]; then
+    # Install again when the browser image does not match the installed Playwright, e.g. after an update
+    local INSTALLED_PLAYWRIGHT
+    INSTALLED_PLAYWRIGHT=$(sed -n 's/.*"version": "\([0-9.]*\)".*/\1/p' "${ROOT_DIR}/Build/node_modules/@playwright/test/package.json" 2>/dev/null)
+    if [ ! -e "${ROOT_DIR}/Build/node_modules/.bin/playwright" ] || [ "${INSTALLED_PLAYWRIGHT}" != "${PLAYWRIGHT_VERSION}" ]; then
         ${CONTAINER_BIN} run ${CONTAINER_COMMON_PARAMS} --name e2e-npm-ci-${SUFFIX} -e HOME=${ROOT_DIR}/.cache \
             ${IMAGE_PLAYWRIGHT} npm --prefix=Build ci --no-audit --no-fund || return 1
     fi
