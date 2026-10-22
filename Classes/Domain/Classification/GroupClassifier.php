@@ -132,6 +132,21 @@ final readonly class GroupClassifier
                 $subgroups,
             ));
         }
+        // Without EXT:workspaces, there is no "workspace" kind, no form shows workspace_perms and TYPO3 ignores it:
+        // every user works in the live workspace. The value takes effect again once EXT:workspaces is installed.
+        if (in_array('workspace_perms', $fieldsWithoutKind, true) && !$this->tcaSchemaFactory->has('sys_workspace')) {
+            $otherFieldsWithoutKind = array_diff($fieldsWithoutKind, ['workspace_perms']);
+            return $proposal(
+                ClassificationAction::Manual,
+                null,
+                'The group allows editing in the live workspace (workspace_perms), but EXT:workspaces is not installed: no form shows the field, and it grants nothing until EXT:workspaces is installed again. '
+                . 'Install EXT:workspaces to convert the group with a building block of the kind "workspace", or clear the field if you no longer use workspaces (see "Installations without EXT:workspaces" in the manual).'
+                . ($otherFieldsWithoutKind === [] ? '' : sprintf(
+                    ' Other fields that belong to no kind of building block have values as well: %s. Assign them to a kind or keep the group classic.',
+                    implode(', ', $otherFieldsWithoutKind),
+                )),
+            );
+        }
         if ($fieldsWithoutKind !== []) {
             return $proposal(ClassificationAction::Manual, null, sprintf(
                 'Fields that belong to no kind of building block have values: %s. Assign them to a kind or keep the group classic.',

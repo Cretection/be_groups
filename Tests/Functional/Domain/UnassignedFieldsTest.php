@@ -62,6 +62,22 @@ final class UnassignedFieldsTest extends FunctionalTestCase
     }
 
     #[Test]
+    public function namesFieldsOfNoKindNextToTheAccessToTheLiveWorkspaceWithoutWorkspaces(): void
+    {
+        // Group 8 allows editing in the live workspace, which belongs to no kind without EXT:workspaces.
+        $this->setPermissionOfOtherExtension(8);
+
+        $classification = $this->get(GroupClassifier::class)->classify(8);
+
+        self::assertSame(ClassificationAction::Manual, $classification?->action);
+        self::assertStringStartsWith('The group allows editing in the live workspace (workspace_perms), but EXT:workspaces is not installed: ', $classification->reason);
+        self::assertStringEndsWith(
+            ' Other fields that belong to no kind of building block have values as well: tx_test_permission. Assign them to a kind or keep the group classic.',
+            $classification->reason,
+        );
+    }
+
+    #[Test]
     public function theAuditReportsValuesInUnassignedFieldsOfOtherKinds(): void
     {
         $this->setPermissionOfOtherExtension(12);

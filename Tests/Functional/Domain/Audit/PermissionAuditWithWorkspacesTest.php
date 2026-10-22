@@ -45,4 +45,21 @@ final class PermissionAuditWithWorkspacesTest extends FunctionalTestCase
         );
         self::assertStringEndsWith(': workspace_perms. Keep user records free of permissions.', $findings[0]->message);
     }
+
+    #[Test]
+    public function reportsAccessToTheLiveWorkspaceOfOtherKindsAsInEffect(): void
+    {
+        $this->importCSVDataSet(__DIR__ . '/Fixtures/WorkspaceData.csv');
+        $this->getConnectionPool()->getConnectionForTable('be_groups')->update('be_groups', ['workspace_perms' => 1], ['uid' => 2]);
+
+        $messages = [];
+        foreach ($this->get(PermissionAudit::class)->run() as $finding) {
+            $messages[$finding->table . ':' . $finding->uid][] = $finding->identifier . ': ' . $finding->message;
+        }
+
+        self::assertSame(
+            ['foreign-permissions: Permissions that the kind "db_mount" does not show are in effect: workspace_perms. Saving the group removes them.'],
+            $messages['be_groups:2'],
+        );
+    }
 }

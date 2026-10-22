@@ -69,4 +69,18 @@ final class ClassifyCommandWorkspaceTest extends FunctionalTestCase
         // Without access to the live workspace, TYPO3 opens the first workspace the user is a member of.
         self::assertSame(1, $this->setUpBackendUser(4)->workspace);
     }
+
+    #[Test]
+    public function convertsTheAccessToTheLiveWorkspaceIntoAWorkspaceBuildingBlock(): void
+    {
+        $commandTester = new CommandTester($this->get(ClassifyCommand::class));
+
+        self::assertSame(Command::SUCCESS, $commandTester->execute([]));
+        // Without EXT:workspaces, the group needs a decision (GroupClassifierTest)
+        self::assertStringContainsString('be_groups:8 Workspace access: converted The kind is now "workspace".', $commandTester->getDisplay());
+        self::assertSame(
+            ['tx_begroups_kind' => 'workspace', 'workspace_perms' => 1],
+            $this->getConnectionPool()->getConnectionForTable('be_groups')->select(['tx_begroups_kind', 'workspace_perms'], 'be_groups', ['uid' => 8])->fetchAssociative(),
+        );
+    }
 }

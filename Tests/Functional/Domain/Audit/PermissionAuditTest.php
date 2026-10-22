@@ -134,6 +134,29 @@ final class PermissionAuditTest extends FunctionalTestCase
     }
 
     #[Test]
+    public function saysThatTheAccessToTheLiveWorkspaceHasNoEffectWithoutWorkspaces(): void
+    {
+        $this->importCSVDataSet(__DIR__ . '/Fixtures/AuditData.csv');
+        $connection = $this->getConnectionPool()->getConnectionForTable('be_groups');
+        // Left behind by an installation with EXT:workspaces, or written by SQL
+        $connection->update('be_groups', ['workspace_perms' => 1], ['uid' => 2]);
+        $connection->update('be_groups', ['workspace_perms' => 1], ['uid' => 7]);
+
+        $findings = [];
+        foreach ($this->get(PermissionAudit::class)->run() as $finding) {
+            $findings[$finding->table . ':' . $finding->uid][] = $finding->identifier . ': ' . $finding->message;
+        }
+
+        $withoutEffect = 'foreign-permissions: The group allows editing in the live workspace (workspace_perms), which the kind "%s" does not show. '
+            . 'This has no effect while EXT:workspaces is not installed, but takes effect again once it is installed. Saving the group removes it.';
+        self::assertSame([sprintf($withoutEffect, 'db_mount')], $findings['be_groups:2']);
+        self::assertSame([
+            'foreign-permissions: Permissions that the kind "acl" does not show are in effect: TSconfig. Saving the group removes them.',
+            sprintf($withoutEffect, 'acl'),
+        ], $findings['be_groups:7']);
+    }
+
+    #[Test]
     public function readsListsOfGroupsLikeTypo3(): void
     {
         $this->importCSVDataSet(__DIR__ . '/Fixtures/AuditData.csv');

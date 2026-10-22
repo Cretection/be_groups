@@ -145,11 +145,27 @@ final readonly class PermissionAudit
                 $foreignFields[] = $fieldName;
             }
         }
+        // Without EXT:workspaces, every user works in the live workspace and TYPO3 ignores workspace_perms,
+        // until EXT:workspaces is installed again.
+        $hasLiveWorkspaceWithoutEffect = in_array('workspace_perms', $foreignFields, true) && !$this->tcaSchemaFactory->has('sys_workspace');
+        if ($hasLiveWorkspaceWithoutEffect) {
+            $foreignFields = array_diff($foreignFields, ['workspace_perms']);
+        }
         if ($foreignFields !== []) {
             $findings[] = $finding(
                 AuditSeverity::Error,
                 'foreign-permissions',
                 sprintf('Permissions that the kind "%s" does not show are in effect: %s. Saving the group removes them.', $kind, implode(', ', $foreignFields)),
+            );
+        }
+        if ($hasLiveWorkspaceWithoutEffect) {
+            $findings[] = $finding(
+                AuditSeverity::Error,
+                'foreign-permissions',
+                sprintf(
+                    'The group allows editing in the live workspace (workspace_perms), which the kind "%s" does not show. This has no effect while EXT:workspaces is not installed, but takes effect again once it is installed. Saving the group removes it.',
+                    $kind,
+                ),
             );
         }
 

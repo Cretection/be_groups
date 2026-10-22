@@ -136,10 +136,12 @@ final class SplitCommandTest extends FunctionalTestCase
         $groupCount = $this->countGroups();
         $commandTester = new CommandTester($this->get(SplitCommand::class));
 
-        self::assertSame(Command::FAILURE, $commandTester->execute(['uids' => ['1', '10', '11', '99']]));
+        self::assertSame(Command::FAILURE, $commandTester->execute(['uids' => ['1', '8', '10', '11', '99']]));
         $display = $commandTester->getDisplay();
         // The audit advises to convert every classic group; this one changes its kind instead.
         self::assertStringContainsString('be_groups:1 Mounts only: skipped. Only grants permissions of the kind "db_mount". begroups:classify changes its kind to "db_mount".', $display);
+        // Without EXT:workspaces, no form shows the access to the live workspace
+        self::assertStringContainsString('be_groups:8 Workspace access: skipped. The group allows editing in the live workspace (workspace_perms), but EXT:workspaces is not installed: ', $display);
         self::assertStringContainsString('be_groups:10 Role: skipped. It is a group of the kind "role", not a classic group.', $display);
         self::assertStringContainsString('be_groups:11 Deleted: skipped. The group is deleted.', $display);
         self::assertStringContainsString('be_groups:99: skipped. The group does not exist.', $display);

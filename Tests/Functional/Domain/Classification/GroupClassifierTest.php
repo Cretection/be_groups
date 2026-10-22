@@ -77,8 +77,10 @@ final class GroupClassifierTest extends FunctionalTestCase
             'Grants no permissions and is assigned to no user directly. Choose a kind; delete it only if no group, workspace or TSconfig condition refers to it.',
             $classifier->classify(4)?->reason,
         );
+        // Without EXT:workspaces, no form shows the field and there is no kind it could be assigned to.
         self::assertSame(
-            'Fields that belong to no kind of building block have values: workspace_perms. Assign them to a kind or keep the group classic.',
+            'The group allows editing in the live workspace (workspace_perms), but EXT:workspaces is not installed: no form shows the field, and it grants nothing until EXT:workspaces is installed again. '
+            . 'Install EXT:workspaces to convert the group with a building block of the kind "workspace", or clear the field if you no longer use workspaces (see "Installations without EXT:workspaces" in the manual).',
             $classifier->classify(8)?->reason,
         );
         self::assertSame(
