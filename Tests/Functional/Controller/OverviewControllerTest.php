@@ -106,7 +106,7 @@ final class OverviewControllerTest extends FunctionalTestCase
         $html = (string)$this->get(OverviewController::class)->indexAction($this->createModuleRequest())->getBody();
 
         self::assertMatchesRegularExpression(
-            '#<span class="badge badge-danger">not a building block</span>(?:(?!</div>).)*>META: R editor</a>#s',
+            '#<span class="badge badge-danger">not a building block</span>(?:(?!</div>).)*>META: R editor</bdi></a>#s',
             $html,
         );
     }
@@ -122,9 +122,9 @@ final class OverviewControllerTest extends FunctionalTestCase
         $html = $this->renderModule();
 
         // TYPO3 does not apply hidden groups: own row and the rows of the roles "R editor" and "R other"
-        self::assertSame(3, preg_match_all('#>ACL editing</a>\s*<span class="badge badge-default">disabled</span>#', $html));
+        self::assertSame(3, preg_match_all('#>ACL editing</bdi></a>\s*<span class="badge badge-default">disabled</span>#', $html));
         // Own row and "Used in" of "ACL editing" and "DBM site A"
-        self::assertSame(3, preg_match_all('#>(?:META: )?R editor</a>\s*<span class="badge badge-default">disabled</span>#', $html));
+        self::assertSame(3, preg_match_all('#>(?:META: )?R editor</bdi></a>\s*<span class="badge badge-default">disabled</span>#', $html));
     }
 
     #[Test]
@@ -189,8 +189,8 @@ final class OverviewControllerTest extends FunctionalTestCase
 
         $html = $this->renderModule();
 
-        self::assertMatchesRegularExpression('#>META: R other</a>, (?:(?!</td>).)*>Classic all-in-one</a>#s', $html);
-        self::assertDoesNotMatchRegularExpression('#</a>\s+,#', $html);
+        self::assertMatchesRegularExpression('#>META: R other</bdi></a>, (?:(?!</td>).)*>Classic all-in-one</bdi></a>#s', $html);
+        self::assertDoesNotMatchRegularExpression('#</(?:bdi|a|span)>\s+,#', $html);
     }
 
     #[Test]
@@ -221,7 +221,27 @@ final class OverviewControllerTest extends FunctionalTestCase
 
         $html = $this->renderModule();
 
-        self::assertMatchesRegularExpression('#<th scope="row">(?:(?!</th>).)*>Zentrale</a>.*<th scope="row">(?:(?!</th>).)*>Ärzte</a>#s', $html);
+        self::assertMatchesRegularExpression('#<th scope="row">(?:(?!</th>).)*>Zentrale</bdi></a>.*<th scope="row">(?:(?!</th>).)*>Ärzte</bdi></a>#s', $html);
+    }
+
+    #[Test]
+    public function isolatesTitlesAndUsernamesFromTheTextAroundThem(): void
+    {
+        $this->setUpBackendUserWithLanguage(1);
+        // A right-to-left override in a title must not reorder the groups and commas that follow it
+        $groups = $this->get(ConnectionPool::class)->getConnectionForTable('be_groups');
+        $groups->update('be_groups', ['title' => "ACL \u{202E}editing"], ['uid' => 1]);
+        $groups->update('be_groups', ['title' => "R \u{202E}editor"], ['uid' => 6]);
+        $this->get(ConnectionPool::class)->getConnectionForTable('be_users')
+            ->update('be_users', ['username' => "mi\u{202E}xed", 'realName' => "Max \u{202E}Mustermann"], ['uid' => 4]);
+
+        $html = $this->renderModule();
+
+        // Building block in the rows of the roles, role in "Used in", user and name in the lists of users
+        self::assertStringContainsString("<bdi>ACL \u{202E}editing</bdi>", $html);
+        self::assertStringContainsString("<bdi>META: R \u{202E}editor</bdi>", $html);
+        self::assertStringContainsString("<bdi>mi\u{202E}xed</bdi>", $html);
+        self::assertStringContainsString("(<bdi>Max \u{202E}Mustermann</bdi>)", $html);
     }
 
     #[Test]
