@@ -1,6 +1,6 @@
 # Arbeitsstand be_groups-Relaunch
 
-Stand: **2026-10-09** · Branch **`relaunch`**, wird zu `dev` (CI grün) · Ziel: **1.0.0 für TYPO3 14.3 LTS**
+Stand: **2026-10-22** · Branch **`dev`** (Standard), `main` nur für Releases · Ziel: **1.0.0 für TYPO3 14.3 LTS**
 
 Dieses Dokument ist der Einstiegspunkt, um die Arbeit fortzusetzen. Das Konzept steht in [`RELAUNCH.md`](RELAUNCH.md), die verbindlichen Regeln für den Code in [`CODING_GUIDELINES.de.md`](CODING_GUIDELINES.de.md) bzw. [`CODING_GUIDELINES.md`](CODING_GUIDELINES.md).
 
@@ -32,7 +32,7 @@ Dieses Dokument ist der Einstiegspunkt, um die Arbeit fortzusetzen. Das Konzept 
   - **Barrierefreiheit** (2026-10-08, M4): axe-core 4.13 nach WCAG 2.2 AA in hellem und dunklem Theme. Modul, Rollen- und Bausteinformular und die überschriebenen Templates des Users-Moduls haben 0 Verstöße; der einzige Fund (Zielgröße der Benutzer-Links) ist behoben (`9320b38`).
   - **Laufzeit** (2026-10-08, M4): bei 1.000 Gruppen und 5.000 Benutzern `classify` 24 s statt 199 s, `split --all` 100 s statt über 10 Minuten.
 - **Testbasis:** Alle Prüfungen sind grün, auf allen Datenbanken, mit PHP 8.2 und 8.5, auf TYPO3 14.3 und 15-dev (Stand je Zeile in Abschnitt 3).
-- **Nächster Schritt:** der Rest von M4: Klicktest, Crowdin, Release (Abschnitt 7). Der erste Lauf des Jobs `mutation` auf GitHub ist grün (2026-10-09, [Lauf 37924063344](https://github.com/Cretection/be_groups/actions/runs/37924063344), `dev` auf `dfa1a62`): Covered Code MSI 82 % bei Minimum 80 %, 1.111 Mutanten erkannt, 240 abgedeckte nicht.
+- **Nächster Schritt:** Release 1.0.0 (Abschnitt 7, „Weg zu 1.0.0“). Am 2026-10-22 behoben: PHPStan 2.3 (Dependabot) und der Job `typo3-next` gegen TYPO3 15-dev; alle Prüfungen lokal grün mit TYPO3 14.3.10. Der Wochenlauf vom 2026-10-19 war bis auf `typo3-next` grün, inklusive `mutation`. Der erste Lauf des Jobs `mutation` auf GitHub ist grün (2026-10-09, [Lauf 37924063344](https://github.com/Cretection/be_groups/actions/runs/37924063344), `dev` auf `dfa1a62`): Covered Code MSI 82 % bei Minimum 80 %, 1.111 Mutanten erkannt, 240 abgedeckte nicht.
 
 ---
 
@@ -90,6 +90,9 @@ Dieses Dokument ist der Einstiegspunkt, um die Arbeit fortzusetzen. Das Konzept 
 | `[TASK] Add mutation tests with Infection` | `-s mutation`, PHAR mit Prüfsumme, Job `mutation` (wöchentlich) |
 | `[TASK] Test the gaps in the rules that mutation testing found` | Neue Regeltests, kein Fehler im Code |
 | `[TASK] Compare file mounts and file operations of the model with the core` | Abgleich über öffentliche API |
+| `[TASK] Give the second loop of the split command its own variable` | Neue Regel `foreach.valueOverwrite` von PHPStan 2.3 |
+| `[TASK] Test the file mounts also with file storages of TYPO3 15` | Dateispeicher im Test nur als Datensatz, wo es `sys_file_storage` noch gibt |
+| `[TASK] Keep the Node types on the version that runs the tests` | Dependabot schlägt `@types/node` nur innerhalb von Node 24 vor (Playwright-Image) |
 
 **Stand der Meilensteine** (Details in `RELAUNCH.md` §9):
 
@@ -107,14 +110,14 @@ Dieses Dokument ist der Einstiegspunkt, um die Arbeit fortzusetzen. Das Konzept 
 
 | Prüfung | Ergebnis |
 |---|---|
-| Unit-Tests | 37 Tests grün |
-| Functional Tests | 170 Tests grün (2026-10-08, SQLite) |
+| Unit-Tests | 37 Tests grün (2026-10-22, TYPO3 14.3.10) |
+| Functional Tests | 170 Tests grün (2026-10-22, SQLite, TYPO3 14.3.10) |
 | CI auf GitHub | Erster Lauf nach dem Push (2026-10-08, Stand `589dc5c`, [Lauf 37818522748](https://github.com/Cretection/be_groups/actions/runs/37818522748)): alle 23 Jobs grün, inklusive `typo3-next`, `e2e` und `coverage`; `mutation` läuft nur wöchentlich und auf Abruf. |
 | Lokales CI-Raster | Alle Jobs von `ci.yml` lokal nachgestellt (2026-10-08, Stand `06795e9`): 40 von 40 grün. Statische Prüfungen mit PHP 8.2; Unit-Tests mit PHP 8.2, 8.3, 8.4 und 8.5, jeweils niedrigste und höchste Abhängigkeiten; Functional Tests mit PHP 8.2 (SQLite) und 8.5 auf SQLite, MariaDB 10.11 und 11.8 (mysqli und pdo_mysql), MySQL 8.0 und 8.4 (mysqli und pdo_mysql), PostgreSQL 14 und 18; TYPO3 15-dev (Core `784b432`) mit Unit- und Functional Tests; Doku. Der Folgestand `16e219e` zusätzlich auf SQLite, MariaDB 10.11, MySQL 8.0 und PostgreSQL 14 grün, ebenso der Stand `a4abc2d` (170 Functional Tests, PHP 8.5). Die neuen Jobs `coverage`, `e2e` und `mutation` liefen lokal (Abschnitt 3); `typo3-next` gegen den neuen Stand steht aus und läuft mit dem ersten CI-Lauf. Skript: `run-matrix.sh` im Scratchpad. |
 | Massentest | Generierte Installation (150 Gruppen, 403 Benutzer, alle Sonderfälle): `classify` + `split --all`, wirksame Rechte aller Benutzer vorher und nachher über den Core verglichen. Wiederholt am 2026-10-08 mit korrigiertem Dump, der auch deaktivierte Benutzer lädt und nichts schreibt: 44 + 101 Gruppen umgestellt, 0 fehlgeschlagen, 0 Abweichungen. Bei 387 Benutzern ist eine neue Seitenrechte-Gruppe Eigentümerin neuer Seiten (beabsichtigt). Danach meldet das Audit 143 × `role-invalid-member` (Rollen in Rollen), 1 × `role-missing-member` (gelöschte Gruppe aus den Testdaten) und 4 klassische Gruppen zur Entscheidung. Werkzeuge im Testprojekt: `generate-test-data.php`, `dump-permissions.php`. |
 | Lasttest | 1.000 Gruppen, 5.000 Benutzer (Seed 11), Endstand 2026-10-08: `classify` 24 s (240 umgestellt), `split --all` 100 s (739 umgestellt), 0 fehlgeschlagen; wirksame Rechte aller 5.007 Benutzer über den Core verglichen: 0 Abweichungen; 0 Fehler im Systemprotokoll. Vorher: `classify` 199 s, `split --all` über 10 Minuten. Werkzeuge im Testprojekt: `benchmark.sh`, Skript `e2e.sh` im Scratchpad (Erzeugen, Dump, Assistenten, Vergleich, Log). |
 | Log-Test | Nach Testdaten, Assistenten und Rundgang durch das Backend: 0 Fehler im Systemprotokoll (nur Einträge des DataHandler), keine neuen Einträge im Datei-Log, keine Konsolenfehler (2026-10-08). |
-| PHP- und TYPO3-Versionen | PHP 8.2 bis 8.5 mit niedrigsten und höchsten Abhängigkeiten, TYPO3 14.3.7 und 15.0-dev: siehe lokales CI-Raster |
+| PHP- und TYPO3-Versionen | PHP 8.2 bis 8.5 mit niedrigsten und höchsten Abhängigkeiten, TYPO3 14.3.7 und 15.0-dev: siehe lokales CI-Raster. Am 2026-10-22 mit TYPO3 14.3.10 (PHP 8.5, SQLite) lokal grün; die Core-Templates, auf denen die Overrides des Users-Moduls beruhen, sind in 14.3.8 bis 14.3.10 unverändert (Hashes geprüft). |
 | Testabdeckung | 94,09 % der Zeilen in `Classes/` (1.530 von 1.626), Unit- und Functional-Tests (SQLite) zusammengeführt, PHP 8.5 mit Xdebug (2026-10-08). Ziel laut `CODING_GUIDELINES.md` §13: mindestens 90 %; die CI prüft das im Job `coverage` (`-s coverageMerge`, `-s coverageCheck`). Der Bericht enthält auch `Configuration/` und `ext_localconf.php` (0 %, weil TYPO3 sie vor der Messung lädt); sie bleiben in `<source>`, damit Notices und Deprecations dort die Tests scheitern lassen. Größte Lücken: `BackendGroupRepository` (28 Zeilen), `BackendUserRepository` (13), `GroupConverter` (11). |
 | Mutationsproben | 11 gezielte Mutanten in Prüfung und Modell, dazu Gegenproben aller Korrekturen vom 2026-10-08 (u. a. MariaDB mit `clearCacheCmd`, Platzhalter, `TCAdefaults`, gespeicherte Listen, Override-Vergleich): alle von Tests erkannt |
 | Mutationstests | Infection 0.35.4 über `Classes/Domain` und `Classes/DataHandling` mit Unit- und Functional-Tests (2026-10-08, Stand `4dd5839`): 1.342 Mutanten, 1.082 getötet, 3 Fehler, 2 Timeouts, 255 überlebt, MSI **81 %** (Ziel 80 %), 1 h 27 min. Danach geschlossen: Lücken in den Regeln (`8be8dab`) und im Abgleich des Modells mit dem Core für Dateifreigaben und Dateioperationen (`a4abc2d`); kein Fehler im Code gefunden. Nachlauf nur für die Regel-Engine (`DataHandling/`, Stand `8be8dab`): 364 Mutanten, 297 getötet, 67 überlebt, MSI **81,6 %** (Ziel 80 % laut `RELAUNCH.md` §8.1); alle gezielten Mutanten (u. a. `trim` des Typs, abgeschaltete klassische Gruppen, Platzhalter späterer Gruppen, Ausdruck für unsichere Werte) werden erkannt. Die Überlebenden im Modell, die beide Seiten des Vorher-nachher-Vergleichs gleich verändern (z. B. `array_values`, `intExplode(…, false)` mit nachgelagertem Filter), können keine Rechteänderung verdecken. |
@@ -122,7 +125,8 @@ Dieses Dokument ist der Einstiegspunkt, um die Arbeit fortzusetzen. Das Konzept 
 | E2E-Tests | 32 Tests grün (2026-10-08, `-s e2e`, Playwright 1.63, TYPO3 14.3.7): Modul (Listen, Filter, Sortierung, Inkonsistenzen, Vorrang im TSconfig, Bearbeiten-Links), Formulare aller Bausteintypen und der Rolle, Ablehnung „Rolle in Rolle“ und „Baustein am Benutzer“ samt Sudo-Mode, Präfixe im Core-Modul „Users“; axe (WCAG 2.2 AA) im hellen und im dunklen Theme, eine Prüfung der Textfarbe stellt sicher, dass der dunkle Lauf wirklich dunkel ist. Gegenprobe: ein Bild ohne Alt-Text im Modul lässt beide axe-Tests scheitern. |
 | Barrierefreiheit | axe-core 4.13 (WCAG 2.2 AA) per Playwright 1.63 in hellem und dunklem Theme: 0 Verstöße in Modul, Rollen- und Bausteinformular und überschriebenen Users-Templates. Offene „needs review“-Hinweise betreffen das Modulmenü des Core. Bedienung nur über native Links und Buttons, keine eigenen Widgets. |
 | Release-Probe | Release 1.0.0 in einer Kopie simuliert: `setVersion.php`, Changelogs, `checkReleaseVersion.php`, annotierter Tag, `git archive`; `tailor create-artefact` validiert das Paket. Kein Upload ins TER. |
-| PHPStan | Level max, ohne Baseline, mit Prüfung auf `@internal`: 0 Fehler. Gegen 15-dev (Core `784b432`, 2026-10-08): `Classes/` ohne Befund; 403 Meldungen nur in den Tests (`mixed` aus `get()`, weil das Testing-Framework für v15 die Typisierung geändert hat; vor dem Wechsel auf v15 zu lösen). |
+| Gegen TYPO3 15-dev | 2026-10-22 lokal wie der Job `typo3-next` (Kopie, `composerUpdateDev`, Core `169401d`, PHP 8.5): 37 Unit- und 170 Functional-Tests grün. Vorher schlug der Job seit dem 2026-10-15 mit 22 Fehlern fehl: TYPO3 15 konfiguriert Dateispeicher in `config/system/file-storages.yaml`, die Tabelle `sys_file_storage` gibt es nicht mehr (Core `e2255aa815`). Nur der Test legte den Speicher als Datensatz an; `Classes/` nutzt die Tabelle nicht. |
+| PHPStan | Level max, ohne Baseline, mit Prüfung auf `@internal`: 0 Fehler (2026-10-22 mit PHPStan 2.3.1). Gegen 15-dev (Core `784b432`, 2026-10-08): `Classes/` ohne Befund; 403 Meldungen nur in den Tests (`mixed` aus `get()`, weil das Testing-Framework für v15 die Typisierung geändert hat; vor dem Wechsel auf v15 zu lösen). |
 | Weitere Prüfungen | php-cs-fixer, Lizenzköpfe, Rector, Lint, PSR-4, Integrität (Exception-Codes, Testkonventionen), XLIFF, YAML, JSON, `composer normalize`: alle grün |
 | Doku | `render-guides` (EN und DE) ohne Warnungen |
 | Gegen TYPO3 15 | 0 genutzte APIs, die in v15 deprecated oder intern sind |
@@ -247,10 +251,10 @@ Beim Ändern von Typ oder Rollenzusammensetzung fragt TYPO3 nach dem Passwort. D
   2. Ruleset `main` (id 24783350): Ziel von „Default branch“ auf `main` ändern, die Regel „Require a pull request“ entfernen, der Rest bleibt (Löschen, Force-Push, Status-Check `Required checks` aktuell). Ein Push von `dev` nach `main` ist erlaubt, weil der Check auf diesem Commit schon bestanden hat.
   3. Neues Ruleset `dev`: Ziel „Default branch“, Löschen und Force-Push sperren, sonst nichts. Der Check `Required checks` wird erst später auch für `dev` verlangt (dann nur noch über Pull Requests).
   Bis dahin gilt: Der Check `Required checks` und das Ruleset `main` sind eingerichtet (2026-10-09, per API geprüft).
-- **TER:** ✅ Token „Release: be_groups“ (Scopes `extension:read`, `extension:write`, nur `be_groups`) liegt als Secret `TYPO3_API_TOKEN` in der GitHub-Environment `ter` (2026-10-09). Die Environment ist auf Tags `[0-9]*.[0-9]*.[0-9]*` beschränkt (per API geprüft). **Der Token läuft am 2026-10-15 ab:** Vor dem Tag `1.0.0` auf https://extensions.typo3.org/my-access-tokens/list erneuern („Refresh an access token“) und das Secret nachtragen, sonst scheitert der Upload. Der Extension-Key `be_groups` gehört bereits `cretection` (TER-API, geprüft am 2026-10-08; letzte Version 0.0.9 für TYPO3 11).
-- **docs.typo3.org:** den Webhook für das Rendering der Doku.
+- **TER:** ✅ Token „Release: be_groups“ (Scopes `extension:read`, `extension:write`, nur `be_groups`) liegt als Secret `TYPO3_API_TOKEN` in der GitHub-Environment `ter` (2026-10-09). Die Environment ist auf Tags `[0-9]*.[0-9]*.[0-9]*` beschränkt (per API geprüft). **Der Token ist am 2026-10-15 abgelaufen:** Vor dem Tag `1.0.0` auf https://extensions.typo3.org/my-access-tokens/list erneuern („Refresh an access token“) und das Secret nachtragen, sonst scheitert der Upload. Der Extension-Key `be_groups` gehört bereits `cretection` (TER-API, geprüft am 2026-10-08; letzte Version 0.0.9 für TYPO3 11).
+- **docs.typo3.org:** den Webhook für das Rendering der Doku, **vor dem Tag `1.0.0`**, damit das Handbuch zum Release erscheint. Am 2026-10-22 lieferte https://docs.typo3.org/p/cretection/be-groups/main/en-us/ noch 404. Anleitung: https://docs.typo3.org/m/typo3/docs-how-to-document/main/en-us/Howto/WritingDocForExtension/Webhook.html (GitHub *Settings → Webhooks → Add webhook*, Payload-URL `https://docs-hook.typo3.org`, Content type `application/json`, SSL-Prüfung an, nur Push-Events). Beim ersten Mal gibt das Doku-Team das Repo frei; Voraussetzungen erfüllt (Key `be_groups` im TER, Repo auf der TER-Seite verlinkt), Nachfrage sonst in `#typo3-documentation`. Gerendert werden `main`, Tags und `documentation-draft`. Der alte Branch `documentation-draft` (2022, `3f8b57e`, alte Doku) würde dann als Entwurf erscheinen; vorher löschen.
 - **Crowdin (E15):** Im TYPO3-Slack, Kanal `#typo3-localization-team`, die Aufnahme von `be_groups` beantragen (Name der Extension, E-Mail-Adresse für die Einladung). Danach im Repo die Secrets `CROWDIN_PROJECT_ID` und `CROWDIN_PERSONAL_TOKEN` anlegen (Token-Rechte laut [Doku](https://docs.typo3.org/permalink/t3coreapi:crowdin-extension-integration)), die deutschen Übersetzungen als „existing translations“ hochladen (`zip translations.zip Resources/Private/Language/*.*.xlf Resources/Private/Language/Modules/*.*.xlf`) und freigeben. Den Link zum Projekt in `CONTRIBUTING*.md` eintragen.
-- **Packagist:** Das Paket `cretection/be-groups` besteht bereits (0.0.1–0.0.9 aus `Cretection/be_groups`, geprüft am 2026-10-08). Offen: prüfen, ob der Auto-Update-Hook aktiv ist.
+- **Packagist:** ✅ Das Paket `cretection/be-groups` besteht bereits (0.0.1–0.0.9 aus `Cretection/be_groups`, geprüft am 2026-10-08). Der Auto-Update-Hook ist aktiv: Die Paketseite meldet am 2026-10-22 „This package is auto-updated“, letzte Aktualisierung 2026-10-16 beim Push der Dependabot-Branches.
 
 **An den TYPO3 Core zu melden (Forge, öffentlich, keine Sicherheitslücke):**
 - `SelectCheckBoxElement` (TYPO3 14.3.7, Zeile 164) rendert die Köpfe gruppierter Checkboxen als `role="tab"` ohne Tabliste und mit einem Button darin; axe meldet `aria-required-parent` und `nested-interactive`. Betrifft z. B. die Dateioperationen jeder Backend-Gruppe, auch ohne be_groups. Die E2E-Tests nehmen genau diese Elemente aus.
@@ -264,11 +268,26 @@ Beim Ändern von Typ oder Rollenzusammensetzung fragt TYPO3 nach dem Passwort. D
 
 ## 7. Nächste Aufgaben (Reihenfolge)
 
-1. **Nach dem ersten CI-Lauf** (✅ grün am 2026-10-08; gepusht von Jonathan als `Cretection` per SSH mit dem Secretive-Schlüssel, Remote `git@github.com-cretection:Cretection/be_groups.git`). Vor jedem Push alle Commits auf Hinweise auf LLMs prüfen.
+**Weg zu 1.0.0** (Stand 2026-10-22):
+
+| # | Schritt | Wer | Stand |
+|---|---|---|---|
+| 1 | Lokale Commits auf `dev` pushen (`git push origin dev`), CI abwarten | Jonathan | offen |
+| 2 | Dependabot-PR #10 schließen (siehe unten) | Jonathan | offen |
+| 3 | Klicktest in `begroups-test` (Abschnitt 5) | Jonathan | offen; Sichtprüfung vom 2026-10-08 ist erledigt |
+| 4 | TER-Token erneuern und Secret `TYPO3_API_TOKEN` in der Environment `ter` ersetzen (abgelaufen am 2026-10-15) | Jonathan | offen |
+| 5 | Webhook von docs.typo3.org einrichten, alten Branch `documentation-draft` löschen (Abschnitt 6) | Jonathan | offen |
+| 6 | Release-Commit: `setVersion.php 1.0.0`, Changelogs mit Datum, `checkReleaseVersion.php 1.0.0` | Entwicklung | nach 3 |
+| 7 | `git push origin origin/dev:main`, annotierter Tag `1.0.0`, Upload über den Workflow `Publish` prüfen | Jonathan | nach 4–6 |
+
+Crowdin blockiert 1.0.0 nicht: Deutsch liegt im Repo, Crowdin bringt weitere Sprachen nach.
+
+1. **Nach dem ersten CI-Lauf** (✅ grün am 2026-10-08; gepusht von Jonathan als `Cretection` per SSH mit dem Secretive-Schlüssel, Remote `git@github.com-cretection:Cretection/be_groups.git`).
    - ✅ Der Job `mutation` lief am 2026-10-09 einmal über „Actions → CI → Run workflow“ auf `dev`: grün, MSI 82 %.
    - Die Pipeline beobachten, besonders die Container-Images und den Job `typo3-next`. Der Runner `ubuntu-26.04` ist seit dem 2026-09-17 allgemein verfügbar; `actionlint` 1.7.12 kennt das Label noch nicht (falscher Alarm).
    - ✅ Branch-Schutz eingerichtet (2026-10-09, Abschnitt 6). Das Branch-Modell (`dev` Standard, `main` Release) steht in Abschnitt 6.
    - Die Testabdeckung wird zusammengeführt und geprüft (Job `coverage`, siehe Abschnitt 3).
+   - **Dependabot** (erste Runde am 2026-10-16, PRs #4–#11): #4–#9 und #11 sind lokal auf `dev` übernommen (Commits von `dependabot[bot]`, per Cherry-Pick); Dependabot schließt die PRs selbst, sobald die Versionen auf `dev` liegen. #11 (PHPStan 2.3.1) brauchte vorher die Korrektur in `SplitCommand`. #10 (`@types/node` 26) wird nicht übernommen, weil die Tests auf Node 24 laufen; die neue Regel in `.github/dependabot.yml` verhindert solche Vorschläge, den PR von Hand schließen.
 2. **Klicktest von Jonathan** in `begroups-test` (Abschnitt 5, aktuelles Szenario). Befunde zuerst als Test reproduzieren, dann beheben.
    - Sichtprüfung am 2026-10-08 abgeschlossen: alle Typ-Formulare, Ablehnungen im Formular (Rolle in Rolle, Baustein am Benutzer) mit Titel und uid in der Meldung, Typ-Auswahl bei abgeschalteten klassischen Gruppen (neue Gruppen starten als Rolle, bestehende klassische Gruppen behalten „Classic“), Rollenformular mit über 3.000 Gruppen in der Auswahl (Aufbau etwa 1 s).
    - Vorschlag: Das Modul zeigt die Bausteine einer Rolle nach Typ gruppiert, nicht in der gespeicherten Reihenfolge, die den TSconfig-Vorrang bestimmt. Die Reihenfolge zusätzlich anzeigen. ✅ Entschieden von Jonathan (2026-10-08): ja, nur wo sie zählt. Umgesetzt (`f8d5d29`): „Vorrang im TSconfig“ ab zwei sichtbaren TSconfig-Bausteinen.
