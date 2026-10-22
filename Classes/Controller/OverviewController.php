@@ -90,6 +90,7 @@ final readonly class OverviewController
             $this->getTranslatedKindDefinitions(),
             $sorting,
             $kindFilter,
+            $this->getLocale(),
         );
 
         $normalizedParams = $request->getAttribute('normalizedParams');
@@ -155,6 +156,16 @@ final readonly class OverviewController
             $definitions[] = new KindDefinition($definition->value, $label !== '' ? $label : $definition->value, $definition->iconIdentifier);
         }
         return $definitions;
+    }
+
+    /**
+     * The locale of the editor, as the core uses it to sort labels (SelectItemProcessor).
+     */
+    private function getLocale(): string
+    {
+        $languageService = $GLOBALS['LANG'] ?? null;
+        $locale = $languageService instanceof LanguageService ? $languageService->getLocale() : null;
+        return $locale !== null ? (string)$locale : 'en';
     }
 
     private function translate(string $key): string

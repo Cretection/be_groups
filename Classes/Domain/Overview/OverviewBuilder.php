@@ -40,9 +40,14 @@ final readonly class OverviewBuilder
      * @param list<DatabaseRow> $userRows fields: uid, username, realName, usergroup, disable
      * @param list<KindDefinition> $kindDefinitions the configured kinds with translated labels, in their order
      * @param string $kindFilter only building blocks of this kind are listed ('' = all)
+     * @param string $locale the locale of the editor, titles and usernames are sorted alphabetically for it
      */
-    public function build(array $groupRows, array $userRows, array $kindDefinitions, string $sorting, string $kindFilter): Overview
+    public function build(array $groupRows, array $userRows, array $kindDefinitions, string $sorting, string $kindFilter, string $locale = 'en'): Overview
     {
+        // Like the core sorts labels (SelectItemProcessor), numbers in their natural order: "Meta 9" before "Meta 10"
+        $collator = new \Collator($locale);
+        $collator->setAttribute(\Collator::NUMERIC_COLLATION, \Collator::ON);
+
         $definitions = [];
         foreach ($kindDefinitions as $definition) {
             $definitions['kind:' . $definition->value] = $definition;
@@ -92,15 +97,15 @@ final readonly class OverviewBuilder
         $buildingBlocks = [];
         foreach ($groups as $uid => $group) {
             if ($group->kind === GroupKind::Role->value) {
-                $roles[] = $this->buildRole($group, $members[$uid], $groups, $definitions, $isBuildingBlock, $usersByGroup[$uid] ?? []);
+                $roles[] = $this->buildRole($group, $members[$uid], $groups, $definitions, $isBuildingBlock, $usersByGroup[$uid] ?? [], $collator);
             } elseif ($group->kind === GroupKind::Classic->value) {
                 $classicGroups[] = $group;
             } elseif ($isBuildingBlock($group->kind)) {
                 $buildingBlocks[] = new BuildingBlockItem(
                     $group,
-                    $this->sortGroups($parentRoles[$uid] ?? []),
-                    $this->sortGroups($parentOthers[$uid] ?? []),
-                    $this->sortUsers($usersByGroup[$uid] ?? []),
+                    $this->sortGroups($parentRoles[$uid] ?? [], $collator),
+                    $this->sortGroups($parentOthers[$uid] ?? [], $collator),
+                    $this->sortUsers($usersByGroup[$uid] ?? [], $collator),
                     $members[$uid] !== [],
                 );
             } else {
@@ -133,16 +138,16 @@ final readonly class OverviewBuilder
                     $definition->value,
                     $definition->label,
                     $definition->iconIdentifier,
-                    $this->sortBuildingBlocks($blocksOfKind, $sorting),
+                    $this->sortBuildingBlocks($blocksOfKind, $sorting, $collator),
                 );
             }
         }
 
         return new Overview(
-            $this->sortRoles($roles, $sorting),
+            $this->sortRoles($roles, $sorting, $collator),
             $sections,
-            $this->sortGroups($classicGroups),
-            $this->sortGroups($unknownKindGroups),
+            $this->sortGroups($classicGroups, $collator),
+            $this->sortGroups($unknownKindGroups, $collator),
             $buildingBlockKinds,
             $issueCount,
         );
@@ -167,7 +172,7 @@ final readonly class OverviewBuilder
      * @param \Closure(string): bool $isBuildingBlock
      * @param list<UserItem> $users
      */
-    private function buildRole(GroupItem $role, array $memberUids, array $groups, array $definitions, \Closure $isBuildingBlock, array $users): RoleItem
+    private function buildRole(GroupItem $role, array $memberUids, array $groups, array $definitions, \Closure $isBuildingBlock, array $users, \Collator $collator): RoleItem
     {
         $buildingBlocks = [];
         $invalidMembers = [];
@@ -190,7 +195,7 @@ final readonly class OverviewBuilder
                 static fn(GroupItem $member): bool => $member->kind === $definition->value,
             ));
             if ($membersOfKind !== []) {
-                $kindGroups[] = new KindGroups($definition->value, $definition->label, $definition->iconIdentifier, $this->sortGroups($membersOfKind));
+                $kindGroups[] = new KindGroups($definition->value, $definition->label, $definition->iconIdentifier, $this->sortGroups($membersOfKind, $collator));
             }
         }
         // TYPO3 applies the TSconfig of the members in their stored order, hidden groups not at all.
@@ -202,20 +207,20 @@ final readonly class OverviewBuilder
         if (count($tsconfigPrecedence) < 2) {
             $tsconfigPrecedence = [];
         }
-        return new RoleItem($role, $kindGroups, $invalidMembers, $missingMemberUids, $this->sortUsers($users), $tsconfigPrecedence);
+        return new RoleItem($role, $kindGroups, $invalidMembers, $missingMemberUids, $this->sortUsers($users, $collator), $tsconfigPrecedence);
     }
 
     /**
      * @param list<RoleItem> $roles
      * @return list<RoleItem>
      */
-    private function sortRoles(array $roles, string $sorting): array
+    private function sortRoles(array $roles, string $sorting, \Collator $collator): array
     {
-        usort($roles, static function (RoleItem $a, RoleItem $b) use ($sorting): int {
+        usort($roles, static function (RoleItem $a, RoleItem $b) use ($sorting, $collator): int {
             if ($sorting === self::SORT_USAGE && count($a->users) !== count($b->users)) {
                 return count($b->users) <=> count($a->users);
             }
-            return strnatcasecmp($a->group->title, $b->group->title);
+            return (int)$collator->compare($a->group->title, $b->group->title);
         });
         return $roles;
     }
@@ -224,13 +229,13 @@ final readonly class OverviewBuilder
      * @param list<BuildingBlockItem> $buildingBlocks
      * @return list<BuildingBlockItem>
      */
-    private function sortBuildingBlocks(array $buildingBlocks, string $sorting): array
+    private function sortBuildingBlocks(array $buildingBlocks, string $sorting, \Collator $collator): array
     {
-        usort($buildingBlocks, static function (BuildingBlockItem $a, BuildingBlockItem $b) use ($sorting): int {
+        usort($buildingBlocks, static function (BuildingBlockItem $a, BuildingBlockItem $b) use ($sorting, $collator): int {
             if ($sorting === self::SORT_USAGE && $a->getUsageCount() !== $b->getUsageCount()) {
                 return $b->getUsageCount() <=> $a->getUsageCount();
             }
-            return strnatcasecmp($a->group->title, $b->group->title);
+            return (int)$collator->compare($a->group->title, $b->group->title);
         });
         return $buildingBlocks;
     }
@@ -239,9 +244,9 @@ final readonly class OverviewBuilder
      * @param list<GroupItem> $groups
      * @return list<GroupItem>
      */
-    private function sortGroups(array $groups): array
+    private function sortGroups(array $groups, \Collator $collator): array
     {
-        usort($groups, static fn(GroupItem $a, GroupItem $b): int => strnatcasecmp($a->title, $b->title));
+        usort($groups, static fn(GroupItem $a, GroupItem $b): int => (int)$collator->compare($a->title, $b->title));
         return $groups;
     }
 
@@ -249,9 +254,9 @@ final readonly class OverviewBuilder
      * @param list<UserItem> $users
      * @return list<UserItem>
      */
-    private function sortUsers(array $users): array
+    private function sortUsers(array $users, \Collator $collator): array
     {
-        usort($users, static fn(UserItem $a, UserItem $b): int => strnatcasecmp($a->username, $b->username));
+        usort($users, static fn(UserItem $a, UserItem $b): int => (int)$collator->compare($a->username, $b->username));
         return $users;
     }
 }

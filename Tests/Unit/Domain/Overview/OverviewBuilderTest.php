@@ -252,6 +252,44 @@ final class OverviewBuilderTest extends UnitTestCase
     }
 
     #[Test]
+    public function titlesAndUsernamesAreSortedAlphabeticallyForTheLanguageOfTheEditor(): void
+    {
+        $overview = $this->subject->build(
+            [
+                $this->group(1, 'Zentrale', 'role'),
+                $this->group(2, 'Ärzte', 'role'),
+                $this->group(3, 'Autoren', 'role'),
+                $this->group(4, 'éditeurs', 'role'),
+                $this->group(5, 'Öffentlichkeitsarbeit', 'role'),
+                $this->group(6, 'Meta 10', 'role'),
+                $this->group(7, 'Meta 9', 'role'),
+                $this->group(8, 'Übersicht', 'acl'),
+                $this->group(9, 'Zahlen', 'acl'),
+                $this->group(10, 'Änderungen', 'acl'),
+            ],
+            [
+                DatabaseRow::fromArray(['uid' => 1, 'username' => 'zoe', 'realName' => '', 'usergroup' => '3', 'disable' => 0]),
+                DatabaseRow::fromArray(['uid' => 2, 'username' => 'Ömer', 'realName' => '', 'usergroup' => '3', 'disable' => 0]),
+                DatabaseRow::fromArray(['uid' => 3, 'username' => 'anna', 'realName' => '', 'usergroup' => '3', 'disable' => 0]),
+            ],
+            [new KindDefinition('role', 'Role', 'status-user-group-backend'), new KindDefinition('acl', 'Access rights', 'actions-shield')],
+            OverviewBuilder::SORT_TITLE,
+            '',
+            'de',
+        );
+
+        self::assertSame(
+            ['Ärzte', 'Autoren', 'éditeurs', 'Meta 9', 'Meta 10', 'Öffentlichkeitsarbeit', 'Zentrale'],
+            array_map(static fn(RoleItem $role): string => $role->group->title, $overview->roles),
+        );
+        self::assertSame(
+            ['Änderungen', 'Übersicht', 'Zahlen'],
+            array_map(static fn(BuildingBlockItem $buildingBlock): string => $buildingBlock->group->title, $overview->buildingBlockSections[0]->buildingBlocks),
+        );
+        self::assertSame(['anna', 'Ömer', 'zoe'], array_map(static fn(UserItem $user): string => $user->username, $this->findRole($overview, 'Autoren')->users));
+    }
+
+    #[Test]
     public function groupsAreHiddenUnlessTheirHiddenFlagIsZeroLikeInTypo3(): void
     {
         // The HiddenRestriction of TYPO3 only lets "hidden = 0" pass

@@ -128,6 +128,21 @@ final class OverviewControllerTest extends FunctionalTestCase
     }
 
     #[Test]
+    public function sortsTitlesForTheLanguageOfTheEditor(): void
+    {
+        $this->setUpBackendUser(1);
+        // Swedish sorts "Ä" after "Z", English and German sort it with "A"
+        $GLOBALS['LANG'] = $this->get(LanguageServiceFactory::class)->create('sv');
+        $connection = $this->get(ConnectionPool::class)->getConnectionForTable('be_groups');
+        $connection->update('be_groups', ['title' => 'Ärzte'], ['uid' => 6]);
+        $connection->update('be_groups', ['title' => 'Zentrale'], ['uid' => 7]);
+
+        $html = $this->renderModule();
+
+        self::assertMatchesRegularExpression('#<th scope="row">(?:(?!</th>).)*>Zentrale</a>.*<th scope="row">(?:(?!</th>).)*>Ärzte</a>#s', $html);
+    }
+
+    #[Test]
     public function escapesGroupTitles(): void
     {
         $this->setUpBackendUserWithLanguage(1);
