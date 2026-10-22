@@ -108,6 +108,30 @@ final class PermissionAuditTest extends FunctionalTestCase
     }
 
     #[Test]
+    public function saysThatAGroupHasNoKind(): void
+    {
+        $this->importCSVDataSet(__DIR__ . '/Fixtures/AuditData.csv');
+        $connection = $this->getConnectionPool()->getConnectionForTable('be_groups');
+        $connection->update('be_groups', ['tx_begroups_kind' => ''], ['uid' => 5]);
+        $connection->update('be_groups', ['subgroup' => '1,5'], ['uid' => 3]);
+
+        $findings = [];
+        foreach ($this->get(PermissionAudit::class)->run() as $finding) {
+            $findings[$finding->table . ':' . $finding->uid][] = $finding;
+        }
+
+        self::assertSame('unknown-kind', $findings['be_groups:5'][0]->identifier);
+        self::assertSame(
+            'The group has no kind (e.g. written by SQL). It is neither a role nor a building block; assign a kind.',
+            $findings['be_groups:5'][0]->message,
+        );
+        self::assertSame(
+            'The role contains group 5 "Unknown kind" without a kind; only building blocks belong in a role.',
+            $findings['be_groups:3'][0]->message,
+        );
+    }
+
+    #[Test]
     public function readsListsOfGroupsLikeTypo3(): void
     {
         $this->importCSVDataSet(__DIR__ . '/Fixtures/AuditData.csv');

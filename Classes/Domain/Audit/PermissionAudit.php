@@ -117,7 +117,9 @@ final readonly class PermissionAudit
             return [$finding(
                 AuditSeverity::Error,
                 'unknown-kind',
-                sprintf('The kind "%s" is not configured or has no type of its own (e.g. the kind of an uninstalled extension, or written by SQL). The group is neither a role nor a building block; assign a kind.', $kind),
+                $kind === ''
+                    ? 'The group has no kind (e.g. written by SQL). It is neither a role nor a building block; assign a kind.'
+                    : sprintf('The kind "%s" is not configured or has no type of its own (e.g. the kind of an uninstalled extension, or written by SQL). The group is neither a role nor a building block; assign a kind.', $kind),
             )];
         }
         if ($kind === GroupKind::Classic->value) {
@@ -160,9 +162,9 @@ final readonly class PermissionAudit
                 AuditSeverity::Warning,
                 'unassigned-fields',
                 sprintf(
-                    'The fields %s have values, but belong to no kind, so the form of the kind "%s" does not show them. If they grant permissions, assign them to a kind.',
-                    implode(', ', $unassignedFields),
+                    'Fields that belong to no kind have values, which the form of the kind "%s" does not show: %s. If they grant permissions, assign these fields to a kind.',
                     $kind,
+                    implode(', ', $unassignedFields),
                 ),
             );
         }
@@ -183,6 +185,7 @@ final readonly class PermissionAudit
                     AuditSeverity::Error,
                     'role-invalid-member',
                     sprintf('The role contains %s; only building blocks belong in a role.', match (true) {
+                        $memberKind === '' => sprintf('group %s without a kind', $memberName),
                         !$this->kindRegistry->isKind($memberKind) => sprintf('group %s of the unknown kind "%s"', $memberName, $memberKind),
                         $memberKind === GroupKind::Role->value => 'the role ' . $memberName,
                         default => 'the classic group ' . $memberName,
