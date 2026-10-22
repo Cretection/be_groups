@@ -65,6 +65,21 @@ final class GroupConverterTest extends FunctionalTestCase
     }
 
     #[Test]
+    public function changesAGroupThatGrantsNothingButIsAssignedToUsersIntoARole(): void
+    {
+        // As first group of the user, the group owns the pages the user creates, and it stays so as a role.
+        $this->getConnectionPool()->getConnectionForTable('be_users')->insert('be_users', ['uid' => 4, 'pid' => 0, 'username' => 'reviewer', 'admin' => 1, 'usergroup' => '4,2']);
+
+        $result = $this->get(GroupConverter::class)->changeKind(4);
+
+        self::assertSame(ConversionStatus::Converted, $result->status, $result->message);
+        self::assertSame(['tx_begroups_kind' => 'role', 'subgroup' => ''], $this->getGroup(4, ['tx_begroups_kind', 'subgroup']));
+        self::assertSame('4,2', $this->getConnectionPool()->getConnectionForTable('be_users')->select(['usergroup'], 'be_users', ['uid' => 4])->fetchOne());
+        $this->setUpBackendUser(4);
+        self::assertSame(4, $this->createPageAndGetItsGroup());
+    }
+
+    #[Test]
     public function doesNotChangeTheKindOfGroupsThatNeedASplitOrADecision(): void
     {
         $converter = $this->get(GroupConverter::class);

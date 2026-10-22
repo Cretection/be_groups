@@ -115,7 +115,7 @@ final class SplitCommandTest extends FunctionalTestCase
         self::assertStringContainsString('be_groups:9 Hidden editors (disabled): converted', $commandTester->getDisplay());
         $this->getConnectionPool()->getConnectionForTable('be_groups')->update('be_groups', ['hidden' => 1], ['uid' => 4]);
         $commandTester->execute(['uids' => ['4']]);
-        self::assertStringContainsString('be_groups:4 Empty (disabled): skipped. Grants no permissions.', $commandTester->getDisplay());
+        self::assertStringContainsString('be_groups:4 Empty (disabled): skipped. Grants no permissions and', $commandTester->getDisplay());
     }
 
     #[Test]

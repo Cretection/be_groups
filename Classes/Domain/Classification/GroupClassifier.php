@@ -34,6 +34,8 @@ use TYPO3\CMS\Core\Utility\GeneralUtility;
  * shows it. A group whose permissions belong to one kind only changes its kind; a group with
  * permissions of several kinds, with subgroups and own permissions, or that is assigned to
  * users directly is split: the group keeps its uid as a role, so assignments stay unchanged.
+ * A group that grants nothing itself becomes a role if it combines other groups or is assigned
+ * to users directly, and a page group if it only owns pages.
  *
  * Building blocks are always created, never shared with other groups: the uid of an existing
  * group may be referenced elsewhere (owner group of pages, workspace member, TSconfig conditions),
@@ -137,8 +139,15 @@ final readonly class GroupClassifier
             if ($hasSubgroups) {
                 return $proposal(ClassificationAction::ChangeKind, GroupKind::Role->value, 'Only combines other groups.');
             }
+            // Workspaces (owners, members, persons responsible for a stage), TSconfig conditions and TYPO3
+            // itself (owner group of the pages a user creates) may refer to the group by its uid.
             if (!$ownsPages) {
-                return $proposal(ClassificationAction::Manual, null, 'Grants no permissions. Choose a kind or delete the group.');
+                return $directUsers > 0
+                    ? $proposal(ClassificationAction::ChangeKind, GroupKind::Role->value, sprintf(
+                        'Grants no permissions, but is assigned to %d user(s) directly. As a role it keeps them and every reference to its uid, e.g. as workspace member.',
+                        $directUsers,
+                    ))
+                    : $proposal(ClassificationAction::Manual, null, 'Grants no permissions and is assigned to no user directly. Choose a kind; delete it only if no group, workspace or TSconfig condition refers to it.');
             }
             return $directUsers === 0
                 ? $proposal(ClassificationAction::ChangeKind, GroupKind::PageGroup->value, 'Grants no permissions, but owns pages.')

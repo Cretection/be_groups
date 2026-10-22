@@ -52,8 +52,9 @@ final class ClassifyCommand extends Command
             ->addOption('dry-run', null, InputOption::VALUE_NONE, 'Only show the proposals, change nothing')
             ->setHelp(
                 'A classic group whose permissions belong to one kind of building block, that grants nothing but '
-                . 'combines other groups (role) or that only owns pages (page group) changes its kind. Groups that '
-                . 'need to be split are listed for begroups:split, the others need a decision of an administrator. '
+                . 'combines other groups or is assigned to users directly (role), or that only owns pages (page group) '
+                . 'changes its kind. Groups that need to be split are listed for begroups:split, the others need a '
+                . 'decision of an administrator. '
                 . 'Effective permissions never change: every change is verified and rolled back otherwise.',
             );
     }

@@ -73,7 +73,10 @@ final class GroupClassifierTest extends FunctionalTestCase
     {
         $classifier = $this->get(GroupClassifier::class);
 
-        self::assertSame('Grants no permissions. Choose a kind or delete the group.', $classifier->classify(4)?->reason);
+        self::assertSame(
+            'Grants no permissions and is assigned to no user directly. Choose a kind; delete it only if no group, workspace or TSconfig condition refers to it.',
+            $classifier->classify(4)?->reason,
+        );
         self::assertStringContainsString('workspace_perms belong to no kind', (string)$classifier->classify(8)?->reason);
         self::assertSame(
             'Is assigned to 1 user(s) directly, so it stays their role. A new page group becomes the owner group of the pages its users create.',
@@ -81,6 +84,22 @@ final class GroupClassifierTest extends FunctionalTestCase
         );
         // Its active subgroup stays the owner group of new pages.
         self::assertSame('Grants permissions of several kinds: acl, file_operations.', $classifier->classify(9)?->reason);
+    }
+
+    #[Test]
+    public function proposesARoleForAGroupThatGrantsNothingButIsAssignedToUsers(): void
+    {
+        // Workspaces, stages and TYPO3 itself (owner group of new pages) may refer to the group by its uid.
+        $this->getConnectionPool()->getConnectionForTable('be_users')->insert('be_users', ['uid' => 4, 'pid' => 0, 'username' => 'reviewer', 'usergroup' => '4,2']);
+
+        $classification = $this->get(GroupClassifier::class)->classify(4);
+
+        self::assertNotNull($classification);
+        self::assertSame('change-kind role', $this->summarize([$classification])[4]);
+        self::assertSame(
+            'Grants no permissions, but is assigned to 1 user(s) directly. As a role it keeps them and every reference to its uid, e.g. as workspace member.',
+            $classification->reason,
+        );
     }
 
     #[Test]
