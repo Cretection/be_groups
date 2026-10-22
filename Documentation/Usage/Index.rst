@@ -11,9 +11,9 @@ Usage
 Creating building blocks and roles
 ==================================
 
-Backend user groups are created in the root of the page tree, as usual. The
-first field of a group is its **kind**. After choosing a kind, the form only
-shows the settings of that kind:
+Backend user groups are created in the root of the page tree, as usual.
+Below the title, choose the **kind** of the group. The form only shows the
+settings of that kind:
 
 *   A building block covers exactly one concern, for example the page tree
     entry points of a site (*Page tree mount*) or the modules and tables an
@@ -27,10 +27,18 @@ shows the settings of that kind:
     A building block of kind "Access rights": its permissions are in the tabs
     "Record Permissions" and "Module Permissions".
 
+A change of the kind changes the form, so TYPO3 asks to save the group and
+reload the form (*Refresh required*, :guilabel:`Save and refresh`). As the
+kind decides which permissions a group may grant, saving may ask for your
+password. Enter the title before you change the kind: the group is stored
+with the change.
+
 When a group is saved, all permission settings that do not belong to its
-kind are removed, including default values. The system log
-(*Administration > Log*) records this as information, see
-:ref:`concept-rules`.
+kind are removed. A new group does not even get the default values of such
+fields, for example the default file permissions. The system log
+(*Administration > Log*) records removed values as information, for example
+the settings of the former kind after a change of the kind. Default values a
+new group never got are not logged, see :ref:`concept-rules`.
 
 ..  _usage-role-form:
 

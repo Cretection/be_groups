@@ -22,9 +22,10 @@ use PHPUnit\Framework\Attributes\Test;
 use TYPO3\TestingFramework\Core\Unit\UnitTestCase;
 
 /**
- * The manual names what the backend shows: the kinds by the labels of their select, and the
- * configuration TYPO3 14 reads. Both languages are compared with the labels of the extension,
- * and the example of the label override with the site package that the functional test loads.
+ * The manual names what the backend shows: the kinds by the labels of their select, the form as
+ * TYPO3 shows it and the configuration TYPO3 14 reads. Both languages are compared with the labels
+ * of the extension, and the example of the label override with the site package that the
+ * functional test loads.
  */
 #[CoversNothing]
 final class ManualTest extends UnitTestCase
@@ -107,6 +108,25 @@ final class ManualTest extends UnitTestCase
         }
     }
 
+    /**
+     * @return array<string, array{string, string}>
+     */
+    public static function formDescriptionDataProvider(): array
+    {
+        return [
+            'English' => ['', 'first field of a group is its'],
+            'German' => ['Localization.de_DE/', 'erste Feld einer Gruppe ist ihr'],
+        ];
+    }
+
+    #[Test]
+    #[DataProvider('formDescriptionDataProvider')]
+    public function theKindIsNotCalledTheFirstFieldOfAGroup(string $manual, string $formerText): void
+    {
+        // The kind follows the title, and a change of the kind saves the group to reload the form
+        self::assertSame(0, substr_count($this->readTextOfChapter($manual, 'Usage'), $formerText), $formerText);
+    }
+
     #[Test]
     public function otherPrefixesAreConfiguredWithTheOptionOfTypo3V14(): void
     {
@@ -135,6 +155,14 @@ final class ManualTest extends UnitTestCase
         $content = file_get_contents(self::MANUAL_PATH . $manual . $chapter . '/Index.rst');
         self::assertIsString($content);
         return $content;
+    }
+
+    /**
+     * @return string the chapter with every sequence of whitespace replaced by one space
+     */
+    private function readTextOfChapter(string $manual, string $chapter): string
+    {
+        return (string)preg_replace('/\s+/', ' ', $this->readChapter($manual, $chapter));
     }
 
     /**

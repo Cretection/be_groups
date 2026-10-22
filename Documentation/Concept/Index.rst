@@ -102,9 +102,10 @@ extended by "TSconfig" and "Workspace".
         -   All fields in the core layout. This is how TYPO3 groups work
             without this extension.
 
-All kinds additionally have a title, a description and the "disabled"
-flag. The title does not need to contain the kind: TYPO3 shows the prefix of
-the kind in front of it, see :ref:`usage-prefixes`.
+All kinds additionally have a title, the toggle :guilabel:`Group enabled`
+(tab :guilabel:`Access`) and a description (tab :guilabel:`Notes`). The title
+does not need to contain the kind: TYPO3 shows the prefix of the kind in
+front of it, see :ref:`usage-prefixes`.
 
 Only the configured kinds are valid: the items of the field
 :sql:`tx_begroups_kind` that have a form of their own. A stored value that is
@@ -233,8 +234,9 @@ working. Every intervention is written to the system log
 (:guilabel:`Administration > Log`) and, in the backend, shown to the editor
 as message: emptied fields of a former kind as information (this is what a
 change of the kind is meant to do), rejected values and records as user
-error. Fields the caller empties itself are not reported. Corrections are
-reported after the save operation has completed:
+error. Fields the caller empties itself are not reported, nor are default
+values a new group never gets. Corrections are reported after the save
+operation has completed:
 if a save is aborted, for example because the password confirmation of the
 sudo mode is cancelled, no correction is logged. A rejected record or a
 rejected change to a classic group is reported right away.

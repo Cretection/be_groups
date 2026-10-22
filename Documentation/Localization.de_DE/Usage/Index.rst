@@ -12,8 +12,8 @@ Bausteine und Rollen anlegen
 ============================
 
 Backend-Benutzergruppen werden wie gewohnt auf der Wurzelebene des
-Seitenbaums angelegt. Das erste Feld einer Gruppe ist ihr **Typ**. Nach der
-Auswahl zeigt das Formular nur die Einstellungen dieses Typs:
+Seitenbaums angelegt. Unter dem Titel wählen Sie den **Typ** der Gruppe. Das
+Formular zeigt nur die Einstellungen dieses Typs:
 
 *   Ein Baustein deckt genau ein Thema ab, zum Beispiel die
     Seitenbaum-Einstiegspunkte einer Website (*Seitenbaum-Freigabe*) oder die
@@ -27,10 +27,20 @@ Auswahl zeigt das Formular nur die Einstellungen dieses Typs:
     Ein Baustein vom Typ „Zugriffsrechte“: Seine Rechte stehen in den Reitern
     „Record Permissions“ und „Module Permissions“.
 
+Ein Wechsel des Typs ändert das Formular, deshalb fragt TYPO3, ob die Gruppe
+gespeichert und das Formular neu geladen werden soll (*Aktualisierung
+erforderlich*, :guilabel:`Speichern und aktualisieren`). Weil der Typ
+bestimmt, welche Rechte eine Gruppe vergeben darf, fragt das Speichern
+gegebenenfalls nach Ihrem Passwort. Geben Sie den Titel ein, bevor Sie den
+Typ wechseln: Die Gruppe wird mit dem Wechsel gespeichert.
+
 Beim Speichern einer Gruppe werden alle Rechte-Einstellungen entfernt, die
-nicht zu ihrem Typ gehören, auch Standardwerte. Das Systemprotokoll
-(*Administration > Protokoll*) hält das als Information fest, siehe
-:ref:`concept-rules`.
+nicht zu ihrem Typ gehören. Eine neue Gruppe bekommt die Standardwerte
+solcher Felder gar nicht erst, zum Beispiel die Standard-Dateirechte. Das
+Systemprotokoll (*Verwaltung > Protokoll*) hält entfernte Werte als
+Information fest, zum Beispiel die Einstellungen des früheren Typs nach einem
+Typwechsel. Standardwerte, die eine neue Gruppe nie bekommen hat, werden
+nicht protokolliert, siehe :ref:`concept-rules`.
 
 ..  _usage-role-form:
 
