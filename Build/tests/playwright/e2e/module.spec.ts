@@ -121,6 +121,18 @@ test.describe('Module "Roles & Building Blocks"', () => {
     }
   });
 
+  test('aligns the cells of tall rows at the top', async ({ backend }) => {
+    const frame = backend.contentFrame;
+    const tables = [
+      frame.getByRole('table', { name: 'Roles with their building blocks and users' }),
+      frame.getByRole('table', { name: /Building blocks of kind "Access rights"/ }),
+    ];
+    for (const table of tables) {
+      await expect(table.getByRole('rowheader').first()).toHaveCSS('vertical-align', 'top');
+      await expect(table.getByRole('cell').first()).toHaveCSS('vertical-align', 'top');
+    }
+  });
+
   test('meets WCAG 2.2 AA @a11y', async ({ backend }) => {
     await backend.expectAccessible();
   });
