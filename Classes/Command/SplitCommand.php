@@ -43,6 +43,11 @@ use TYPO3\CMS\Core\Core\Bootstrap;
 #[AsCommand('begroups:split', 'Splits classic groups into building blocks and a role that keeps the uid of the group.')]
 final class SplitCommand extends Command
 {
+    /**
+     * The largest uid that every database of TYPO3 can store: PostgreSQL has signed 32-bit integers only.
+     */
+    private const MAX_UID = 2147483647;
+
     public function __construct(
         private readonly GroupClassifier $groupClassifier,
         private readonly GroupConverter $groupConverter,
@@ -179,7 +184,7 @@ final class SplitCommand extends Command
         $uids = [];
         foreach (is_array($arguments) ? $arguments : [] as $argument) {
             $argument = is_scalar($argument) ? (string)$argument : '';
-            if (preg_match('/^[1-9]\d*$/', $argument) !== 1) {
+            if (preg_match('/^[1-9]\d{0,9}$/', $argument) !== 1 || (int)$argument > self::MAX_UID) {
                 return $argument;
             }
             $uids[] = (int)$argument;

@@ -192,6 +192,13 @@ final class SplitCommandTest extends FunctionalTestCase
         self::assertStringContainsString('"2x" is no uid.', $commandTester->getDisplay());
         self::assertSame(Command::INVALID, $commandTester->execute(['uids' => ['0']]));
         self::assertStringContainsString('"0" is no uid.', $commandTester->getDisplay());
+        // PostgreSQL stores uids as signed 32-bit integers and fails on a query for a larger one.
+        self::assertSame(Command::INVALID, $commandTester->execute(['uids' => ['2147483648']]));
+        self::assertStringContainsString('"2147483648" is no uid.', $commandTester->getDisplay());
+        self::assertSame(Command::INVALID, $commandTester->execute(['uids' => ['99999999999999999999']]));
+        self::assertStringContainsString('"99999999999999999999" is no uid.', $commandTester->getDisplay());
+        self::assertSame(Command::FAILURE, $commandTester->execute(['uids' => ['2147483647']]));
+        self::assertStringContainsString('be_groups:2147483647: skipped. The group does not exist.', $commandTester->getDisplay());
     }
 
     private function countGroups(): int
