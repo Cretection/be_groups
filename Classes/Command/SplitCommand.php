@@ -100,7 +100,13 @@ final class SplitCommand extends Command
                 $classifications[] = $classification;
             } elseif (!$all) {
                 $skipped++;
-                $io->writeln(ConsoleTextUtility::escape(sprintf('be_groups:%d %s: skipped. %s', $classification->uid, $classification->title, $classification->reason)));
+                $io->writeln(ConsoleTextUtility::escape(sprintf(
+                    'be_groups:%d %s%s: skipped. %s',
+                    $classification->uid,
+                    $classification->title,
+                    $classification->hidden ? ' (disabled)' : '',
+                    $classification->reason,
+                )));
             }
         }
         if ($classifications === []) {
@@ -129,9 +135,10 @@ final class SplitCommand extends Command
                 $split++;
             }
             $io->writeln(ConsoleTextUtility::escape(sprintf(
-                'be_groups:%d %s: %s %s%s',
+                'be_groups:%d %s%s: %s %s%s',
                 $result->uid,
                 $planned->title,
+                $planned->hidden ? ' (disabled)' : '',
                 $result->status->value,
                 $result->message,
                 $result->createdBlockUids !== [] ? ' Created: ' . implode(', ', $result->createdBlockUids) . '.' : '',

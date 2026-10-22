@@ -83,25 +83,50 @@ final class ClassifyCommand extends Command
             static fn(Classification $classification): bool => $classification->action === ClassificationAction::ChangeKind,
         ));
         $toSplit = count(array_filter($classifications, static fn(Classification $classification): bool => $classification->action === ClassificationAction::Split));
-        $failed = false;
+        $failed = 0;
         if ($input->getOption('dry-run') === true) {
             $io->note(sprintf('%d group(s) would change their kind. Nothing was changed (--dry-run).', count($toChange)));
-        } elseif ($toChange !== []) {
-            Bootstrap::initializeBackendAuthentication();
-            foreach ($toChange as $classification) {
-                $result = $this->groupConverter->changeKind($classification->uid);
-                $failed = $failed || $result->status === ConversionStatus::Failed;
-                $io->writeln(ConsoleTextUtility::escape(sprintf('be_groups:%d %s: %s %s', $result->uid, $classification->title, $result->status->value, $result->message)));
-            }
+        } else {
+            $failed = $this->changeKinds($io, $toChange);
         }
         if ($toSplit > 0) {
             $io->note(sprintf('%d group(s) can be split into building blocks and a role: begroups:split --all --dry-run', $toSplit));
         }
-        if ($failed) {
-            $io->error('At least one group could not be changed and was left unchanged.');
-            return Command::FAILURE;
+        return $failed > 0 ? Command::FAILURE : Command::SUCCESS;
+    }
+
+    /**
+     * @param list<Classification> $toChange
+     * @return int the number of groups whose kind could not be changed
+     */
+    private function changeKinds(SymfonyStyle $io, array $toChange): int
+    {
+        if ($toChange === []) {
+            $io->success('There is no group whose kind can be changed.');
+            return 0;
         }
-        return Command::SUCCESS;
+        Bootstrap::initializeBackendAuthentication();
+        $changed = 0;
+        $failed = 0;
+        foreach ($toChange as $classification) {
+            $result = $this->groupConverter->changeKind($classification->uid);
+            $changed += $result->status === ConversionStatus::Converted ? 1 : 0;
+            $failed += $result->status === ConversionStatus::Failed ? 1 : 0;
+            $io->writeln(ConsoleTextUtility::escape(sprintf(
+                'be_groups:%d %s%s: %s %s',
+                $result->uid,
+                $classification->title,
+                $classification->hidden ? ' (disabled)' : '',
+                $result->status->value,
+                $result->message,
+            )));
+        }
+        if ($failed > 0) {
+            $io->error(sprintf('%d group(s) changed their kind, %d could not be changed, see above.', $changed, $failed));
+        } else {
+            $io->success(sprintf('%d group(s) changed their kind.', $changed));
+        }
+        return $failed;
     }
 
     private static function describeProposal(Classification $classification): string

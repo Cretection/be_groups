@@ -97,6 +97,18 @@ final class SplitCommandTest extends FunctionalTestCase
     }
 
     #[Test]
+    public function marksDisabledGroupsInTheResult(): void
+    {
+        $commandTester = new CommandTester($this->get(SplitCommand::class));
+
+        self::assertSame(Command::SUCCESS, $commandTester->execute(['uids' => ['9']]));
+        self::assertStringContainsString('be_groups:9 Hidden editors (disabled): converted', $commandTester->getDisplay());
+        $this->getConnectionPool()->getConnectionForTable('be_groups')->update('be_groups', ['hidden' => 1], ['uid' => 4]);
+        $commandTester->execute(['uids' => ['4']]);
+        self::assertStringContainsString('be_groups:4 Empty (disabled): skipped. Grants no permissions.', $commandTester->getDisplay());
+    }
+
+    #[Test]
     public function splitsAllGroupsThatNeedIt(): void
     {
         $commandTester = new CommandTester($this->get(SplitCommand::class));

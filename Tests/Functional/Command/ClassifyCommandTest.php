@@ -32,7 +32,10 @@ use TYPO3\TestingFramework\Core\Functional\FunctionalTestCase;
 #[CoversClass(GroupConverter::class)]
 final class ClassifyCommandTest extends FunctionalTestCase
 {
-    protected array $testExtensionsToLoad = ['cretection/be-groups'];
+    protected array $testExtensionsToLoad = [
+        'cretection/be-groups',
+        __DIR__ . '/../Fixtures/Extensions/be_groups_test_rewrite',
+    ];
 
     protected function setUp(): void
     {
@@ -64,6 +67,41 @@ final class ClassifyCommandTest extends FunctionalTestCase
         self::assertSame(Command::SUCCESS, $commandTester->execute([]));
         self::assertSame(['db_mount', 'classic', 'role', 'classic', 'page_group', 'classic'], $this->getKinds([1, 2, 3, 4, 5, 6]));
         self::assertStringContainsString('be_groups:1 Mounts only: converted', $commandTester->getDisplay());
+        self::assertStringContainsString('[OK] 3 group(s) changed their kind.', $commandTester->getDisplay());
+    }
+
+    #[Test]
+    public function saysSoIfNoKindCanBeChanged(): void
+    {
+        $commandTester = new CommandTester($this->get(ClassifyCommand::class));
+        $commandTester->execute([]);
+
+        self::assertSame(Command::SUCCESS, $commandTester->execute([]));
+        self::assertStringContainsString('[OK] There is no group whose kind can be changed.', $commandTester->getDisplay());
+    }
+
+    #[Test]
+    public function countsTheGroupsWhoseKindCouldNotBeChanged(): void
+    {
+        // The test extension changes the page mounts of the group while saving.
+        $this->getConnectionPool()->getConnectionForTable('be_groups')->update('be_groups', ['description' => 'rewrite:page-mount'], ['uid' => 1]);
+        $commandTester = new CommandTester($this->get(ClassifyCommand::class));
+
+        self::assertSame(Command::FAILURE, $commandTester->execute([]));
+        self::assertStringContainsString('be_groups:1 Mounts only: failed', $commandTester->getDisplay());
+        self::assertStringContainsString('[ERROR] 2 group(s) changed their kind, 1 could not be changed, see above.', $commandTester->getDisplay());
+        self::assertSame(['classic', 'role', 'page_group'], $this->getKinds([1, 3, 5]));
+    }
+
+    #[Test]
+    public function marksDisabledGroupsInTheResult(): void
+    {
+        $this->getConnectionPool()->getConnectionForTable('be_groups')->update('be_groups', ['hidden' => 1], ['uid' => 1]);
+        $commandTester = new CommandTester($this->get(ClassifyCommand::class));
+
+        $commandTester->execute([]);
+
+        self::assertStringContainsString('be_groups:1 Mounts only (disabled): converted', $commandTester->getDisplay());
     }
 
     #[Test]
