@@ -62,7 +62,7 @@ Die Typen sind an der offiziellen Doku ausgerichtet und um TSconfig und Workspac
 
 \* `availableWidgets` nur mit EXT:dashboard.
 
-Alle Typen haben außerdem Titel, Beschreibung und „Deaktiviert“.
+Alle Typen haben außerdem Titel, Beschreibung und den Schalter „Die Gruppe ist aktiviert“ (`hidden`).
 
 ---
 
@@ -100,6 +100,7 @@ Eine Variante mit `selectCheckBox` wurde im Spike gerendert, aber verworfen: Sie
 - `be_users.usergroup` listet alle Gruppen, gruppiert in Rollen, klassische Gruppen und Bausteine je Typ („über eine Rolle zuweisen“).
 - Auch hier gibt es keinen Filter, aus demselben Grund wie in 4.2. Eine direkte Zuweisung von Bausteinen lehnt der Hook beim Speichern ab (R4).
 - Ob „Klassisch“ im Gruppenformular angeboten wird, entscheidet zur Laufzeit ein FormEngine-Data-Provider (`KindSelection`), nicht das TCA. Die Option `allowClassicGroups` wirkt deshalb sofort, ohne Cache-Leerung. Bei abgeschalteten klassischen Gruppen beginnen neue Gruppen als Rolle.
+- Bei abgeschalteten klassischen Gruppen bietet auch der Assistent für neue Datensätze („Create new record“) den Typ nicht an (Listener `HideClassicKindInNewRecordWizard`), und das Benutzerformular markiert klassische Gruppen als „abgeschaltet, können nicht zugewiesen werden“, statt sie auszublenden (`KindSelection`). Den Typ `0` bietet der Assistent nie an; er bleibt das Formular der Gruppen mit unbekanntem Typ.
 
 ### 4.4 Listen und Bezeichnungen
 - Ein Icon pro Typ, sortiert nach Typ und Titel.
@@ -134,13 +135,14 @@ Geplant war ein Typ-Filter für die Gruppenliste über `AfterBackendGroupListCon
 - **Gespeicherte Verknüpfungen bleiben:** R2 und R4 prüfen nur hinzukommende Verknüpfungen. Die Reihenfolge bleibt erhalten.
 - **Jede Schreibweise:** `NEW…`-Platzhalter (aufgelöst über den Datamap bzw. `substNEWwithIDs`), `uid|label`, URL-kodierte und tabellenpräfixierte Werte werden verstanden. So lässt sich R4 nicht umgehen.
 - **Gelöschte Datensätze** folgen den Regeln ebenfalls, damit ein Wiederherstellen keinen verbotenen Stand zurückbringt.
-- **Typ neuer Datensätze:** Ohne Typ im Datamap gilt, was der DataHandler setzen würde (TCA-Default, `TCAdefaults` aus User- und Page-TSconfig). Genau dieser Typ wird geprüft und ausdrücklich gespeichert.
+- **Typ neuer Datensätze:** Ohne gültigen Typ im Datamap gilt, was der DataHandler setzen würde (TCA-Default, `TCAdefaults` aus User-TSconfig und globalem Page-TSconfig, denn Gruppen liegen auf der Wurzelebene), oder der Typ, den ein Listener von `ModifyKindOfNewGroupEvent` wählt. Genau dieser Typ wird geprüft und ausdrücklich gespeichert.
 - **Tolerant:** Der Hook korrigiert, statt Exceptions zu werfen. Nur eine Gruppe, die bei abgeschalteten klassischen Gruppen als „Klassisch“ entstünde, wird gar nicht angelegt.
-- **Protokoll:** Korrekturen werden in `processDatamap_afterAllOperations` gemeldet (Systemprotokoll und Hinweis). Bricht der Sudo-Mode das Speichern ab, entsteht kein falscher Eintrag. Ablehnungen werden sofort gemeldet. Der Hook ist `shared: false`, also pro DataHandler-Lauf eine eigene Instanz.
+- **Protokoll:** Korrekturen werden in `processDatamap_afterAllOperations` gemeldet (Systemprotokoll und Hinweis). Bricht der Sudo-Mode das Speichern ab, entsteht kein falscher Eintrag. Ablehnungen werden sofort gemeldet. Der Hook ist `shared: false`, also pro DataHandler-Lauf eine eigene Instanz. Jede Meldung nennt den Datensatz (Präfix, Titel, uid).
+- **Stufen:** Geleerte Rechtefelder (R1, R3) sind Informationen, nach einem Typwechsel ebenso wie bei Werten, die ein Aufrufer ohne Typwechsel in Feldern eines anderen Typs sendet (Sync-Werkzeuge). Abgelehnte Verknüpfungen (R2, R4), unbekannte Typen und abgelehnte Datensätze sind Bedienfehler.
 - **Sudo-Mode:** Die Core-Prüfung läuft in `processDatamap_postProcessFieldArray` auf dem finalen Feldarray. Geleerte, geschützte Felder lösen sie also aus, und das ist gewollt.
 
-**Konsistenzprüfung (geplant, M2):**
-- CLI-Befehl `begroups:audit` mit Exit-Code für CI und Monitoring, optional als Status im Reports-Modul.
+**Konsistenzprüfung (umgesetzt, M2):**
+- CLI-Befehl `begroups:audit` mit Exit-Code und JSON-Ausgabe für CI und Monitoring, erweiterbar über `AfterAuditFindingsCollectedEvent`. Ein Status im Reports-Modul ist nicht umgesetzt.
 - Sie findet Verstöße, die per SQL oder durch Sync-Tools entstanden sind, und Rechtefelder anderer Extensions, die keinem Typ zugeordnet sind.
 
 ---

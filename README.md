@@ -36,8 +36,8 @@ kinds with a guided user interface instead of naming conventions.
   converting).
 - **What is not visible does not apply:** permission fields that do not
   belong to a kind are cleared on every save – in the backend, via the
-  DataHandler API and by import or sync tools. Stored assignments are never
-  dropped, other data on the group is never touched.
+  DataHandler API and by import or sync tools. The rules never drop stored
+  assignments and never touch other data on the group.
 - **Core native:** only one additional field (`tx_begroups_kind`). TYPO3
   resolves permissions as usual.
 - **Overview module** "Roles & Building Blocks" (Administration): which role
@@ -124,11 +124,12 @@ Gruppentypen mit geführter Oberfläche statt Namenskonventionen.
   einstellbar).
 - **Was nicht sichtbar ist, wirkt nicht:** Rechtefelder, die nicht zu einem
   Typ gehören, werden bei jedem Speichern geleert – im Backend, über die
-  DataHandler-API und durch Import- oder Sync-Werkzeuge. Gespeicherte
-  Zuweisungen gehen nie verloren, andere Daten der Gruppe bleiben unberührt.
+  DataHandler-API und durch Import- oder Sync-Werkzeuge. Die Regeln
+  verwerfen nie gespeicherte Zuweisungen, andere Daten der Gruppe bleiben
+  unberührt.
 - **Core-nativ:** nur ein zusätzliches Feld (`tx_begroups_kind`). TYPO3
   wertet die Rechte wie gewohnt aus.
-- **Übersichtsmodul** „Rollen & Bausteine“ (Administration): welche Rolle aus
+- **Übersichtsmodul** „Rollen & Bausteine“ (Verwaltung): welche Rolle aus
   welchen Bausteinen besteht, wer welche Rolle hat, wo ein Baustein verwendet
   wird – sortier- und filterbar, mit Markierung von Inkonsistenzen.
 - **Assistenten** für bestehende Installationen: `begroups:classify` schlägt
