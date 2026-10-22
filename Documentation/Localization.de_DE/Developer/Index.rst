@@ -139,20 +139,15 @@ Kennung als Überschrift). Gruppen eines Typs, der nicht (mehr) konfiguriert
 ist, zum Beispiel nach der Deinstallation Ihrer Extension, stehen im
 Formular einer Rolle unter „Gruppen mit unbekanntem Typ (können keiner Rolle
 hinzugefügt werden)“ und im Formular eines Benutzers unter „Gruppen mit
-unbekanntem Typ (können nicht zugewiesen werden)“. Im Formular einer Rolle
-bleiben die Gruppen, die keiner Rolle hinzugefügt werden können, am Ende:
+unbekanntem Typ (können nicht zugewiesen werden)“. be_groups stellt die
+Gruppen, die keiner Rolle hinzugefügt werden können, und die Gruppen mit
+unbekanntem Typ nach allen TCA-Overrides ans Ende dieser Listen:
 
 ..  code-block:: php
     :caption: EXT:my_extension/Configuration/TCA/Overrides/be_groups.php
 
-    $itemGroups = &$GLOBALS['TCA']['be_groups']['types']['role']['columnsOverrides']['subgroup']['config']['itemGroups'];
-    $itemGroups['my_news'] = 'my_extension.db:be_groups.kind.news';
-    // The groups that cannot be added to a role stay at the end
-    foreach (['role', 'classic'] as $kind) {
-        $label = $itemGroups[$kind];
-        unset($itemGroups[$kind]);
-        $itemGroups[$kind] = $label;
-    }
+    $GLOBALS['TCA']['be_groups']['types']['role']['columnsOverrides']['subgroup']['config']['itemGroups']['my_news']
+        = 'my_extension.db:be_groups.kind.news';
 
 Im Formular eines Benutzers geben Sie der Bezeichnung den Hinweis der
 Bausteine dieser Extension, zum Beispiel

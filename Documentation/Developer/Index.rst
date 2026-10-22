@@ -136,21 +136,15 @@ which are grouped by kind (otherwise the lists show its identifier as
 heading). Groups of a kind that is not configured (any more), for example
 after your extension is uninstalled, are listed under "Groups with an
 unknown kind (cannot be added to a role)" in the form of a role and under
-"Groups with an unknown kind (cannot be assigned)" in the form of a user. In
-the form of a role, keep the groups that cannot be added to a role at the
-end:
+"Groups with an unknown kind (cannot be assigned)" in the form of a user. be_groups keeps the
+groups that cannot be added to a role, and the groups of an unknown kind, at
+the end of these lists, after all TCA overrides:
 
 ..  code-block:: php
     :caption: EXT:my_extension/Configuration/TCA/Overrides/be_groups.php
 
-    $itemGroups = &$GLOBALS['TCA']['be_groups']['types']['role']['columnsOverrides']['subgroup']['config']['itemGroups'];
-    $itemGroups['my_news'] = 'my_extension.db:be_groups.kind.news';
-    // The groups that cannot be added to a role stay at the end
-    foreach (['role', 'classic'] as $kind) {
-        $label = $itemGroups[$kind];
-        unset($itemGroups[$kind]);
-        $itemGroups[$kind] = $label;
-    }
+    $GLOBALS['TCA']['be_groups']['types']['role']['columnsOverrides']['subgroup']['config']['itemGroups']['my_news']
+        = 'my_extension.db:be_groups.kind.news';
 
 In the form of a user, give the label the hint of the building blocks of this
 extension, for example ``News (building blocks, assign through a role)``:

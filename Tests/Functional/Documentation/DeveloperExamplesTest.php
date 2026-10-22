@@ -15,6 +15,7 @@ declare(strict_types=1);
 
 namespace Cretection\BeGroups\Tests\Functional\Documentation;
 
+use Cretection\BeGroups\Form\ItemsProcessor\UnknownKindItemGroup;
 use PHPUnit\Framework\Attributes\CoversNothing;
 use PHPUnit\Framework\Attributes\Test;
 use Psr\Http\Message\ServerRequestFactoryInterface;
@@ -81,6 +82,17 @@ final class DeveloperExamplesTest extends FunctionalTestCase
         self::assertIsInt($position, implode(', ', $groups));
         self::assertLessThan(array_search('role', $groups, true), $position, implode(', ', $groups));
         self::assertLessThan(array_search('classic', $groups, true), $position, implode(', ', $groups));
+        // Groups of an unknown kind (group 6) cannot be added either
+        self::assertSame(['role', 'classic', UnknownKindItemGroup::GROUP], array_slice($groups, -3), implode(', ', $groups));
+    }
+
+    #[Test]
+    public function ownBuildingBlocksAreListedBeforeTheGroupsOfAnUnknownKindInTheUserForm(): void
+    {
+        $groups = array_keys($this->getItemsByGroup($this->compileForm('be_users', 1), 'usergroup'));
+
+        self::assertContains('my_news', $groups, implode(', ', $groups));
+        self::assertSame(UnknownKindItemGroup::GROUP, $groups[array_key_last($groups)], implode(', ', $groups));
     }
 
     #[Test]

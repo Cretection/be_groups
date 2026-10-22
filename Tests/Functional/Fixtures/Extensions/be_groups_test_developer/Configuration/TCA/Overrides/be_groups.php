@@ -64,11 +64,5 @@ ExtensionManagementUtility::addToAllTCAtypes(
     'after:custom_options',
 );
 
-$itemGroups = &$GLOBALS['TCA']['be_groups']['types']['role']['columnsOverrides']['subgroup']['config']['itemGroups'];
-$itemGroups['my_news'] = 'be_groups_test_developer.db:be_groups.kind.news';
-// The groups that cannot be added to a role stay at the end
-foreach (['role', 'classic'] as $kind) {
-    $label = $itemGroups[$kind];
-    unset($itemGroups[$kind]);
-    $itemGroups[$kind] = $label;
-}
+$GLOBALS['TCA']['be_groups']['types']['role']['columnsOverrides']['subgroup']['config']['itemGroups']['my_news']
+    = 'be_groups_test_developer.db:be_groups.kind.news';
