@@ -174,8 +174,8 @@ gepflegt. Bitte beide im selben Pull Request aktuell halten.
 
 Alle anderen Sprachen werden im
 [Crowdin-Projekt von TYPO3](https://docs.typo3.org/permalink/t3coreapi:crowdin-extension-integration)
-übersetzt und kommen als Sprachpakete in TYPO3-Installationen (Admin Tools >
-Maintenance > Manage Languages). Der Workflow `Crowdin` lädt die englischen
+übersetzt und kommen als Sprachpakete in TYPO3-Installationen (System >
+Wartung > Manage Language Packs). Der Workflow `Crowdin` lädt die englischen
 Labels nach jeder Änderung auf `dev` hoch (`.crowdin.yml`). Die deutschen
 Übersetzungen in diesem Repository haben Vorrang vor dem Sprachpaket, weil
 TYPO3 zuerst die Datei neben der Quelle liest.

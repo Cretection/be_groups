@@ -170,8 +170,8 @@ repository. Please keep both in sync in the same pull request.
 
 All other languages are translated in the
 [Crowdin project of TYPO3](https://docs.typo3.org/permalink/t3coreapi:crowdin-extension-integration)
-and reach TYPO3 installations as language packs (Admin Tools > Maintenance >
-Manage Languages). The workflow `Crowdin` uploads the English labels after
+and reach TYPO3 installations as language packs (System > Maintenance >
+Manage Language Packs). The workflow `Crowdin` uploads the English labels after
 every change on `dev` (`.crowdin.yml`). German translations in this
 repository have precedence over the language pack, as TYPO3 reads the file
 next to the source first.

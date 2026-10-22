@@ -28,22 +28,24 @@ Relaunch for TYPO3 14.3 LTS (version 1.0.0).
   - R1 clears permission fields that do not belong to the kind, including
     default values of new records. Only permission fields are managed; other
     data on `be_groups` is never touched.
-  - R2 and R4 only reject newly added relations; stored relations are kept.
+  - R2 and R4 only reject newly added relations; stored relations are kept,
+    also by update imports of EXT:impexp.
     `NEW…` placeholders, `uid|label`, URL-encoded and table-prefixed values
     are understood.
   - New records without kind get the kind the DataHandler stores (TCA
     default, `TCAdefaults` in user and page TSconfig).
 - Every intervention of the rules is written to the system log and shown to
-  the editor as flash message: emptied fields of a former kind as
-  information, rejected values and records as user error; fields the caller
-  empties itself are not reported. Corrections are reported after the save
-  operation has completed, so an aborted save (e.g. a cancelled sudo mode
-  confirmation) leaves no log entry.
+  the editor as flash message, naming the record with its kind, title and
+  uid: emptied fields as information, rejected values and records as user
+  error; fields the caller empties itself are not reported. Corrections are
+  reported after the save operation has completed, so an aborted save (e.g.
+  a cancelled sudo mode confirmation) leaves no log entry.
 - Read-only backend module "Roles & Building Blocks" (Administration): roles
   with their building blocks and users, building blocks with every group and
   user using them, classic groups and groups with an unknown kind; sorting by
   title or usage, filtering by kind; markers for roles with invalid members,
-  building blocks with subgroups or direct users, and unused building blocks;
+  building blocks with subgroups or direct users, unused building blocks and
+  hidden groups;
   the order of the TSconfig building blocks for roles with two or more of
   them, as later ones override earlier ones. The issue count does not depend
   on the filter; kinds of other extensions use their own label and icon.
@@ -60,7 +62,8 @@ Relaunch for TYPO3 14.3 LTS (version 1.0.0).
   the record, e.g. from a prefix of the title.
 - Assistant `begroups:classify` (`--dry-run`): proposes a kind for every
   classic group and changes the kind of groups that serve one purpose,
-  combine other groups (role) or only own pages (page group).
+  combine other groups or grant nothing but are assigned to users (role), or
+  only own pages (page group).
 - Assistant `begroups:split` (uids or `--all`, `--dry-run`): moves the
   permissions of a classic group into new building blocks, one per kind, and
   makes the group a role with the same uid, so assignments stay unchanged. A
@@ -73,8 +76,10 @@ Relaunch for TYPO3 14.3 LTS (version 1.0.0).
 - `begroups:audit` reports lists of groups with duplicates or entries TYPO3
   ignores (`unclean-group-list`).
 - Extension setting `allowClassicGroups` (default: enabled). It takes effect
-  immediately: when disabled, the form no longer offers "classic" (except for
-  groups that already are classic) and new groups start as "role".
+  immediately: when disabled, neither the form nor the wizard "Create new
+  record" offers "classic" (except for groups that already are classic), the
+  form of a user marks classic groups as not assignable, and new groups start
+  as "role".
 - The kind is shown as prefix in front of the title wherever TYPO3 shows a
   group (`META: Editors`, `ACL: Editors`, …): forms, record lists, the
   permissions module, workspaces, the element browser and the core module
