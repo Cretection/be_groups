@@ -41,9 +41,10 @@ use TYPO3\CMS\Core\Utility\MathUtility;
  * R4: Users only get roles assigned (and "classic" groups while they are allowed).
  *
  * Relations that are already stored are never removed by R2 and R4, so switching off
- * "classic" groups or migrating never takes away access. Rules never throw: they correct
- * the incoming data or skip the record. Corrections are reported after all operations,
- * so nothing is logged for a save that is aborted (e.g. by the sudo mode).
+ * "classic" groups, migrating or an "Update records" import of EXT:impexp never takes
+ * away access. Rules never throw: they correct the incoming data or skip the record.
+ * Corrections are reported after all operations, so nothing is logged for a save that
+ * is aborted (e.g. by the sudo mode).
  *
  * A new instance is created for every DataHandler run.
  *
@@ -78,6 +79,7 @@ final class GroupKindRules
         private readonly EventDispatcherInterface $eventDispatcher,
         private readonly KindPrefix $kindPrefix,
         private readonly TcaSchemaFactory $tcaSchemaFactory,
+        private readonly RelationsEmptiedByImport $relationsEmptiedByImport,
     ) {}
 
     /**
@@ -337,7 +339,8 @@ final class GroupKindRules
 
     /**
      * Removes newly added relations to groups whose kind is not accepted. Stored relations are kept
-     * and the order of the list is preserved (it matters for the TSconfig inheritance).
+     * and the order of the list is preserved (it matters for the TSconfig inheritance). An import that
+     * empties the relations first and sets them in a second run keeps them (RelationsEmptiedByImport).
      *
      * @param array<string, mixed> $incomingFieldArray
      * @param \Closure(?string): bool $isAcceptedKind
@@ -367,7 +370,12 @@ final class GroupKindRules
             $incomingFieldArray[$fieldName] = $defaultValue;
         }
         $incoming = RelationList::fromValue($incomingFieldArray[$fieldName]);
-        $addedEntries = $incoming->getEntriesMissingIn(RelationList::fromStoredValue($storedValue));
+        $stored = RelationList::fromStoredValue($storedValue);
+        $uid = $this->getUid($id);
+        if ($uid !== null) {
+            $stored = $this->relationsEmptiedByImport->getStoredRelations($table, $uid, $fieldName, $stored, $incoming, $dataHandler->isImporting);
+        }
+        $addedEntries = $incoming->getEntriesMissingIn($stored);
         $kinds = $this->resolveKinds($addedEntries, $dataHandler);
 
         $rejectedEntries = [];

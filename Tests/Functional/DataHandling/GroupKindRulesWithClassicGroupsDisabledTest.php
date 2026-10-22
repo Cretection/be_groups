@@ -18,6 +18,7 @@ namespace Cretection\BeGroups\Tests\Functional\DataHandling;
 use Cretection\BeGroups\Configuration\ExtensionSettings;
 use Cretection\BeGroups\DataHandling\GroupKindRules;
 use Cretection\BeGroups\DataHandling\RelationList;
+use Cretection\BeGroups\DataHandling\RelationsEmptiedByImport;
 use Cretection\BeGroups\DataHandling\RuleViolationReporter;
 use Cretection\BeGroups\Domain\Kind\GroupKind;
 use Cretection\BeGroups\Domain\Kind\KindFieldResolver;
@@ -39,6 +40,7 @@ use TYPO3\TestingFramework\Core\Functional\FunctionalTestCase;
 #[CoversClass(BackendGroupRepository::class)]
 #[CoversClass(BackendUserRepository::class)]
 #[CoversClass(RelationList::class)]
+#[CoversClass(RelationsEmptiedByImport::class)]
 #[CoversClass(KindRegistry::class)]
 #[CoversClass(GroupKind::class)]
 final class GroupKindRulesWithClassicGroupsDisabledTest extends FunctionalTestCase
@@ -144,6 +146,17 @@ final class GroupKindRulesWithClassicGroupsDisabledTest extends FunctionalTestCa
     }
 
     #[Test]
+    public function existingClassicAssignmentsSurviveAnUpdateImportWhileDisabled(): void
+    {
+        // EXT:impexp "Update records": the first run empties the relations, the second run sets them again.
+        $this->processDatamap(['be_users' => [2 => ['username' => 'editor', 'usergroup' => '']]], true);
+        $this->processDatamap(['be_users' => [2 => ['usergroup' => 'be_groups_5']]], true);
+
+        self::assertSame('5', $this->getRecord('be_users', 2)['usergroup']);
+        self::assertSame([], $this->getExtensionLogEntries());
+    }
+
+    #[Test]
     public function newClassicAssignmentsAreRejectedWhileDisabled(): void
     {
         $this->writeUser(1, ['usergroup' => '6,5']);
@@ -170,9 +183,10 @@ final class GroupKindRulesWithClassicGroupsDisabledTest extends FunctionalTestCa
     /**
      * @param array<string, array<int|string, array<string, int|string>>> $datamap
      */
-    private function processDatamap(array $datamap): DataHandler
+    private function processDatamap(array $datamap, bool $isImporting = false): DataHandler
     {
         $dataHandler = GeneralUtility::makeInstance(DataHandler::class);
+        $dataHandler->isImporting = $isImporting;
         $dataHandler->start($datamap, []);
         $dataHandler->process_datamap();
         return $dataHandler;

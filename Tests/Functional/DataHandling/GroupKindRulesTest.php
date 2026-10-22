@@ -18,6 +18,7 @@ namespace Cretection\BeGroups\Tests\Functional\DataHandling;
 use Cretection\BeGroups\Configuration\ExtensionSettings;
 use Cretection\BeGroups\DataHandling\GroupKindRules;
 use Cretection\BeGroups\DataHandling\RelationList;
+use Cretection\BeGroups\DataHandling\RelationsEmptiedByImport;
 use Cretection\BeGroups\DataHandling\RuleViolationReporter;
 use Cretection\BeGroups\Domain\Kind\GroupKind;
 use Cretection\BeGroups\Domain\Kind\KindFieldResolver;
@@ -41,6 +42,7 @@ use TYPO3\TestingFramework\Core\Functional\FunctionalTestCase;
 #[CoversClass(BackendUserRepository::class)]
 #[CoversClass(ExtensionSettings::class)]
 #[CoversClass(RelationList::class)]
+#[CoversClass(RelationsEmptiedByImport::class)]
 #[CoversClass(KindRegistry::class)]
 #[CoversClass(GroupKind::class)]
 final class GroupKindRulesTest extends FunctionalTestCase
@@ -448,6 +450,67 @@ final class GroupKindRulesTest extends FunctionalTestCase
     }
 
     #[Test]
+    public function storedRelationsThatBreakTheRulesSurviveAnUpdateImport(): void
+    {
+        $this->importWithUpdate(
+            [
+                'be_groups' => [7 => ['title' => 'R other', 'tx_begroups_kind' => 'role', 'subgroup' => '']],
+                'be_users' => [4 => ['username' => 'mixed', 'usergroup' => '']],
+            ],
+            [
+                'be_groups' => [7 => ['subgroup' => 'be_groups_5,be_groups_1']],
+                'be_users' => [4 => ['usergroup' => 'be_groups_6,be_groups_1']],
+            ],
+        );
+
+        self::assertSame('5,1', $this->getRecord('be_groups', 7)['subgroup']);
+        self::assertSame('6,1', $this->getRecord('be_users', 4)['usergroup']);
+        self::assertSame([], $this->getExtensionLogEntries());
+    }
+
+    #[Test]
+    public function anUpdateImportOnlyKeepsTheRelationsStoredBeforeIt(): void
+    {
+        $this->importWithUpdate(
+            ['be_groups' => [7 => ['title' => 'R other', 'tx_begroups_kind' => 'role', 'subgroup' => '']]],
+            ['be_groups' => [7 => ['subgroup' => 'be_groups_5,be_groups_9,be_groups_1']]],
+        );
+
+        self::assertSame('5,1', $this->getRecord('be_groups', 7)['subgroup']);
+        self::assertSame('Classic default language [9]', $this->getRejectedGroupsOfLastLogEntry());
+    }
+
+    #[Test]
+    public function relationsEmptiedByAnImportAreCheckedWhenTheyAreSetOutsideOfIt(): void
+    {
+        $this->processDatamap(['be_groups' => [7 => ['subgroup' => '']]], true);
+        $this->writeGroup(7, ['subgroup' => '5,1']);
+
+        self::assertSame('1', $this->getRecord('be_groups', 7)['subgroup']);
+    }
+
+    #[Test]
+    public function relationsAnImportSetsAgainAreOnlyKeptOnce(): void
+    {
+        $this->importWithUpdate(
+            ['be_groups' => [7 => ['subgroup' => '']]],
+            ['be_groups' => [7 => ['subgroup' => 'be_groups_1']]],
+        );
+        $this->processDatamap(['be_groups' => [7 => ['subgroup' => 'be_groups_1,be_groups_5']]], true);
+
+        self::assertSame('1', $this->getRecord('be_groups', 7)['subgroup']);
+    }
+
+    #[Test]
+    public function relationsEmptiedOutsideOfAnImportAreCheckedAgain(): void
+    {
+        $this->writeGroup(7, ['subgroup' => '']);
+        $this->processDatamap(['be_groups' => [7 => ['subgroup' => 'be_groups_5,be_groups_1']]], true);
+
+        self::assertSame('1', $this->getRecord('be_groups', 7)['subgroup']);
+    }
+
+    #[Test]
     public function changingTheKindIsLoggedAsInformationAndNoError(): void
     {
         $this->writeGroup(1, ['tx_begroups_kind' => 'db_mount']);
@@ -569,11 +632,26 @@ final class GroupKindRulesTest extends FunctionalTestCase
     }
 
     /**
+     * Writes records like an "Update records" import of EXT:impexp: the first run writes the records
+     * with empty relation fields (Import::writeRecords()), the second run sets the relations in the
+     * notation "be_groups_<uid>" (Import::setRelations()).
+     *
+     * @param array<string, array<int, array<string, string>>> $records
+     * @param array<string, array<int, array<string, string>>> $relations
+     */
+    private function importWithUpdate(array $records, array $relations): void
+    {
+        $this->processDatamap($records, true);
+        $this->processDatamap($relations, true);
+    }
+
+    /**
      * @param array<string, array<int|string, array<string, int|string>>> $datamap
      */
-    private function processDatamap(array $datamap): DataHandler
+    private function processDatamap(array $datamap, bool $isImporting = false): DataHandler
     {
         $dataHandler = GeneralUtility::makeInstance(DataHandler::class);
+        $dataHandler->isImporting = $isImporting;
         $dataHandler->start($datamap, []);
         $dataHandler->process_datamap();
         return $dataHandler;
