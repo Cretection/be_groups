@@ -29,8 +29,13 @@ use TYPO3\CMS\Core\Schema\TcaSchemaFactory;
  */
 final readonly class KindRegistry
 {
+    /**
+     * The icon of kinds without an icon of their own and of unknown kinds. No kind of this extension
+     * uses it, so such groups look neither like roles nor like a kind of building block.
+     */
+    public const FALLBACK_ICON = 'actions-question-circle';
+
     private const TABLE = 'be_groups';
-    private const FALLBACK_ICON = 'actions-users';
 
     /**
      * The definitions per schema of be_groups: a new schema is only built when TCA changes.
