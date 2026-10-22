@@ -19,7 +19,8 @@ $GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['t3lib/class.t3lib_tcemain.php']['proc
 $GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['t3lib/class.t3lib_tcemain.php']['clearCachePostProc']['be_groups']
     = CacheCommandDeferral::class . '->holdBackCommands';
 
-// Offers the kind "classic" in the group form only while classic groups are allowed.
+// Offers the kind "classic" in the group form only while classic groups are allowed, and marks
+// classic groups in the user form as not assignable meanwhile.
 $GLOBALS['TYPO3_CONF_VARS']['SYS']['formEngine']['formDataGroup']['tcaDatabaseRecord'][KindSelection::class] = [
     'depends' => [
         InitializeProcessedTca::class,
