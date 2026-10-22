@@ -135,8 +135,10 @@ final class AuditCommandTest extends FunctionalTestCase
     {
         $commandTester = $this->createCommandTester();
 
-        self::assertSame(Command::INVALID, $commandTester->execute(['--format' => 'xml']));
-        self::assertStringContainsString('"--format" must be "text" or "json"', $commandTester->getDisplay());
+        // The error goes to stderr, so it never ends up in a file that collects the JSON output.
+        self::assertSame(Command::INVALID, $commandTester->execute(['--format' => 'xml'], ['capture_stderr_separately' => true]));
+        self::assertSame('', $commandTester->getDisplay());
+        self::assertStringContainsString('"--format" must be "text" or "json"', $commandTester->getErrorOutput());
     }
 
     private function createCommandTester(): CommandTester

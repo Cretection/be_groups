@@ -29,7 +29,8 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 /**
  * Checks backend groups and users against the role model.
  *
- * Exit code 0: no errors (warnings allowed, unless --fail-on-warnings is set), 1: findings to fix.
+ * Exit code 0: no errors (warnings allowed, unless --fail-on-warnings is set), 1: findings to fix,
+ * 2: invalid value of --format.
  * Read-only: nothing is changed.
  *
  * @internal
@@ -62,7 +63,8 @@ final class AuditCommand extends Command
     {
         $format = $input->getOption('format');
         if ($format !== self::FORMAT_TEXT && $format !== self::FORMAT_JSON) {
-            (new SymfonyStyle($input, $output))->error('The option "--format" must be "text" or "json".');
+            // On stderr, so the message never ends up in a file that collects the JSON output.
+            (new SymfonyStyle($input, $output))->getErrorStyle()->error('The option "--format" must be "text" or "json".');
             return Command::INVALID;
         }
 
