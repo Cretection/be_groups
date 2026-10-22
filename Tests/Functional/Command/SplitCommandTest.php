@@ -22,6 +22,7 @@ use Cretection\BeGroups\Utility\ConsoleTextUtility;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use Symfony\Component\Console\Command\Command;
+use Symfony\Component\Console\Helper\Helper;
 use Symfony\Component\Console\Tester\CommandTester;
 use TYPO3\CMS\Core\Localization\LanguageServiceFactory;
 use TYPO3\TestingFramework\Core\Functional\FunctionalTestCase;
@@ -79,13 +80,15 @@ final class SplitCommandTest extends FunctionalTestCase
             'explicit_allowdeny' => 'tt_content:CType:text',
             'mfa_providers' => 'totp',
         ], ['uid' => 2]);
+        // Each of these characters takes two columns of the terminal.
+        $this->getConnectionPool()->getConnectionForTable('be_groups')->update('be_groups', ['title' => '広報部とニュース編集部のためのとても長いグループ名'], ['uid' => 6]);
         $commandTester = new CommandTester($this->get(SplitCommand::class));
 
         $commandTester->execute(['--all' => true, '--dry-run' => true]);
 
         $display = $commandTester->getDisplay();
         foreach (explode("\n", $display) as $line) {
-            self::assertLessThanOrEqual(120, mb_strlen($line), $line);
+            self::assertLessThanOrEqual(120, Helper::width($line), $line);
         }
         // Wrapped cells stay plain text.
         self::assertStringContainsString('<fg=red>and</>', $display);

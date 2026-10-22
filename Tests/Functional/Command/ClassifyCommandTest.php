@@ -22,6 +22,7 @@ use Cretection\BeGroups\Utility\ConsoleTextUtility;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use Symfony\Component\Console\Command\Command;
+use Symfony\Component\Console\Helper\Helper;
 use Symfony\Component\Console\Tester\CommandTester;
 use TYPO3\CMS\Core\Localization\LanguageServiceFactory;
 use TYPO3\TestingFramework\Core\Functional\FunctionalTestCase;
@@ -130,13 +131,15 @@ final class ClassifyCommandTest extends FunctionalTestCase
         $connection = $this->getConnectionPool()->getConnectionForTable('be_groups');
         $connection->update('be_groups', ['subgroup' => implode(',', array_fill(0, 30, '1,2'))], ['uid' => 3]);
         $connection->update('be_groups', ['title' => 'Editors of the press releases <fg=red>and</> news'], ['uid' => 2]);
+        // Each of these characters takes two columns of the terminal.
+        $connection->update('be_groups', ['title' => '広報部とニュース編集部のためのとても長いグループ名'], ['uid' => 6]);
         $commandTester = new CommandTester($this->get(ClassifyCommand::class));
 
         $commandTester->execute(['--dry-run' => true]);
 
         $display = $commandTester->getDisplay();
         foreach (explode("\n", $display) as $line) {
-            self::assertLessThanOrEqual(120, mb_strlen($line), $line);
+            self::assertLessThanOrEqual(120, Helper::width($line), $line);
         }
         // Wrapped cells stay plain text.
         self::assertStringContainsString('<fg=red>and</>', $display);
