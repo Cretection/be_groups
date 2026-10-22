@@ -132,7 +132,8 @@ Languages and category mounts restrict
     all languages and categories, unless another role of the user restricts
     them, and removing or hiding the last such building block of a user
     gives the user all languages or categories. Give every role whose users
-    are to be restricted a building block of its own.
+    are to be restricted a "Languages" or "Category mount" building block;
+    roles can share one.
 
 The live workspace needs a "Workspace" building block
     With EXT:workspaces, a user may only work in the live workspace if one of
@@ -189,7 +190,8 @@ R3: Building blocks have no subgroups
 
 R4: Backend users only get roles assigned
     As long as classic groups are allowed (see :ref:`configuration`),
-    backend users may also get classic groups.
+    backend users may also get classic groups, and the message of a
+    rejection names both.
 
 Details of the rules:
 
@@ -199,6 +201,9 @@ Details of the rules:
     migrating never takes away access. The module marks such entries. A
     relation counts as stored only if TYPO3 reads it: a stored
     ``be_groups_12`` is no relation for TYPO3, so adding group 12 is checked.
+    An import of EXT:impexp with :guilabel:`Update records` keeps stored
+    relations as well, although it first writes the fields empty and then
+    sets the relations again.
 *   **The order is kept.** The order of the members of a role and of the
     groups of a user matters for the TSconfig inheritance; rejected entries
     are removed, the others keep their position.
@@ -225,18 +230,26 @@ Details of the rules:
 
         TCAdefaults.be_groups.tx_begroups_kind = role
 *   **Unknown kinds are ignored.** A value that is no configured kind is not
-    stored; the group keeps its kind (or a new group gets the default kind).
+    stored; the group keeps its kind. A new group gets the default kind, or
+    the kind a listener of an event chooses, see :ref:`developer-kind-event`.
 
 The rules correct the data instead of aborting the save operation; only a
 classic group that would be created while classic groups are disabled is not
 created at all. Import and synchronisation tools therefore keep
 working. Every intervention is written to the system log
 (:guilabel:`Administration > Log`) and, in the backend, shown to the editor
-as message: emptied fields of a former kind as information (this is what a
-change of the kind is meant to do), rejected values and records as user
-error. Fields the caller empties itself are not reported, nor are default
-values a new group never gets. Corrections are reported after the save
-operation has completed:
+as message. Each entry names the record: the title with the prefix of its
+kind and the uid, for a new record the uid it got, and for a record that was
+not created the title it was given.
+
+Permission values that do not belong to the kind of the group (R1, R3) are
+emptied and reported as information: after a change of the kind – this is
+what the change is meant to do – as well as when the caller sends them in
+fields of another kind, for example a synchronisation tool that sets the
+same fields for all groups. Rejected relations (R2, R4), unknown kinds and
+rejected records are reported as user error. Fields the caller empties
+itself are not reported, nor are default values a new group never gets.
+Corrections are reported after the save operation has completed:
 if a save is aborted, for example because the password confirmation of the
 sudo mode is cancelled, no correction is logged. A rejected record or a
 rejected change to a classic group is reported right away.
@@ -298,7 +311,8 @@ Rejected records during imports
     DataHandler that import tools usually evaluate nor in the stored data, so
     the consistency check cannot find it either. After an import, check the
     system log (:guilabel:`Administration > Log`): every rejection is an
-    entry for the table :sql:`be_groups` or :sql:`be_users`. Scripts find
+    entry for the table :sql:`be_groups` or :sql:`be_users` that names the
+    record, a record that was not created by its title. Scripts find
     these entries in :sql:`sys_log` with ``type`` 4 and ``error`` 1. The
     consistency check (see :ref:`usage-audit`) finds data written around the
     DataHandler, for example by SQL.

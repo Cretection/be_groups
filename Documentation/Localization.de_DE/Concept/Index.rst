@@ -136,7 +136,8 @@ Sprachen und Kategorie-Freigaben schränken ein
     andere Rolle des Benutzers sie einschränkt, und wer den letzten solchen
     Baustein eines Benutzers entfernt oder versteckt, gibt dem Benutzer alle
     Sprachen oder Kategorien. Geben Sie jeder Rolle, deren Benutzer
-    eingeschränkt sein sollen, einen eigenen solchen Baustein.
+    eingeschränkt sein sollen, einen Baustein vom Typ „Sprachen“ oder
+    „Kategorie-Freigabe“; Rollen können sich einen teilen.
 
 Die Live-Arbeitsumgebung braucht einen Baustein vom Typ „Workspace“
     Mit EXT:workspaces darf ein Benutzer nur dann in der Live-Arbeitsumgebung
@@ -200,7 +201,8 @@ R3: Bausteine haben keine Untergruppen
 
 R4: Backend-Benutzern werden nur Rollen zugewiesen
     Solange klassische Gruppen erlaubt sind (siehe :ref:`configuration`),
-    dürfen Backend-Benutzer auch klassische Gruppen bekommen.
+    dürfen Backend-Benutzer auch klassische Gruppen bekommen, und die Meldung
+    einer Ablehnung nennt beide.
 
 Einzelheiten der Regeln:
 
@@ -211,7 +213,10 @@ Einzelheiten der Regeln:
     nimmt nie Zugriff weg. Das Modul markiert solche Einträge. Als
     gespeichert zählt eine Verknüpfung nur, wenn TYPO3 sie liest: Ein
     gespeichertes ``be_groups_12`` ist für TYPO3 keine Verknüpfung, das
-    Hinzufügen von Gruppe 12 wird also geprüft.
+    Hinzufügen von Gruppe 12 wird also geprüft. Auch ein Import von
+    EXT:impexp, der bestehende Datensätze aktualisiert, behält gespeicherte
+    Verknüpfungen, obwohl er die Felder zuerst leer schreibt und die
+    Verknüpfungen dann wieder setzt.
 *   **Die Reihenfolge bleibt erhalten.** Die Reihenfolge der Mitglieder einer
     Rolle und der Gruppen eines Benutzers ist für die TSconfig-Vererbung
     wichtig; abgelehnte Einträge werden entfernt, die übrigen behalten ihre
@@ -242,20 +247,29 @@ Einzelheiten der Regeln:
 
         TCAdefaults.be_groups.tx_begroups_kind = role
 *   **Unbekannte Typen werden ignoriert.** Ein Wert, der kein konfigurierter
-    Typ ist, wird nicht gespeichert; die Gruppe behält ihren Typ (oder eine
-    neue Gruppe bekommt den Standardtyp).
+    Typ ist, wird nicht gespeichert; die Gruppe behält ihren Typ. Eine neue
+    Gruppe bekommt den Standardtyp oder den Typ, den ein Listener eines
+    Events wählt, siehe :ref:`developer-kind-event`.
 
 Die Regeln korrigieren die Daten, statt das Speichern abzubrechen; nur eine
 klassische Gruppe, die bei abgeschalteten klassischen Gruppen angelegt würde,
 wird gar nicht angelegt. Import- und Synchronisierungs-Werkzeuge
 funktionieren deshalb weiter. Jeder Eingriff wird ins Systemprotokoll
 (:guilabel:`Verwaltung > Protokoll`) geschrieben und im Backend als
-Meldung angezeigt: geleerte Felder eines früheren Typs als Information (das
-ist der Zweck eines Typwechsels), abgelehnte Werte und Datensätze als
-Bedienfehler. Felder, die der Aufrufer selbst leert, werden nicht gemeldet,
-ebenso wenig Standardwerte, die eine neue Gruppe nie bekommt. Korrekturen
-werden gemeldet, nachdem das Speichern
-abgeschlossen ist: Wird das Speichern abgebrochen, zum Beispiel weil die
+Meldung angezeigt. Jeder Eintrag nennt den Datensatz: den Titel mit dem
+Präfix seines Typs und die uid, bei einem neuen Datensatz die uid, die er
+bekommen hat, und bei einem Datensatz, der nicht angelegt wurde, den Titel,
+den er bekommen sollte.
+
+Rechte-Werte, die nicht zum Typ der Gruppe gehören (R1, R3), werden geleert
+und als Information gemeldet: nach einem Typwechsel – das ist sein Zweck –
+ebenso wie dann, wenn der Aufrufer sie in Feldern eines anderen Typs
+sendet, zum Beispiel ein Synchronisierungs-Werkzeug, das bei allen Gruppen
+dieselben Felder setzt. Abgelehnte Verknüpfungen (R2, R4), unbekannte Typen
+und abgelehnte Datensätze werden als Bedienfehler gemeldet. Felder, die der
+Aufrufer selbst leert, werden nicht gemeldet, ebenso wenig Standardwerte,
+die eine neue Gruppe nie bekommt. Korrekturen werden gemeldet, nachdem das
+Speichern abgeschlossen ist: Wird das Speichern abgebrochen, zum Beispiel weil die
 Passwortabfrage des Sudo-Modus abgebrochen wird, wird keine Korrektur
 protokolliert. Ein abgelehnter Datensatz oder eine abgelehnte Umstellung in
 eine klassische Gruppe wird sofort gemeldet.
@@ -323,7 +337,8 @@ Abgelehnte Datensätze bei Importen
     Konsistenzprüfung kann sie deshalb nicht finden. Prüfen Sie nach einem
     Import das Systemprotokoll (:guilabel:`Verwaltung > Protokoll`): Jede
     Ablehnung ist ein Eintrag zur Tabelle :sql:`be_groups` oder
-    :sql:`be_users`. Skripte finden diese Einträge in :sql:`sys_log` mit
+    :sql:`be_users`, der den Datensatz nennt, einen nicht angelegten
+    Datensatz mit seinem Titel. Skripte finden diese Einträge in :sql:`sys_log` mit
     ``type`` 4 und ``error`` 1. Die Konsistenzprüfung (siehe
     :ref:`usage-audit`) findet Daten, die am DataHandler vorbei geschrieben
     wurden, zum Beispiel per SQL.

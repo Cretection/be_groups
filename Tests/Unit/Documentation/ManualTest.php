@@ -35,6 +35,7 @@ final class ManualTest extends UnitTestCase
     private const MANUAL_PATH = __DIR__ . '/../../../Documentation/';
     private const LABEL_PATH = __DIR__ . '/../../../Resources/Private/Language/';
     private const CHAPTERS = ['Introduction', 'Concept', 'Usage'];
+    private const ALL_CHAPTERS = ['Introduction', 'Installation', 'Configuration', 'Concept', 'Usage', 'Migration', 'Developer', 'Changelog', 'Credits'];
     private const XLIFF_NAMESPACE = 'urn:oasis:names:tc:xliff:document:1.2';
     private const SITE_PACKAGE_PATH = __DIR__ . '/../../Functional/Fixtures/Extensions/be_groups_test_sitepackage/';
     private const DEVELOPER_EXTENSION_PATH = __DIR__ . '/../../Functional/Fixtures/Extensions/be_groups_test_developer/';
@@ -128,6 +129,34 @@ final class ManualTest extends UnitTestCase
     {
         // The kind follows the title, and a change of the kind saves the group to reload the form
         self::assertSame(0, substr_count($this->readTextOfChapter($manual, 'Usage'), $formerText), $formerText);
+    }
+
+    /**
+     * @return array<string, array{string, string}>
+     */
+    public static function correctedStatementDataProvider(): array
+    {
+        return [
+            'English: saving a form never removes an assignment' => ['', 'never removes an existing assignment'],
+            'German: saving a form never removes an assignment' => ['Localization.de_DE/', 'nie eine bestehende Zuweisung'],
+            'English: the check finds rejected imports' => ['', 'Run the consistency check after imports'],
+            'German: the check finds rejected imports' => ['Localization.de_DE/', 'Führen Sie nach Importen die Konsistenzprüfung aus'],
+            'English: groups have a "disabled" flag' => ['', 'the "disabled" flag'],
+            'German: groups have a "disabled" flag' => ['Localization.de_DE/', 'das Feld „Deaktiviert“'],
+            'English: only fields of a former kind are information' => ['', 'emptied fields of a former kind as information'],
+            'German: only fields of a former kind are information' => ['Localization.de_DE/', 'geleerte Felder eines früheren Typs als Information'],
+            'English: the event only decides without a kind' => ['', 'only dispatched for new groups without a kind'],
+            'German: the event only decides without a kind' => ['Localization.de_DE/', 'nur für neue Gruppen ohne Typ ausgelöst'],
+        ];
+    }
+
+    #[Test]
+    #[DataProvider('correctedStatementDataProvider')]
+    public function theManualDoesNotRepeatACorrectedStatement(string $manual, string $statement): void
+    {
+        foreach (self::ALL_CHAPTERS as $chapter) {
+            self::assertSame(0, substr_count($this->readTextOfChapter($manual, $chapter), $statement), $chapter);
+        }
     }
 
     #[Test]
