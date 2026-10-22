@@ -3,6 +3,10 @@
   <file source-language="en" target-language="de" datatype="plaintext" original="EXT:be_groups/Resources/Private/Language/de.messages.xlf" date="2026-10-07T12:00:00Z">
     <header/>
     <body>
+      <trans-unit id="rules.record" approved="yes">
+        <source>%1$s: %2$s</source>
+        <target>%1$s: %2$s</target>
+      </trans-unit>
       <trans-unit id="rules.unknownKind.title" approved="yes">
         <source>Unknown group kind</source>
         <target>Unbekannter Gruppentyp</target>

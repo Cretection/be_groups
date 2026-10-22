@@ -80,6 +80,32 @@ final class GroupKindRulesWithClassicGroupsDisabledTest extends FunctionalTestCa
     }
 
     #[Test]
+    public function rejectedNewGroupsAreNamedWithTheirTitle(): void
+    {
+        $this->processDatamap(['be_groups' => ['NEW1' => ['pid' => 0, 'title' => 'Imported without kind', 'groupMods' => 'web_layout']]]);
+
+        $logData = $this->get(ConnectionPool::class)->getConnectionForTable('sys_log')
+            ->select(['log_data'], 'sys_log', ['type' => 4])
+            ->fetchOne();
+        $arguments = json_decode(is_string($logData) ? $logData : '', true);
+        self::assertIsArray($arguments);
+        self::assertSame("\u{2068}Imported without kind\u{2069}", $arguments['record'] ?? null);
+    }
+
+    #[Test]
+    public function rejectedChangesToClassicNameTheGroup(): void
+    {
+        $this->writeGroup(2, ['tx_begroups_kind' => 'classic']);
+
+        $logData = $this->get(ConnectionPool::class)->getConnectionForTable('sys_log')
+            ->select(['log_data'], 'sys_log', ['type' => 4])
+            ->fetchOne();
+        $arguments = json_decode(is_string($logData) ? $logData : '', true);
+        self::assertIsArray($arguments);
+        self::assertSame("\u{2068}DBM: DBM site A\u{2069} [2]", $arguments['record'] ?? null);
+    }
+
+    #[Test]
     public function groupsCanNotBeChangedToClassicWhileDisabled(): void
     {
         $this->writeGroup(2, ['tx_begroups_kind' => 'classic']);
@@ -97,8 +123,8 @@ final class GroupKindRulesWithClassicGroupsDisabledTest extends FunctionalTestCa
         self::assertSame('', $record['groupMods']);
         self::assertSame(
             [
-                ['error' => 1, 'details' => 'Changing groups to kind "classic" is disabled. The group keeps its kind.'],
-                ['error' => 0, 'details' => 'Fields not belonging to kind "{kind}" have been emptied: {fields}'],
+                ['error' => 1, 'details' => '{record}: Changing groups to kind "classic" is disabled. The group keeps its kind.'],
+                ['error' => 0, 'details' => '{record}: Fields not belonging to kind "{kind}" have been emptied: {fields}'],
             ],
             $this->getExtensionLogEntries(),
         );
@@ -110,7 +136,7 @@ final class GroupKindRulesWithClassicGroupsDisabledTest extends FunctionalTestCa
         $this->processDatamap(['be_groups' => ['NEW1' => ['pid' => 0, 'title' => 'Classic', 'tx_begroups_kind' => 'classic']]]);
 
         self::assertSame(
-            [['error' => 1, 'details' => 'Creating groups of kind "classic" is disabled. The group has not been created.']],
+            [['error' => 1, 'details' => '{record}: Creating groups of kind "classic" is disabled. The group has not been created.']],
             $this->getExtensionLogEntries(),
         );
     }

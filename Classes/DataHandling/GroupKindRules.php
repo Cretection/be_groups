@@ -103,11 +103,13 @@ final class GroupKindRules
     public function processDatamap_afterAllOperations(DataHandler $dataHandler): void
     {
         foreach ($this->pendingCorrections as $correction) {
+            $id = $this->resolveId($correction['table'], $correction['id'], $dataHandler);
             $report = $correction['information'] ? $this->reporter->reportInformation(...) : $this->reporter->reportCorrection(...);
             $report(
                 $dataHandler->BE_USER,
                 $correction['table'],
-                $correction['id'],
+                $id,
+                $this->describeRecord($correction['table'], $id, $dataHandler),
                 $correction['labelKey'],
                 $correction['logMessage'],
                 $correction['arguments'],
@@ -192,6 +194,7 @@ final class GroupKindRules
                     $dataHandler->BE_USER,
                     self::GROUPS_TABLE,
                     $id,
+                    $this->describeRecord(self::GROUPS_TABLE, $id, $dataHandler),
                     'rules.classicNotAllowed',
                     'Creating groups of kind "classic" is disabled. The group has not been created.',
                     [],
@@ -210,6 +213,7 @@ final class GroupKindRules
                 $dataHandler->BE_USER,
                 self::GROUPS_TABLE,
                 $id,
+                $this->describeRecord(self::GROUPS_TABLE, $id, $dataHandler),
                 'rules.classicNotAllowed',
                 'Changing groups to kind "classic" is disabled. The group keeps its kind.',
                 [],
@@ -516,7 +520,7 @@ final class GroupKindRules
                 $uidsByEntry[$entry] = $entry;
                 continue;
             }
-            if (!$this->isPlaceholderOfGroupOnly($entry, $dataHandler)) {
+            if (!$this->isPlaceholderOfTableOnly($entry, self::GROUPS_TABLE, $dataHandler)) {
                 continue;
             }
             $substitutedUid = $dataHandler->substNEWwithIDs[$entry] ?? null;
@@ -543,19 +547,69 @@ final class GroupKindRules
     }
 
     /**
-     * Whether a NEW placeholder stands for a group of the datamap and nothing else. The DataHandler
-     * maps placeholders to uids regardless of the table, and the last record created wins: a
-     * placeholder that is also used in another table can point to a different record when the
-     * relation is checked than when it is finally stored.
+     * Whether a NEW placeholder stands for a record of the table in the datamap and nothing else.
+     * The DataHandler maps placeholders to uids regardless of the table, and the last record created
+     * wins: a placeholder that is also used in another table can point to a different record when
+     * the relation is checked than when it is finally stored.
      */
-    private function isPlaceholderOfGroupOnly(string $placeholder, DataHandler $dataHandler): bool
+    private function isPlaceholderOfTableOnly(string $placeholder, string $table, DataHandler $dataHandler): bool
     {
-        foreach ($dataHandler->datamap as $table => $records) {
-            if ($table !== self::GROUPS_TABLE && array_key_exists($placeholder, $records)) {
+        foreach ($dataHandler->datamap as $datamapTable => $records) {
+            if ($datamapTable !== $table && array_key_exists($placeholder, $records)) {
                 return false;
             }
         }
-        return is_array($dataHandler->datamap[self::GROUPS_TABLE] ?? null) && array_key_exists($placeholder, $dataHandler->datamap[self::GROUPS_TABLE]);
+        return is_array($dataHandler->datamap[$table] ?? null) && array_key_exists($placeholder, $dataHandler->datamap[$table]);
+    }
+
+    /**
+     * The uid a new record has been stored with. A record that has not been stored keeps its
+     * placeholder, and so does a placeholder that also stands for a record of another table.
+     */
+    private function resolveId(string $table, int|string $id, DataHandler $dataHandler): int|string
+    {
+        if ($this->getUid($id) !== null) {
+            return $id;
+        }
+        $uid = $dataHandler->substNEWwithIDs[$id] ?? null;
+        return is_int($uid) && $this->isPlaceholderOfTableOnly((string)$id, $table, $dataHandler) ? $uid : $id;
+    }
+
+    /**
+     * Describes the record a report is about the way TYPO3 shows it, e.g. "META: Editors [12]" for a
+     * group or "editor [3]" for a user. A record that has not been stored is named by the title it
+     * was given.
+     */
+    private function describeRecord(string $table, int|string $id, DataHandler $dataHandler): string
+    {
+        $uid = $this->getUid($id);
+        $title = $uid === null ? null : $this->findTitle($table, $uid);
+        if ($uid !== null && $title !== null) {
+            return $title === '' ? sprintf('[%d]', $uid) : sprintf('%s [%d]', $this->isolateTitle($title), $uid);
+        }
+
+        $record = $dataHandler->datamap[$table][$id] ?? null;
+        $givenTitle = is_array($record) ? ($record[$table === self::GROUPS_TABLE ? 'title' : 'username'] ?? null) : null;
+        $givenTitle = is_scalar($givenTitle) ? trim((string)$givenTitle) : '';
+        return $givenTitle === '' ? $this->describeUntrustedValue((string)$id) : $this->isolateTitle($givenTitle);
+    }
+
+    /**
+     * The title of a stored group with the prefix of its kind, or the username of a stored user.
+     *
+     * @return string|null null if the record does not exist
+     */
+    private function findTitle(string $table, int $uid): ?string
+    {
+        if ($table === self::GROUPS_TABLE) {
+            $group = $this->backendGroupRepository->findFieldsByUid($uid, ['title', GroupKind::FIELD_NAME]);
+            if ($group === null || $group->get('title') === '') {
+                return $group?->get('title');
+            }
+            return $this->kindPrefix->prefixTitle($group->get(GroupKind::FIELD_NAME), $group->get('title'));
+        }
+        $username = BackendUtility::getRecord($table, $uid, ['username'], '', false)['username'] ?? null;
+        return is_scalar($username) ? (string)$username : null;
     }
 
     /**

@@ -200,6 +200,73 @@ final class GroupKindRulesTest extends FunctionalTestCase
     }
 
     #[Test]
+    public function logEntriesNameTheRecordTheyConcern(): void
+    {
+        $this->writeUser(2, ['usergroup' => '5,1']);
+
+        $logEntry = $this->getLastExtensionLogEntry();
+        self::assertSame('{record}: Only roles can be assigned to users. Rejected groups: {groups}', $logEntry['details']);
+        self::assertSame("\u{2068}editor\u{2069} [2]", $logEntry['data']['record'] ?? null);
+    }
+
+    #[Test]
+    public function correctionsOfNewUsersAreLoggedForTheCreatedUser(): void
+    {
+        $dataHandler = $this->processDatamap(['be_users' => ['NEW1' => ['pid' => 0, 'username' => 'new', 'password' => 'Secret-Password-1234', 'usergroup' => '5,1']]]);
+
+        $uid = $dataHandler->substNEWwithIDs['NEW1'] ?? null;
+        self::assertIsInt($uid);
+        $logEntry = $this->getLastExtensionLogEntry();
+        self::assertSame($uid, $logEntry['recuid']);
+        self::assertSame($uid, $logEntry['data']['uid'] ?? null);
+        self::assertSame("\u{2068}new\u{2069} [" . $uid . ']', $logEntry['data']['record'] ?? null);
+    }
+
+    #[Test]
+    public function correctionsOfNewGroupsAreLoggedForTheCreatedGroup(): void
+    {
+        $uid = $this->createGroup(['title' => 'DBM site B', 'tx_begroups_kind' => 'db_mount', 'groupMods' => 'web_layout']);
+
+        $logEntry = $this->getLastExtensionLogEntry();
+        self::assertSame($uid, $logEntry['recuid']);
+        self::assertSame("\u{2068}DBM: DBM site B\u{2069} [" . $uid . ']', $logEntry['data']['record'] ?? null);
+    }
+
+    #[Test]
+    public function correctionsOfCopiesAreLoggedForTheCopy(): void
+    {
+        // A copy is a new record, so the classic group of the copied role counts as added.
+        $dataHandler = GeneralUtility::makeInstance(DataHandler::class);
+        $dataHandler->start([], ['be_groups' => [7 => ['copy' => 0]]]);
+        $dataHandler->process_cmdmap();
+
+        $copyUid = $this->get(ConnectionPool::class)->getConnectionForTable('be_groups')
+            ->select(['uid'], 'be_groups', [], [], ['uid' => 'DESC'], 1)
+            ->fetchOne();
+        self::assertIsNumeric($copyUid);
+        self::assertGreaterThan(9, (int)$copyUid);
+        self::assertSame('1', $this->getRecord('be_groups', (int)$copyUid)['subgroup']);
+        $logEntry = $this->getLastExtensionLogEntry();
+        self::assertSame((int)$copyUid, $logEntry['recuid']);
+        self::assertSame("\u{2068}META: R other (copy 1)\u{2069} [" . $copyUid . ']', $logEntry['data']['record'] ?? null);
+    }
+
+    #[Test]
+    public function placeholdersOfRecordsOfSeveralTablesAreNotResolvedForTheLog(): void
+    {
+        // The DataHandler maps the placeholder to the record it creates last, here the user.
+        $this->processDatamap([
+            'be_groups' => ['NEW1' => ['pid' => 0, 'title' => 'ACL new', 'tx_begroups_kind' => 'acl', 'db_mountpoints' => '1']],
+            'be_users' => ['NEW1' => ['pid' => 0, 'username' => 'new', 'password' => 'Secret-Password-1234']],
+        ]);
+
+        $logEntry = $this->getLastExtensionLogEntry();
+        self::assertSame(0, $logEntry['recuid']);
+        self::assertSame('NEW1', $logEntry['data']['uid'] ?? null);
+        self::assertSame("\u{2068}ACL new\u{2069}", $logEntry['data']['record'] ?? null);
+    }
+
+    #[Test]
     public function relationsToGroupsCreatedInTheSameDatamapAreKept(): void
     {
         $dataHandler = $this->processDatamap(['be_groups' => [
@@ -516,7 +583,7 @@ final class GroupKindRulesTest extends FunctionalTestCase
         $this->writeGroup(1, ['tx_begroups_kind' => 'db_mount']);
 
         self::assertSame(
-            [['error' => 0, 'details' => 'Fields not belonging to kind "{kind}" have been emptied: {fields}']],
+            [['error' => 0, 'details' => '{record}: Fields not belonging to kind "{kind}" have been emptied: {fields}']],
             $this->getExtensionLogEntries(),
         );
     }
@@ -536,7 +603,7 @@ final class GroupKindRulesTest extends FunctionalTestCase
         $this->writeUser(2, ['usergroup' => '5,1']);
 
         self::assertSame(
-            [['error' => 1, 'details' => 'Only roles can be assigned to users. Rejected groups: {groups}']],
+            [['error' => 1, 'details' => '{record}: Only roles can be assigned to users. Rejected groups: {groups}']],
             $this->getExtensionLogEntries(),
         );
         self::assertSame("\u{2068}ACL: ACL editing\u{2069} [1]", $this->getRejectedGroupsOfLastLogEntry());
@@ -599,6 +666,23 @@ final class GroupKindRulesTest extends FunctionalTestCase
             static fn(array $row): array => ['error' => is_numeric($row['error']) ? (int)$row['error'] : -1, 'details' => is_string($row['details']) ? $row['details'] : ''],
             $rows,
         );
+    }
+
+    /**
+     * @return array{recuid: int, details: string, data: array<array-key, mixed>} the last entry the extension wrote to the system log
+     */
+    private function getLastExtensionLogEntry(): array
+    {
+        $row = $this->get(ConnectionPool::class)->getConnectionForTable('sys_log')
+            ->select(['recuid', 'details', 'log_data'], 'sys_log', ['type' => 4], [], ['uid' => 'DESC'], 1)
+            ->fetchAssociative();
+        self::assertIsArray($row);
+        $data = json_decode(is_string($row['log_data']) ? $row['log_data'] : '', true);
+        return [
+            'recuid' => is_numeric($row['recuid']) ? (int)$row['recuid'] : -1,
+            'details' => is_string($row['details']) ? $row['details'] : '',
+            'data' => is_array($data) ? $data : [],
+        ];
     }
 
     /**

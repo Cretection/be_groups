@@ -3,6 +3,9 @@
   <file source-language="en" datatype="plaintext" original="EXT:be_groups/Resources/Private/Language/messages.xlf" date="2026-10-07T12:00:00Z">
     <header/>
     <body>
+      <trans-unit id="rules.record">
+        <source>%1$s: %2$s</source>
+      </trans-unit>
       <trans-unit id="rules.unknownKind.title">
         <source>Unknown group kind</source>
       </trans-unit>

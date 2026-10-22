@@ -25,8 +25,9 @@ use TYPO3\CMS\Core\Type\ContextualFeedbackSeverity;
 /**
  * Reports every correction or rejection of the group kind rules.
  *
- * Each report is written to the system log (Administration > Log) as audit trail
- * and shown to the editing user as flash message in backend requests.
+ * Each report names the record it concerns. It is written to the system log
+ * (Administration > Log) as audit trail and shown to the editing user as flash message
+ * in backend requests.
  *
  * @internal
  */
@@ -50,31 +51,34 @@ final readonly class RuleViolationReporter
      * The rules did what the kind demands, e.g. emptied the fields of the former kind after the kind
      * was changed. This is no error.
      *
+     * @param string $record the record as the report names it, e.g. "META: Editors [12]"
      * @param array<string, string> $arguments
      */
-    public function reportInformation(BackendUserAuthentication $backendUser, string $table, string|int $id, string $labelKey, string $logMessage, array $arguments): void
+    public function reportInformation(BackendUserAuthentication $backendUser, string $table, string|int $id, string $record, string $labelKey, string $logMessage, array $arguments): void
     {
-        $this->report($backendUser, $table, $id, $labelKey, $logMessage, $arguments, self::LOG_MESSAGE, ContextualFeedbackSeverity::INFO);
+        $this->report($backendUser, $table, $id, $record, $labelKey, $logMessage, $arguments, self::LOG_MESSAGE, ContextualFeedbackSeverity::INFO);
     }
 
     /**
      * A value that is not allowed was not saved, e.g. a building block assigned to a user directly.
      *
+     * @param string $record the record as the report names it, e.g. "META: Editors [12]"
      * @param array<string, string> $arguments
      */
-    public function reportCorrection(BackendUserAuthentication $backendUser, string $table, string|int $id, string $labelKey, string $logMessage, array $arguments): void
+    public function reportCorrection(BackendUserAuthentication $backendUser, string $table, string|int $id, string $record, string $labelKey, string $logMessage, array $arguments): void
     {
-        $this->report($backendUser, $table, $id, $labelKey, $logMessage, $arguments, self::LOG_ERROR_USER, ContextualFeedbackSeverity::WARNING);
+        $this->report($backendUser, $table, $id, $record, $labelKey, $logMessage, $arguments, self::LOG_ERROR_USER, ContextualFeedbackSeverity::WARNING);
     }
 
     /**
      * A change was rejected completely.
      *
+     * @param string $record the record as the report names it, e.g. "META: Editors [12]"
      * @param array<string, string> $arguments
      */
-    public function reportRejection(BackendUserAuthentication $backendUser, string $table, string|int $id, string $labelKey, string $logMessage, array $arguments): void
+    public function reportRejection(BackendUserAuthentication $backendUser, string $table, string|int $id, string $record, string $labelKey, string $logMessage, array $arguments): void
     {
-        $this->report($backendUser, $table, $id, $labelKey, $logMessage, $arguments, self::LOG_ERROR_USER, ContextualFeedbackSeverity::ERROR);
+        $this->report($backendUser, $table, $id, $record, $labelKey, $logMessage, $arguments, self::LOG_ERROR_USER, ContextualFeedbackSeverity::ERROR);
     }
 
     /**
@@ -84,6 +88,7 @@ final readonly class RuleViolationReporter
         BackendUserAuthentication $backendUser,
         string $table,
         string|int $id,
+        string $record,
         string $labelKey,
         string $logMessage,
         array $arguments,
@@ -91,13 +96,14 @@ final readonly class RuleViolationReporter
         ContextualFeedbackSeverity $severity,
     ): void {
         $recordUid = is_int($id) ? $id : (ctype_digit($id) ? (int)$id : 0);
+        // The text names the record, as the module "Log" shows neither its table nor its uid.
         $backendUser->writelog(
             self::LOG_TYPE_EXTENSION,
             self::LOG_ACTION_NONE,
             $logError,
             null,
-            $logMessage,
-            $arguments + ['table' => $table, 'uid' => (string)$id],
+            '{record}: ' . $logMessage,
+            ['record' => $record] + $arguments + ['table' => $table, 'uid' => $recordUid > 0 ? $recordUid : (string)$id],
             $table,
             $recordUid,
         );
@@ -107,6 +113,7 @@ final readonly class RuleViolationReporter
         }
         $languageService = $this->languageServiceFactory->createFromUserPreferences($backendUser);
         $message = (string)$languageService->translate($labelKey . '.message', self::LABEL_DOMAIN, array_values($arguments), $logMessage);
+        $message = (string)$languageService->translate('rules.record', self::LABEL_DOMAIN, [$record, $message], $record . ': ' . $message);
         $title = (string)$languageService->translate($labelKey . '.title', self::LABEL_DOMAIN, [], 'be_groups');
         $this->flashMessageService
             ->getMessageQueueByIdentifier()
