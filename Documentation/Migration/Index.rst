@@ -160,7 +160,16 @@ the command line. Split them afterwards to start with two roles:
     vendor/bin/typo3 setup:begroups:default --groups=Both
     vendor/bin/typo3 begroups:split --all
 
-The result are the roles "Editor" and "Advanced Editor", each with its own
-building blocks: a page group as owner of new pages, access rights, page
-tree entry point and file mount (``PG: Editor``, ``ACL: Editor``,
-``DBM: Editor`` and ``FM: Editor``).
+The result is two roles, "Editor" and "Advanced Editor", each with its own
+building blocks of the kinds "Page permission group" (the owner group of new
+pages), "Access rights", "Page tree mount" and "File mount": ``PG: Editor``,
+``ACL: Editor``, ``DBM: Editor`` and ``FM: Editor``.
+
+..  attention::
+
+    Split the two groups before you edit them. TYPO3 stores no value in
+    their field :sql:`file_permissions`, which grants no file operations.
+    The backend form shows the default of the field instead, all file
+    operations, so saving one of the groups in the form – even without a
+    change – grants all file operations to its users. The building blocks
+    of the split store no file operations.

@@ -174,6 +174,16 @@ beginnen:
     vendor/bin/typo3 begroups:split --all
 
 Das Ergebnis sind die Rollen „Editor“ und „Advanced Editor“ mit jeweils
-eigenen Bausteinen: einer Seitenrechte-Gruppe als Eigentümerin neuer
-Seiten, Zugriffsrechten, Seitenbaum-Einstiegspunkt und Dateifreigabe
-(``PG: Editor``, ``ACL: Editor``, ``DBM: Editor`` und ``FM: Editor``).
+eigenen Bausteinen der Typen „Seitenrechte-Gruppe“ (die Eigentümergruppe
+neuer Seiten), „Zugriffsrechte“, „Seitenbaum-Freigabe“ und „Dateifreigabe“:
+``PG: Editor``, ``ACL: Editor``, ``DBM: Editor`` und ``FM: Editor``.
+
+..  attention::
+
+    Teilen Sie die beiden Gruppen auf, bevor Sie sie bearbeiten. TYPO3
+    speichert in ihrem Feld :sql:`file_permissions` keinen Wert, und das
+    gewährt keine Dateioperationen. Das Backend-Formular zeigt stattdessen
+    den Standardwert des Felds, alle Dateioperationen. Wer eine der Gruppen
+    im Formular speichert – auch ohne Änderung –, gewährt ihren Benutzern
+    damit alle Dateioperationen. Die Bausteine aus dem Aufteilen speichern
+    keine Dateioperationen.
