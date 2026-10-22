@@ -48,7 +48,9 @@ ihren Plan zuerst mit ``--dry-run``:
 *   Alle anderen Gruppen werden aufgelistet: Gruppen zum Aufteilen und
     Gruppen, über die Sie entscheiden müssen, jeweils mit Begründung – zum
     Beispiel eine leere Gruppe, die keinem Benutzer direkt zugewiesen ist,
-    ein Rechtefeld, das zu keinem Typ gehört, die Wurzel des Seitenbaums als
+    ein Rechtefeld, das zu keinem Typ gehört (ohne EXT:workspaces auch der
+    Zugriff auf die Live-Arbeitsumgebung, siehe
+    :ref:`migration-without-workspaces`), die Wurzel des Seitenbaums als
     Freigabe, Untergruppen mit Duplikaten oder Einträgen, die TYPO3 und das
     Backend-Formular unterschiedlich lesen (etwa ``be_groups_5`` oder
     ``05``), oder Seiten-, Datei- oder Kategoriefreigaben mit Einträgen, die
@@ -191,7 +193,9 @@ Danach:
     entstehen, sind nicht freigegeben. Das Backend-Formular zeigt die Wurzel
     nicht als Freigabe: Wer eine solche Gruppe oder einen Baustein vom Typ
     „Seitenbaum-Freigabe“ mit der Wurzel im Formular speichert, entfernt
-    sie.
+    sie. Für eine Gruppe, die das Bearbeiten in der Live-Arbeitsumgebung
+    erlaubt, während EXT:workspaces nicht installiert ist, siehe
+    :ref:`migration-without-workspaces`.
 #.  Klassische Gruppen abschalten, siehe :ref:`configuration`, sobald
     ``begroups:audit`` keine klassische Gruppe (``classic-group``) mehr
     meldet. Verbliebene klassische Gruppen wirken weiter, werden ab dann
@@ -202,6 +206,61 @@ Danach:
     Wenn Sie den Typ einer Gruppe von Hand ändern, werden alle Felder
     geleert, die nicht zum neuen Typ gehören (Regel R1). Nutzen Sie lieber
     die Assistenten, oder prüfen Sie die Gruppe, bevor Sie ihren Typ ändern.
+
+..  _migration-without-workspaces:
+
+Installationen ohne EXT:workspaces
+==================================
+
+Das Feld :sql:`workspace_perms` einer Gruppe
+(:guilabel:`Live bearbeiten (Online)`) erlaubt das Bearbeiten in der
+Live-Arbeitsumgebung. Ohne EXT:workspaces arbeitet jeder Benutzer in der
+Live-Arbeitsumgebung: TYPO3 ignoriert das Feld, kein Formular zeigt es, und
+der Typ „Workspace“ ist nicht konfiguriert. Ein gespeicherter Wert wirkt
+wieder, sobald EXT:workspaces wieder installiert ist. Wurde EXT:workspaces
+entfernt, haben in der Regel noch die meisten Gruppen einen Wert in dem
+Feld, weil jede Gruppe, deren Benutzer live arbeiteten, ihn brauchte.
+
+Klassische Gruppen mit Zugriff auf die Live-Arbeitsumgebung
+    Die Assistenten stellen sie nicht um: Das Feld gehört zu keinem Typ, und
+    eine Umstellung würde es leeren. ``begroups:classify`` und
+    ``begroups:split`` nennen das als Grund. Es gibt zwei Auswege:
+
+    *   Wenn Sie Arbeitsumgebungen nutzen, installieren Sie EXT:workspaces
+        wieder und behalten Sie die Extension. Die Assistenten stellen diese
+        Gruppen dann mit Bausteinen vom Typ „Workspace“ um.
+    *   Wenn Sie keine Arbeitsumgebungen mehr nutzen, leeren Sie das Feld und
+        führen Sie die Assistenten erneut aus. Kein Formular zeigt das Feld,
+        leeren Sie es deshalb per SQL:
+
+        ..  code-block:: sql
+
+            UPDATE be_groups SET workspace_perms = 0
+                WHERE tx_begroups_kind = 'classic' AND workspace_perms <> 0;
+
+        Die Anweisung schreibt am DataHandler vorbei, weder die Historie
+        noch das Systemprotokoll verzeichnen sie also. Solange EXT:workspaces
+        nicht installiert ist, ändert sie keine wirksamen Rechte. Wenn Sie
+        EXT:workspaces später installieren, vergeben Sie den Zugriff auf die
+        Live-Arbeitsumgebung mit einem Baustein vom Typ „Workspace“, siehe
+        :ref:`concept-combination`.
+
+Bausteine vom Typ „Workspace“
+    Sie haben einen unbekannten Typ (``unknown-kind``, siehe
+    :ref:`concept-kinds`). Behalten Sie sie, auch in ihren Rollen, wenn
+    EXT:workspaces wieder installiert werden könnte: Dann wirken sie wieder.
+    Bis dahin meldet die Konsistenzprüfung auch die Rollen, die sie
+    enthalten (``role-invalid-member``). Wählen Sie keinen anderen Typ: Das
+    leert ihren Zugriff auf die Live-Arbeitsumgebung (R1), und ihren
+    Benutzern fehlt er, sobald EXT:workspaces wieder installiert ist. Wenn
+    Sie keine Arbeitsumgebungen mehr nutzen, entfernen Sie sie aus ihren
+    Rollen und löschen Sie sie.
+
+Andere Rollen und Bausteine mit Zugriff auf die Live-Arbeitsumgebung
+    Ihre Typen zeigen das Feld nicht. Die Konsistenzprüfung meldet einen
+    gespeicherten Wert, zum Beispiel einen per SQL geschriebenen, als
+    vorerst unwirksam (``foreign-permissions``); Speichern der Gruppe
+    entfernt ihn.
 
 ..  _migration-starter:
 

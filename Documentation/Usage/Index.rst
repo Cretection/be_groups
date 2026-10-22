@@ -213,7 +213,9 @@ next to the *Users* module. It is read-only and shows:
     users it is assigned to directly,
 *   the remaining classic groups,
 *   groups with an unknown kind, for example the kind of an uninstalled
-    extension, with a warning.
+    extension, with a warning; without EXT:workspaces, "Workspace" building
+    blocks are listed separately with advice of their own, see
+    :ref:`migration-without-workspaces`.
 
 ..  figure:: /Images/RolesAndBuildingBlocksModule.png
     :alt: The module Roles & Building Blocks: a table of roles with their building blocks, grouped by kind, and their users
@@ -286,7 +288,9 @@ consistency check. It reads all groups and users and changes nothing:
         - ``error``
         - The group has no kind, or its kind is not configured or has no form
           of its own, for example the kind of an uninstalled extension. Choose
-          a kind.
+          a kind. Without EXT:workspaces, this also applies to "Workspace"
+          building blocks; keep them if EXT:workspaces may be installed
+          again, see :ref:`migration-without-workspaces`.
     *   - ``classic-group``
         - ``warning``
         - A classic group. Convert it into a role or building blocks:
@@ -302,7 +306,9 @@ consistency check. It reads all groups and users and changes nothing:
     *   - ``foreign-permissions``
         - ``error``
         - A group carries permissions that its kind does not show. They are
-          in effect until the group is saved again.
+          in effect until the group is saved again. Without EXT:workspaces,
+          the access to the live workspace (:sql:`workspace_perms`) has no
+          effect until EXT:workspaces is installed again; the finding says so.
     *   - ``role-missing-member``
         - ``error``
         - A role contains a group that does not exist or is deleted.

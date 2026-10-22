@@ -45,7 +45,9 @@ kind where nothing else changes:
     "Page permission group", unless it is assigned to users directly.
 *   All other groups are listed: groups to split, and groups that need your
     decision, with the reason – for example an empty group that no user has
-    directly, a permission field that belongs to no kind, the root of the
+    directly, a permission field that belongs to no kind (without
+    EXT:workspaces also the access to the live workspace, see
+    :ref:`migration-without-workspaces`), the root of the
     page tree as page mount, subgroups with duplicates or entries that TYPO3
     and the backend form read differently (such as ``be_groups_5`` or
     ``05``), or page, file or category mounts with entries that the
@@ -171,7 +173,9 @@ Afterwards:
     the page tree and split the group then. This is not quite the same:
     pages created on the top level later are not mounted. The backend form
     does not show the root as page mount: saving such a group in the form,
-    or a "Page tree mount" building block with the root, removes it.
+    or a "Page tree mount" building block with the root, removes it. For a
+    group that allows editing in the live workspace while EXT:workspaces is
+    not installed, see :ref:`migration-without-workspaces`.
 #.  Switch off classic groups, see :ref:`configuration`, once
     ``begroups:audit`` reports no classic group (``classic-group``) any
     more. Remaining classic groups keep working, but are reported as errors
@@ -182,6 +186,56 @@ Afterwards:
     Changing the kind of a group manually clears all fields that do not
     belong to the new kind (rule R1). Prefer the assistants, or check the
     group before you change its kind.
+
+..  _migration-without-workspaces:
+
+Installations without EXT:workspaces
+====================================
+
+The field :sql:`workspace_perms` of a group (:guilabel:`Edit Live (Online)`)
+allows editing in the live workspace. Without EXT:workspaces, every user
+works in the live workspace: TYPO3 ignores the field, no form shows it, and
+the kind "Workspace" is not configured. A stored value takes effect again as
+soon as EXT:workspaces is installed again. After EXT:workspaces has been
+removed, most groups usually still have a value in the field, because every
+group whose users worked live needed it.
+
+Classic groups with access to the live workspace
+    The assistants do not convert them: the field belongs to no kind, and a
+    conversion would clear it. ``begroups:classify`` and ``begroups:split``
+    give this as the reason. There are two ways out:
+
+    *   If you use workspaces, install EXT:workspaces again and keep it. The
+        assistants then convert these groups with "Workspace" building
+        blocks.
+    *   If you no longer use workspaces, clear the field and run the
+        assistants again. No form shows the field, so clear it with SQL:
+
+        ..  code-block:: sql
+
+            UPDATE be_groups SET workspace_perms = 0
+                WHERE tx_begroups_kind = 'classic' AND workspace_perms <> 0;
+
+        The statement writes past the DataHandler, so neither the history
+        nor the system log records it. As long as EXT:workspaces is not
+        installed, it changes no effective permission. If you install
+        EXT:workspaces later, grant the access to the live workspace with a
+        "Workspace" building block, see :ref:`concept-combination`.
+
+"Workspace" building blocks
+    They have an unknown kind (``unknown-kind``, see :ref:`concept-kinds`).
+    Keep them, also in their roles, if EXT:workspaces may be installed
+    again: they take effect again then. Until then, the consistency check
+    also reports the roles that contain them (``role-invalid-member``). Do
+    not choose another kind: that clears their access to the live workspace
+    (R1), and their users lack it once EXT:workspaces is installed again. If
+    you no longer use workspaces, remove them from their roles and delete
+    them.
+
+Other roles and building blocks with access to the live workspace
+    Their kinds do not show the field. The consistency check reports a
+    stored value, for example one written by SQL, as without effect for now
+    (``foreign-permissions``); saving the group removes it.
 
 ..  _migration-starter:
 

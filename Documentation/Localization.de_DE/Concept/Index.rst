@@ -124,6 +124,18 @@ Rolle hinzugefügt und keinem Benutzer zugewiesen werden: Die Formulare von
 Rollen und Benutzern listen sie unter einer eigenen Überschrift, und das
 Modul führt sie gesondert auf.
 
+Ohne EXT:workspaces ist auch der Typ „Workspace“ nicht konfiguriert,
+Bausteine vom Typ „Workspace“ haben dann also einen unbekannten Typ. Da dann
+jeder Benutzer in der Live-Arbeitsumgebung arbeitet, ignoriert TYPO3 ihren
+Zugriff auf die Live-Arbeitsumgebung (:sql:`workspace_perms`), und kein
+Formular zeigt das Feld. Behalten Sie sie, wenn EXT:workspaces wieder
+installiert werden könnte: Dann wirken sie wieder. Wählen Sie für sie keinen
+anderen Typ: Das leert :sql:`workspace_perms` (R1), und ihren Benutzern fehlt
+der Zugriff auf die Live-Arbeitsumgebung, sobald EXT:workspaces wieder
+installiert ist. Wenn Sie keine Arbeitsumgebungen mehr nutzen, entfernen Sie
+sie aus ihren Rollen und löschen Sie sie, siehe
+:ref:`migration-without-workspaces`.
+
 ..  _concept-combination:
 
 Wie TYPO3 Bausteine zusammenführt
@@ -157,7 +169,10 @@ Die Live-Arbeitsumgebung braucht einen Baustein vom Typ „Workspace“
     ohne Mitgliedschaft in einer eigenen Arbeitsumgebung sehen gar kein Modul
     (*Kein Workspace-Zugriff*). Eigene Arbeitsumgebungen
     werden im Datensatz der Arbeitsumgebung vergeben, in dem Rollen und
-    Bausteine Mitglieder oder Besitzer sein können.
+    Bausteine Mitglieder oder Besitzer sein können. Ohne EXT:workspaces
+    arbeitet jeder Benutzer in der Live-Arbeitsumgebung, und TYPO3 ignoriert
+    :sql:`workspace_perms`, bis EXT:workspaces wieder installiert ist, siehe
+    :ref:`migration-without-workspaces`.
 
 Der erste Baustein besitzt die neuen Seiten
     TYPO3 macht die erste Gruppe, die es für einen Benutzer auflöst, zur

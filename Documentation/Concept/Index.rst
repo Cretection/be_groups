@@ -120,6 +120,16 @@ group keeps its stored subgroups, but gets no new ones until a kind is chosen
 assigned to a user: the forms of roles and users list it under a heading of
 its own, and the module lists it separately.
 
+Without EXT:workspaces, the kind "Workspace" is not configured either, so
+"Workspace" building blocks have an unknown kind. As every user works in the
+live workspace then, TYPO3 ignores their access to the live workspace
+(:sql:`workspace_perms`), and no form shows the field. Keep them if
+EXT:workspaces may be installed again: they take effect again then. Do not
+choose another kind for them: that clears :sql:`workspace_perms` (R1), and
+their users lack the access to the live workspace once EXT:workspaces is
+installed again. If you no longer use workspaces, remove them from their
+roles and delete them, see :ref:`migration-without-workspaces`.
+
 ..  _concept-combination:
 
 How TYPO3 combines building blocks
@@ -151,6 +161,9 @@ The live workspace needs a "Workspace" building block
     access and without membership in a custom workspace see no module at all
     (*No workspace access*). Custom workspaces are granted in the workspace
     record, where roles and building blocks can be members or owners.
+    Without EXT:workspaces, every user works in the live workspace, and TYPO3
+    ignores :sql:`workspace_perms` until EXT:workspaces is installed again,
+    see :ref:`migration-without-workspaces`.
 
 The first building block owns the new pages
     TYPO3 makes the first group it resolves for a user the owner group of the

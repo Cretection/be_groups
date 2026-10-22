@@ -222,7 +222,9 @@ dem Modul *Benutzer*. Es ändert nichts, sondern zeigt:
     den Benutzern, denen er direkt zugewiesen ist,
 *   die verbliebenen klassischen Gruppen,
 *   Gruppen mit unbekanntem Typ, zum Beispiel dem Typ einer deinstallierten
-    Extension, mit Warnung.
+    Extension, mit Warnung; ohne EXT:workspaces stehen Bausteine vom Typ
+    „Workspace“ gesondert und mit eigenem Rat, siehe
+    :ref:`migration-without-workspaces`.
 
 ..  figure:: /Images/RolesAndBuildingBlocksModule.png
     :alt: Das Modul Rollen & Bausteine: eine Tabelle der Rollen mit ihren Bausteinen, nach Typ gruppiert, und ihren Benutzern
@@ -296,7 +298,10 @@ Konsistenzprüfung. Sie liest alle Gruppen und Benutzer und ändert nichts:
         - ``error``
         - Die Gruppe hat keinen Typ, oder ihr Typ ist nicht konfiguriert oder
           hat kein eigenes Formular, zum Beispiel der Typ einer
-          deinstallierten Extension. Wählen Sie einen Typ.
+          deinstallierten Extension. Wählen Sie einen Typ. Ohne
+          EXT:workspaces gilt das auch für Bausteine vom Typ „Workspace“;
+          behalten Sie sie, wenn EXT:workspaces wieder installiert werden
+          könnte, siehe :ref:`migration-without-workspaces`.
     *   - ``classic-group``
         - ``warning``
         - Eine klassische Gruppe. Stellen Sie sie in eine Rolle oder
@@ -312,7 +317,10 @@ Konsistenzprüfung. Sie liest alle Gruppen und Benutzer und ändert nichts:
     *   - ``foreign-permissions``
         - ``error``
         - Eine Gruppe trägt Rechte, die ihr Typ nicht anzeigt. Sie wirken,
-          bis die Gruppe erneut gespeichert wird.
+          bis die Gruppe erneut gespeichert wird. Ohne EXT:workspaces wirkt
+          der Zugriff auf die Live-Arbeitsumgebung (:sql:`workspace_perms`)
+          nicht, bis EXT:workspaces wieder installiert ist; die Meldung sagt
+          das.
     *   - ``role-missing-member``
         - ``error``
         - Eine Rolle enthält eine Gruppe, die es nicht gibt oder die
