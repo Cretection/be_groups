@@ -75,7 +75,12 @@ final class GroupClassifierTest extends FunctionalTestCase
 
         self::assertSame('Grants no permissions. Choose a kind or delete the group.', $classifier->classify(4)?->reason);
         self::assertStringContainsString('workspace_perms belong to no kind', (string)$classifier->classify(8)?->reason);
-        self::assertSame('Is assigned to 1 user(s) directly, so it stays their role.', $classifier->classify(6)?->reason);
+        self::assertSame(
+            'Is assigned to 1 user(s) directly, so it stays their role. A new page group becomes the owner group of the pages its users create.',
+            $classifier->classify(6)?->reason,
+        );
+        // Its active subgroup stays the owner group of new pages.
+        self::assertSame('Grants permissions of several kinds: acl, file_operations.', $classifier->classify(9)?->reason);
     }
 
     #[Test]

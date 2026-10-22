@@ -52,9 +52,19 @@ final class SplitCommandTest extends FunctionalTestCase
         $display = $commandTester->getDisplay();
         self::assertStringContainsString('new ACL: Editors', $display);
         self::assertStringContainsString('new FO: Editors', $display);
+        self::assertMatchesRegularExpression('/new PG: Editors +no permissions, owner group of new pages/', $display);
         self::assertStringContainsString('the group becomes a role', $display);
         self::assertStringContainsString('3 group(s) would be split.', $display);
         self::assertSame($groupCount, $this->countGroups());
+    }
+
+    #[Test]
+    public function explainsThePageGroupInTheHelp(): void
+    {
+        self::assertStringContainsString(
+            'a new page group without permissions becomes its first member and takes over this task',
+            $this->get(SplitCommand::class)->getHelp(),
+        );
     }
 
     #[Test]

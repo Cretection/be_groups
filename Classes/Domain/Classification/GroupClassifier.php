@@ -180,6 +180,7 @@ final readonly class GroupClassifier
             || $this->isOnCycle($group->getUid(), $groups)
         ) {
             $concerns = [new Concern(GroupKind::PageGroup->value, []), ...$concerns];
+            $reason .= ' A new page group becomes the owner group of the pages its users create.';
         }
         return new Classification($group->getUid(), $group->get('title'), $group->get('hidden') === '1', ClassificationAction::Split, GroupKind::Role->value, $concerns, $reason);
     }

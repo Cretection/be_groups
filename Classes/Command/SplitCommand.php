@@ -61,8 +61,9 @@ final class SplitCommand extends Command
             ->setHelp(
                 'The permissions of the group move into one new building block per kind. The group becomes a role '
                 . 'containing its former subgroups followed by the building blocks, so the precedence of TSconfig stays '
-                . 'the same. Effective permissions never change: every split is verified for all users and rolled back '
-                . 'otherwise.',
+                . 'the same. If the group would be the owner group of the pages its users create (it has no active '
+                . 'subgroups), a new page group without permissions becomes its first member and takes over this task. '
+                . 'Effective permissions never change: every split is verified for all users and rolled back otherwise.',
             );
     }
 
@@ -195,7 +196,8 @@ final class SplitCommand extends Command
                 $rows[] = self::wrapRow([
                     $group,
                     'new ' . $this->kindPrefix->prefixTitle($concern->kind, $classification->title),
-                    implode(', ', array_keys($concern->values)),
+                    // See GroupClassifier: only the page group that takes over as owner group has no permissions.
+                    $concern->values === [] ? 'no permissions, owner group of new pages' : implode(', ', array_keys($concern->values)),
                 ]);
                 $group = '';
             }
