@@ -97,6 +97,24 @@ final class GroupConverterRollbackTest extends FunctionalTestCase
     }
 
     #[Test]
+    public function namesHowManyFurtherErrorsWereLogged(): void
+    {
+        // Every new building block fails, and the system log is rolled back with the conversion.
+        $this->updateGroup(2, ['title' => 'Unknown column everywhere']);
+
+        $result = $this->get(GroupConverter::class)->split(2);
+
+        self::assertSame(ConversionStatus::Failed, $result->status);
+        if ($this->getConnectionPool()->getConnectionForTable('be_groups')->getDatabasePlatform() instanceof PostgreSQLPlatform) {
+            // PostgreSQL aborts the transaction, so the DataHandler cannot log the errors.
+            self::assertStringStartsWith('Database error, nothing was changed: ', $result->message);
+        } else {
+            self::assertSame(3, substr_count($result->message, 'column_that_does_not_exist'));
+            self::assertStringEndsWith(' (and 2 more)', $result->message);
+        }
+    }
+
+    #[Test]
     public function rollsBackIfUsersWouldGetAnotherGroup(): void
     {
         $this->updateGroup(6, ['description' => 'rewrite:add-subgroup']);
@@ -143,7 +161,7 @@ final class GroupConverterRollbackTest extends FunctionalTestCase
         $result = $this->get(GroupConverter::class)->split(6);
 
         self::assertSame(ConversionStatus::Failed, $result->status);
-        self::assertSame('The group 12 would change while saving; nothing was changed.', $result->message);
+        self::assertSame('The group 12 was changed while saving (groupMods), e.g. by another extension; nothing was changed.', $result->message);
         self::assertSame('web_list', $this->getGroup(12, ['groupMods'])['groupMods']);
     }
 
@@ -155,7 +173,7 @@ final class GroupConverterRollbackTest extends FunctionalTestCase
         $result = $this->get(GroupConverter::class)->split(6);
 
         self::assertSame(ConversionStatus::Failed, $result->status);
-        self::assertSame('The group 12 would change while saving; nothing was changed.', $result->message);
+        self::assertSame('The group 12 was removed while saving, e.g. by another extension; nothing was changed.', $result->message);
         self::assertSame('web_list', $this->getGroup(12, ['groupMods'])['groupMods']);
     }
 
@@ -167,7 +185,7 @@ final class GroupConverterRollbackTest extends FunctionalTestCase
         $result = $this->get(GroupConverter::class)->split(6);
 
         self::assertSame(ConversionStatus::Failed, $result->status);
-        self::assertSame('The user 100 would change while saving; nothing was changed.', $result->message);
+        self::assertSame('The user 100 was created while saving, e.g. by another extension; nothing was changed.', $result->message);
     }
 
     #[Test]
@@ -178,7 +196,7 @@ final class GroupConverterRollbackTest extends FunctionalTestCase
         $result = $this->get(GroupConverter::class)->split(6);
 
         self::assertSame(ConversionStatus::Failed, $result->status);
-        self::assertSame('The user 2 would change while saving; nothing was changed.', $result->message);
+        self::assertSame('The user 2 was changed while saving (usergroup), e.g. by another extension; nothing was changed.', $result->message);
     }
 
     #[Test]

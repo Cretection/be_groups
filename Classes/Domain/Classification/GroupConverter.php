@@ -52,6 +52,11 @@ final readonly class GroupConverter
 {
     private const TABLE = 'be_groups';
 
+    /**
+     * The number of logged errors a failed conversion names; it counts the others.
+     */
+    private const NAMED_ERRORS = 3;
+
     public function __construct(
         private GroupClassifier $groupClassifier,
         private GroupPermissionResolver $groupPermissionResolver,
@@ -268,15 +273,17 @@ final readonly class GroupConverter
         $after = $this->takeSnapshot();
         // Users and groups that are new or no longer exist count as changed as well.
         foreach (array_keys($before->users + $after->users) as $userUid) {
-            if (($before->users[$userUid] ?? null) !== ($after->users[$userUid] ?? null)) {
-                return sprintf('The user %d would change while saving; nothing was changed.', $userUid);
+            $change = self::describeChange('user', $userUid, $before->users[$userUid] ?? null, $after->users[$userUid] ?? null);
+            if ($change !== null) {
+                return $change;
             }
         }
         foreach (array_keys($before->groups + $after->groups) as $groupUid) {
-            if ($groupUid !== $uid && !in_array($groupUid, $createdUids, true)
-                && ($before->groups[$groupUid] ?? null)?->values !== ($after->groups[$groupUid] ?? null)?->values
-            ) {
-                return sprintf('The group %d would change while saving; nothing was changed.', $groupUid);
+            $change = $groupUid !== $uid && !in_array($groupUid, $createdUids, true)
+                ? self::describeChange('group', $groupUid, ($before->groups[$groupUid] ?? null)?->values, ($after->groups[$groupUid] ?? null)?->values)
+                : null;
+            if ($change !== null) {
+                return $change;
             }
         }
         $changingFields = [
@@ -290,6 +297,29 @@ final readonly class GroupConverter
             }
         }
         return $this->findPermissionChange($uid, $before->getActiveGroups(), $after->getActiveGroups(), $before->getUsergroupLists(), $createdUids, $ownerPageGroupUid);
+    }
+
+    /**
+     * The conversion itself never changes another record, so such a change was made while saving,
+     * e.g. by a hook of another extension.
+     *
+     * @param array<string, mixed>|null $before the stored values, null if the record did not exist
+     * @param array<string, mixed>|null $after
+     * @return string|null a description of the change, or null if the record is unchanged
+     */
+    private static function describeChange(string $recordName, int $uid, ?array $before, ?array $after): ?string
+    {
+        if ($before === $after) {
+            return null;
+        }
+        if ($before === null || $after === null) {
+            return sprintf('The %s %d was %s while saving, e.g. by another extension; nothing was changed.', $recordName, $uid, $before === null ? 'created' : 'removed');
+        }
+        $changedFields = array_filter(
+            array_keys($before + $after),
+            static fn(string $field): bool => !array_key_exists($field, $before) || !array_key_exists($field, $after) || $before[$field] !== $after[$field],
+        );
+        return sprintf('The %s %d was changed while saving (%s), e.g. by another extension; nothing was changed.', $recordName, $uid, implode(', ', $changedFields));
     }
 
     /**
@@ -389,9 +419,14 @@ final readonly class GroupConverter
             $lastLogUid = $this->systemLogRepository->findLastUid();
             $result = $conversion();
             if ($result->status === ConversionStatus::Failed) {
-                $errors = $this->systemLogRepository->findErrorMessagesAfter($lastLogUid);
+                $errors = $this->systemLogRepository->findErrorMessagesAfter($lastLogUid, PHP_INT_MAX);
                 if ($errors !== []) {
-                    $result = new ConversionResult($uid, $result->status, $result->message . ' Logged errors: ' . implode(' | ', $errors));
+                    $result = new ConversionResult($uid, $result->status, sprintf(
+                        '%s Logged errors: %s%s',
+                        $result->message,
+                        implode(' | ', array_slice($errors, 0, self::NAMED_ERRORS)),
+                        count($errors) > self::NAMED_ERRORS ? sprintf(' (and %d more)', count($errors) - self::NAMED_ERRORS) : '',
+                    ));
                 }
             }
         } catch (DatabaseException $exception) {

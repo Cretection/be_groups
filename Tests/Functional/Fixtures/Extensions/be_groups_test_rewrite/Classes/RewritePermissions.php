@@ -26,6 +26,7 @@ use TYPO3\CMS\Core\DataHandling\DataHandler;
  * - new page tree mount "Editors": page 2 is added to the page mounts,
  * - new access rights "Database error": a query fails,
  * - new access rights "Unknown column": a column that does not exist is written,
+ * - every new group "Unknown column everywhere": a column that does not exist is written,
  * - "rewrite:page-mount": page 2 is added to the page mounts when the kind changes,
  * - "rewrite:add-subgroup": group 12 is added to the subgroups of the new role,
  * - "rewrite:widen-other-group": group 12 gets another module,
@@ -59,6 +60,9 @@ final readonly class RewritePermissions
                 'acl:Unknown column' => $fieldArray['column_that_does_not_exist'] = 1,
                 default => null,
             };
+            if ($title === 'Unknown column everywhere') {
+                $fieldArray['column_that_does_not_exist'] = 1;
+            }
             return;
         }
         if (!isset($fieldArray['tx_begroups_kind'])) {
