@@ -35,8 +35,9 @@ Allow classic groups
             group created through the API without a kind is rejected,
             because it would be classic by default.
         *   Backend users can only get roles assigned.
-        *   The consistency check (planned, see :ref:`developer-planned`)
-            reports remaining classic groups as an error.
+        *   The consistency check ``begroups:audit`` reports remaining
+            classic groups as error ``classic-group-disabled``, see
+            :ref:`usage-audit`.
         *   Existing classic groups and their assignments keep working. No
             permissions are deleted.
 

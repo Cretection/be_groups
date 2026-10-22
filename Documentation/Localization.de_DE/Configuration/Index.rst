@@ -37,8 +37,9 @@ Klassische Gruppen erlauben
             die DataHandler-API. Eine über die API ohne Typ angelegte Gruppe
             wird abgelehnt, weil sie standardmäßig klassisch wäre.
         *   Backend-Benutzern können nur Rollen zugewiesen werden.
-        *   Die Konsistenzprüfung (geplant, siehe :ref:`developer-planned`)
-            meldet verbliebene klassische Gruppen als Fehler.
+        *   Die Konsistenzprüfung ``begroups:audit`` meldet verbliebene
+            klassische Gruppen als Fehler ``classic-group-disabled``, siehe
+            :ref:`usage-audit`.
         *   Bestehende klassische Gruppen und ihre Zuweisungen wirken weiter.
             Es werden keine Rechte gelöscht.
 
