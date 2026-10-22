@@ -65,7 +65,8 @@ defined('TYPO3') or die();
     // Wherever TYPO3 shows the title of a group, it is prefixed with its kind, e.g. "META: Editors".
     $GLOBALS['TCA'][$table]['ctrl']['label_userFunc'] = GroupRecordTitle::class . '->render';
     $GLOBALS['TCA'][$table]['ctrl']['typeicon_column'] = $kindField;
-    $GLOBALS['TCA'][$table]['ctrl']['default_sortby'] = 'title';
+    // Lists show the kind in front of the title: sort them by kind, so groups of one kind stay together.
+    $GLOBALS['TCA'][$table]['ctrl']['default_sortby'] = $kindField . ', title';
     // Monochrome icons of the core, so they follow the light and the dark backend theme.
     $GLOBALS['TCA'][$table]['ctrl']['typeicon_classes']['default'] = 'actions-users';
     foreach ($availableKinds as $kind) {

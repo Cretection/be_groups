@@ -87,6 +87,19 @@ final class GroupAndUserFormTest extends AbstractFormTestCase
         self::assertSame('META: R other', $this->compileForm('be_groups', 7)['recordTitle'] ?? null);
     }
 
+    /**
+     * Lists show the kind in front of the title, so they are sorted by kind and title. "Archive"
+     * sorts the same way with binary and with case-insensitive collations.
+     */
+    #[Test]
+    public function groupListsAreSortedByKindAndTitle(): void
+    {
+        $this->importCSVDataSet(__DIR__ . '/Fixtures/RoleArchive.csv');
+
+        // The subgroups of a classic group are a flat list
+        self::assertSame(['1', '9', '2', '3', '4', '10', '6', '7'], $this->getItemValues($this->compileForm('be_groups', 5), 'subgroup'));
+    }
+
     #[Test]
     public function classicKindIsOfferedWhileClassicGroupsAreAllowed(): void
     {
