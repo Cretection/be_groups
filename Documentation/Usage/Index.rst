@@ -131,7 +131,20 @@ already name the kind.
 
 To use other prefixes, override the labels ``kind.prefix.<kind>`` of
 :file:`EXT:be_groups/Resources/Private/Language/db.xlf` with
-``$GLOBALS['TYPO3_CONF_VARS']['SYS']['locallangXMLOverride']``.
+``$GLOBALS['TYPO3_CONF_VARS']['LANG']['resourceOverrides']``, for example in
+a site package:
+
+..  code-block:: php
+    :caption: EXT:my_sitepackage/ext_localconf.php
+
+    $GLOBALS['TYPO3_CONF_VARS']['LANG']['resourceOverrides']['EXT:be_groups/Resources/Private/Language/db.xlf'][]
+        = 'EXT:my_sitepackage/Resources/Private/Language/Overrides/be_groups.db.xlf';
+
+The file contains only the labels to change, for example ``kind.prefix.role``
+with the source ``ROLE``. Labels in other languages come from a file in the
+same folder whose name starts with the language, for example
+:file:`de.be_groups.db.xlf` with the target ``ROLLE``. Flush the caches
+afterwards.
 
 ..  _usage-module:
 

@@ -22,8 +22,9 @@ use PHPUnit\Framework\Attributes\Test;
 use TYPO3\TestingFramework\Core\Unit\UnitTestCase;
 
 /**
- * The manual names what the backend shows: the kinds by the labels of their select. Both
- * languages are compared with the labels of the extension.
+ * The manual names what the backend shows: the kinds by the labels of their select, and the
+ * configuration TYPO3 14 reads. Both languages are compared with the labels of the extension,
+ * and the example of the label override with the site package that the functional test loads.
  */
 #[CoversNothing]
 final class ManualTest extends UnitTestCase
@@ -32,6 +33,7 @@ final class ManualTest extends UnitTestCase
     private const LABEL_PATH = __DIR__ . '/../../../Resources/Private/Language/';
     private const CHAPTERS = ['Introduction', 'Concept', 'Usage'];
     private const XLIFF_NAMESPACE = 'urn:oasis:names:tc:xliff:document:1.2';
+    private const SITE_PACKAGE_PATH = __DIR__ . '/../../Functional/Fixtures/Extensions/be_groups_test_sitepackage/';
 
     /**
      * @return array<string, array{string, string}>
@@ -103,6 +105,29 @@ final class ManualTest extends UnitTestCase
                 self::assertContains((string)preg_replace('/\s+/', ' ', $mention), $kindLabels, $chapter);
             }
         }
+    }
+
+    #[Test]
+    public function otherPrefixesAreConfiguredWithTheOptionOfTypo3V14(): void
+    {
+        foreach (self::manualDataProvider() as $language => [$manual]) {
+            $usage = $this->readChapter($manual, 'Usage');
+
+            self::assertGreaterThan(0, substr_count($usage, "['LANG']['resourceOverrides']['EXT:be_groups/Resources/Private/Language/db.xlf'][]"), $language . ': the option of TYPO3 14');
+            self::assertSame(0, substr_count($usage, 'locallangXMLOverride'), $language . ': the option of TYPO3 13, which TYPO3 14 ignores');
+        }
+    }
+
+    #[Test]
+    #[DataProvider('manualDataProvider')]
+    public function theSitePackageOfTheFunctionalTestUsesTheExampleOfTheManual(string $manual): void
+    {
+        $found = preg_match('/:caption: EXT:my_sitepackage\/ext_localconf\.php\n\n((?: {4}.*\n)+)/', $this->readChapter($manual, 'Usage'), $match);
+        self::assertSame(1, $found, 'the example in ext_localconf.php');
+        // Every line of the code block, with the indentation of the block removed and the inner one kept
+        $example = str_replace('my_sitepackage', 'be_groups_test_sitepackage', (string)preg_replace('/^ {4}/m', '', $match[1]));
+
+        self::assertStringContainsString($example, (string)file_get_contents(self::SITE_PACKAGE_PATH . 'ext_localconf.php'));
     }
 
     private function readChapter(string $manual, string $chapter): string

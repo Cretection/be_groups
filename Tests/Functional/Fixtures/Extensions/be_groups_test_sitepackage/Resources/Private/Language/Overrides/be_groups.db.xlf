@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" version="1.2">
+  <file source-language="en" datatype="plaintext" original="EXT:be_groups/Resources/Private/Language/db.xlf" date="2026-10-22T12:00:00Z">
+    <header/>
+    <body>
+      <trans-unit id="kind.prefix.role">
+        <source>ROLE</source>
+      </trans-unit>
+    </body>
+  </file>
+</xliff>

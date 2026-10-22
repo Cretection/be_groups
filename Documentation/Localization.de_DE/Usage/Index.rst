@@ -135,7 +135,20 @@ Abschnitt den Typ nicht schon nennt.
 
 Für andere Präfixe überschreiben Sie die Labels ``kind.prefix.<kind>`` aus
 :file:`EXT:be_groups/Resources/Private/Language/db.xlf` per
-``$GLOBALS['TYPO3_CONF_VARS']['SYS']['locallangXMLOverride']``.
+``$GLOBALS['TYPO3_CONF_VARS']['LANG']['resourceOverrides']``, zum Beispiel in
+einem Sitepackage:
+
+..  code-block:: php
+    :caption: EXT:my_sitepackage/ext_localconf.php
+
+    $GLOBALS['TYPO3_CONF_VARS']['LANG']['resourceOverrides']['EXT:be_groups/Resources/Private/Language/db.xlf'][]
+        = 'EXT:my_sitepackage/Resources/Private/Language/Overrides/be_groups.db.xlf';
+
+Die Datei enthält nur die Labels, die sich ändern sollen, zum Beispiel
+``kind.prefix.role`` mit der Quelle ``ROLE``. Labels in anderen Sprachen kommen
+aus einer Datei im selben Ordner, deren Name mit der Sprache beginnt, zum
+Beispiel :file:`de.be_groups.db.xlf` mit dem Ziel ``ROLLE``. Leeren Sie danach
+die Caches.
 
 ..  _usage-module:
 
