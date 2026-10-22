@@ -28,12 +28,14 @@ Formular zeigt nur die Einstellungen dieses Typs:
     „Datensatz-Berechtigungen“ und „Modul-Berechtigungen“ (im Bild aus dem
     englischen Backend „Record Permissions“ und „Module Permissions“).
 
-Ein Wechsel des Typs ändert das Formular, deshalb fragt TYPO3, ob die Gruppe
-gespeichert und das Formular neu geladen werden soll (*Aktualisierung
-erforderlich*, :guilabel:`Speichern und aktualisieren`). Weil der Typ
-bestimmt, welche Rechte eine Gruppe vergeben darf, fragt das Speichern
-gegebenenfalls nach Ihrem Passwort. Geben Sie den Titel ein, bevor Sie den
-Typ wechseln: Die Gruppe wird mit dem Wechsel gespeichert.
+Das Menü :guilabel:`Neuer Baustein` des Moduls
+:ref:`Rollen & Bausteine <usage-module>` öffnet das Formular mit dem
+gewählten Typ. Ein Wechsel des Typs ändert das Formular, deshalb fragt
+TYPO3, ob die Gruppe gespeichert und das Formular neu geladen werden soll
+(*Aktualisierung erforderlich*, :guilabel:`Speichern und aktualisieren`).
+Weil der Typ bestimmt, welche Rechte eine Gruppe vergeben darf, fragt das
+Speichern gegebenenfalls nach Ihrem Passwort. Geben Sie den Titel ein, bevor
+Sie den Typ wechseln: Die Gruppe wird mit dem Wechsel gespeichert.
 
 Beim Speichern einer Gruppe werden alle Rechte-Einstellungen entfernt, die
 nicht zu ihrem Typ gehören. Eine neue Gruppe bekommt die Standardwerte
@@ -92,7 +94,10 @@ Rollen an Benutzer vergeben
 Das Feld :guilabel:`Gruppe` eines Backend-Benutzers listet alle Gruppen,
 gruppiert in Rollen, klassische Gruppen und Bausteine je Typ. Bausteine sind
 mit „über eine Rolle zuweisen“ gekennzeichnet; eine direkte Zuweisung wird
-beim Speichern des Benutzers abgelehnt.
+beim Speichern des Benutzers abgelehnt. Solange klassische Gruppen
+abgeschaltet sind (siehe :ref:`configuration`), stehen die klassischen
+Gruppen unter „Klassische Gruppen (abgeschaltet, können nicht zugewiesen
+werden)“, und auch ihre Zuweisung wird abgelehnt.
 
 Keine der beiden Listen ist gefiltert. Eine gefilterte Liste würde beim
 Speichern jeden gespeicherten Wert verwerfen, der nicht in ihr enthalten ist –
@@ -156,7 +161,8 @@ anderer Extensions verwenden ihre Bezeichnung.
 Das Präfix erscheint in den Gruppen- und Benutzerformularen, in den
 Datensatzlisten, im Rechte-Modul, bei Eigentümern und Mitgliedern von
 Workspaces, im Element-Browser, im Core-Modul :guilabel:`Benutzer`
-(Benutzer- und Gruppenlisten, Gruppenfilter, Details und Vergleich) und im
+(Benutzer- und Gruppenlisten, Gruppenfilter, Details, Vergleich und
+Löschbestätigung) und im
 Modul :ref:`Rollen & Bausteine <usage-module>` überall dort, wo der
 Abschnitt den Typ nicht schon nennt.
 
@@ -199,7 +205,7 @@ Administratoren finden das Modul *Verwaltung > Rollen & Bausteine* neben
 dem Modul *Benutzer*. Es ändert nichts, sondern zeigt:
 
 *   jede Rolle mit ihren Bausteinen, gruppiert nach Typ, und ihren Benutzern;
-    bei einer Rolle mit zwei oder mehr TSconfig-Bausteinen auch die
+    bei einer Rolle mit zwei oder mehr aktiven TSconfig-Bausteinen auch die
     Reihenfolge, in der TYPO3 sie anwendet, denn spätere überschreiben frühere,
 *   jeden Baustein mit den Rollen und anderen Gruppen, die ihn verwenden, und
     den Benutzern, denen er direkt zugewiesen ist,
@@ -226,7 +232,8 @@ Gruppen, die keine Bausteine sind oder nicht mehr existieren, Bausteine mit
 Untergruppen, Bausteine, die Benutzern direkt zugewiesen sind, und Gruppen
 mit unbekanntem Typ. Die Anzahl dieser Einträge steht oben und hängt nicht
 vom Typ-Filter ab. Bausteine, die keine Gruppe und kein Benutzer verwendet,
-sind als unbenutzt markiert.
+sind als unbenutzt markiert. Versteckte Gruppen sind überall, wo sie
+aufgeführt sind, mit „deaktiviert“ markiert; TYPO3 wendet sie nicht an.
 
 Ein Mitglied einer Rolle, das kein Baustein ist, ist mit „kein Baustein“
 markiert und wird mit seinem Typ angezeigt, zum Beispiel ``META: Redakteure``
@@ -238,8 +245,9 @@ Typen anderer Extensions werden mit ihrer eigenen Bezeichnung und ihrem
 eigenen Icon angezeigt.
 
 Ein Klick auf einen Titel öffnet die Gruppe oder den Benutzer im gewohnten
-Formular. Die Schaltflächen im Kopfbereich legen eine neue Rolle oder einen
-neuen Baustein an.
+Formular. Die Schaltfläche :guilabel:`Neue Rolle` im Kopfbereich legt eine
+Rolle an, das Menü :guilabel:`Neuer Baustein` einen Baustein des gewählten
+Typs, auch der Typen anderer Extensions.
 
 Das Modul ist optional. Um es auszublenden, ergänzen Sie seine Kennung im
 User-TSconfig der Administratoren:
@@ -305,7 +313,11 @@ Konsistenzprüfung. Sie liest alle Gruppen und Benutzer und ändert nichts:
           Rollen hinzufügt. Neue Benutzer erhalten standardmäßig alle
           Dateioperationen (Core-Standardwert von :sql:`file_permissions`);
           entfernen Sie sie im Benutzer-Datensatz. Wie neue Benutzer ohne sie
-          angelegt werden, steht unter :ref:`concept-limitations`.
+          angelegt werden, steht unter :ref:`concept-limitations`. Mit
+          EXT:workspaces zählt auch der Zugriff auf die
+          Live-Arbeitsumgebung (:sql:`workspace_perms`); vergeben Sie ihn
+          stattdessen mit einem Baustein vom Typ „Workspace“, siehe
+          :ref:`concept-combination`.
     *   - ``unassigned-fields``
         - ``warning``
         - Eine Rolle oder ein Baustein hat Werte in Feldern anderer

@@ -282,7 +282,8 @@ Bekannte Einschränkungen
 
 Rechte an Backend-Benutzer-Datensätzen
     Backend-Benutzer-Datensätze haben eigene Rechtefelder, zum Beispiel
-    Dateirechte, Module, TSconfig und Freigaben. TYPO3 führt sie mit den
+    Dateirechte, Module, TSconfig, Freigaben und, mit EXT:workspaces, den
+    Zugriff auf die Live-Arbeitsumgebung. TYPO3 führt sie mit den
     Rechten der Gruppen zusammen. Das Rollenmodell kann sie nicht steuern.
     Halten Sie Benutzer-Datensätze frei von Rechten und vergeben Sie alles
     über Rollen. Die Konsistenzprüfung meldet Rechte an

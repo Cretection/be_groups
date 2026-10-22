@@ -261,7 +261,8 @@ Known limitations
 
 Permissions on backend user records
     Backend user records have permission fields of their own, for example
-    file permissions, modules, TSconfig and mounts. TYPO3 merges them with
+    file permissions, modules, TSconfig, mounts and, with EXT:workspaces,
+    access to the live workspace. TYPO3 merges them with
     the permissions of the groups. The role model cannot control them. Keep
     backend user records free of permissions and grant everything through
     roles. The consistency check reports permissions on user records, see

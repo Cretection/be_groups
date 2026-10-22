@@ -27,9 +27,11 @@ settings of that kind:
     A building block of kind "Access rights": its permissions are in the tabs
     "Record Permissions" and "Module Permissions".
 
-A change of the kind changes the form, so TYPO3 asks to save the group and
-reload the form (*Refresh required*, :guilabel:`Save and refresh`). As the
-kind decides which permissions a group may grant, saving may ask for your
+The menu :guilabel:`New building block` of the module
+:ref:`Roles & Building Blocks <usage-module>` opens the form with the chosen
+kind. A change of the kind changes the form, so TYPO3 asks to save the group
+and reload the form (*Refresh required*, :guilabel:`Save and refresh`). As
+the kind decides which permissions a group may grant, saving may ask for your
 password. Enter the title before you change the kind: the group is stored
 with the change.
 
@@ -86,7 +88,9 @@ Assigning roles to users
 The field :guilabel:`Group` of a backend user lists all groups, grouped into
 roles, classic groups and building blocks of each kind. Building blocks are
 marked "assign through a role"; assigning one directly is rejected when the
-user is saved.
+user is saved. While classic groups are disabled (see :ref:`configuration`),
+the classic groups are listed under "Classic groups (disabled, cannot be
+assigned)", and assigning one is rejected as well.
 
 Neither list is filtered. A filtered list would drop every stored value that
 is not part of it whenever the form is saved – with the full list, saving a
@@ -148,7 +152,7 @@ extensions use their label.
 The prefix appears in the group and user forms, in the record lists, in the
 permissions module, in the owners and members of workspaces, in the element
 browser, in the core module :guilabel:`Users` (lists of users and groups,
-group filter, details and comparison) and in the module
+group filter, details, comparison and delete confirmation) and in the module
 :ref:`Roles & Building Blocks <usage-module>` wherever the section does not
 already name the kind.
 
@@ -190,8 +194,8 @@ Administrators find the module *Administration > Roles & Building Blocks*
 next to the *Users* module. It is read-only and shows:
 
 *   every role with its building blocks, grouped by kind, and its users;
-    for a role with two or more TSconfig building blocks also the order in
-    which TYPO3 applies them, as later ones override earlier ones,
+    for a role with two or more active TSconfig building blocks also the
+    order in which TYPO3 applies them, as later ones override earlier ones,
 *   every building block with the roles and other groups using it and the
     users it is assigned to directly,
 *   the remaining classic groups,
@@ -217,7 +221,8 @@ groups that are no building blocks or no longer exist, building blocks that
 have subgroups, building blocks assigned to users directly and groups with an
 unknown kind. The number of these entries is shown at the top and does not
 depend on the kind filter. Building blocks that no group and no user uses
-are marked as unused.
+are marked as unused. Hidden groups are marked "disabled" wherever they are
+listed; TYPO3 does not apply them.
 
 A member of a role that is no building block is marked "not a building
 block" and shown with its kind, for example ``META: Editors`` for a role
@@ -228,7 +233,9 @@ leaves such roles, see :ref:`migration-vanilla`.
 Kinds added by other extensions are shown with their own label and icon.
 
 Click a title to edit the group or user in the regular record form. The
-buttons in the document header create a new role or a new building block.
+button :guilabel:`New role` in the document header creates a role, the menu
+:guilabel:`New building block` a building block of the chosen kind, including
+the kinds of other extensions.
 
 The module is optional. To hide it, add its identifier to the user TSconfig
 of the administrators:
@@ -293,7 +300,10 @@ consistency check. It reads all groups and users and changes nothing:
           those of the roles. New users get all file operations by default
           (core default of :sql:`file_permissions`); clear them in the user
           record. To create new users without them, see
-          :ref:`concept-limitations`.
+          :ref:`concept-limitations`. With EXT:workspaces, access to the live
+          workspace (:sql:`workspace_perms`) counts as well; grant it with a
+          "Workspace" building block instead, see
+          :ref:`concept-combination`.
     *   - ``unassigned-fields``
         - ``warning``
         - A role or a building block has values in fields of other
