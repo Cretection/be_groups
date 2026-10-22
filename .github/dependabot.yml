@@ -19,6 +19,10 @@ updates:
         patterns:
           - "@playwright/test"
           - "playwright-core"
+    ignore:
+      # The types follow Node 24, which the Playwright image runs (engines in package.json)
+      - dependency-name: "@types/node"
+        versions: [">= 25.0"]
     commit-message:
       prefix: "[TASK] "
 
