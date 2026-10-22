@@ -60,6 +60,15 @@ After the installation
     or create the first building blocks and roles yourself, see
     :ref:`concept`.
 
+..  note::
+
+    Updating the language packs (:bash:`language:update` or
+    :guilabel:`System > Maintenance > Manage Language Packs`) logs a warning
+    for be_groups as long as the TYPO3 translation server has no language
+    packs for the extension (status code 404). The warning does no harm: the
+    German translation is part of the extension, and other languages show
+    the English texts until language packs exist.
+
 ..  _installation-update:
 
 Updating
@@ -73,8 +82,11 @@ updating, flush all caches and set the extension up again:
     vendor/bin/typo3 cache:flush
     vendor/bin/typo3 extension:setup
 
-TYPO3 keeps the configuration of its services in a cache. Until it is
-flushed, saving groups and users can fail with an error.
+TYPO3 keeps the configuration of its services, the TCA and the labels in
+caches. Until they are flushed, saving groups and users can fail with an
+error, and the prefixes of the kinds can be missing: TYPO3 then shows the
+label of the kind instead, for example ``Role: Editors`` instead of
+``META: Editors``.
 
 ..  _installation-uninstall:
 

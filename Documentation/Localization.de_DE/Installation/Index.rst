@@ -61,6 +61,15 @@ Nach der Installation
     :ref:`migration`, oder legen Sie die ersten Bausteine und Rollen selbst
     an, siehe :ref:`concept`.
 
+..  note::
+
+    Beim Aktualisieren der Sprachpakete (:bash:`language:update` oder
+    :guilabel:`System > Wartung > Manage Language Packs`) protokolliert
+    TYPO3 eine Warnung für be_groups, solange der Übersetzungsserver von
+    TYPO3 keine Sprachpakete der Extension hat (Statuscode 404). Die Warnung
+    schadet nicht: Die deutsche Übersetzung ist Teil der Extension, und
+    andere Sprachen zeigen die englischen Texte, bis es Sprachpakete gibt.
+
 ..  _installation-update:
 
 Aktualisieren
@@ -74,9 +83,11 @@ dem Update alle Caches leeren und die Extension erneut einrichten:
     vendor/bin/typo3 cache:flush
     vendor/bin/typo3 extension:setup
 
-TYPO3 hält die Konfiguration seiner Dienste in einem Cache. Bis er geleert
-ist, kann das Speichern von Gruppen und Benutzern mit einem Fehler
-abbrechen.
+TYPO3 hält die Konfiguration seiner Dienste, das TCA und die Labels in
+Caches. Bis sie geleert sind, kann das Speichern von Gruppen und Benutzern
+mit einem Fehler abbrechen, und die Präfixe der Typen können fehlen: TYPO3
+zeigt dann stattdessen die Bezeichnung des Typs, zum Beispiel
+``Rolle: Editors`` statt ``META: Editors``.
 
 ..  _installation-uninstall:
 
