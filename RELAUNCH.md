@@ -125,7 +125,7 @@ Geplant war ein Typ-Filter für die Gruppenliste über `AfterBackendGroupListCon
 
 | Regel | Inhalt |
 |---|---|
-| R1 | Ein Baustein vergibt nur, was sein Typ anzeigt. Bei jedem Speichern werden Rechtefelder geleert, die nicht zum Typ gehören, auch Standardwerte neuer Datensätze. Verwaltet werden nur Rechtefelder (die des Core und alle Felder, die im Formular einer Rolle oder eines Bausteins stehen); andere Daten, z. B. Sync-Kennungen, bleiben unberührt. |
+| R1 | Ein Baustein vergibt nur, was sein Typ anzeigt. Bei jedem Speichern werden Rechtefelder geleert, die nicht zum Typ gehören, auch Standardwerte neuer Datensätze. Verwaltet werden nur Rechtefelder (die des Core und alle Felder, die im Formular einer Rolle oder eines Bausteins stehen, außer Feldern, die die Formulare aller Typen zeigen); andere Daten, z. B. Sync-Kennungen, bleiben unberührt. |
 | R2 | Einer Rolle werden nur Bausteine hinzugefügt. Abgelehnt werden Rollen, klassische Gruppen, Gruppen mit unbekanntem Typ, gelöschte oder fehlende Gruppen und die Rolle selbst. |
 | R3 | Bausteine haben keine Untergruppen (folgt aus R1). |
 | R4 | Benutzern werden nur Rollen zugewiesen (und klassische Gruppen, solange sie erlaubt sind). |
@@ -153,7 +153,7 @@ Geplant war ein Typ-Filter für die Gruppenliste über `AfterBackendGroupListCon
 - **Felder anderer Extensions** werden mit `addToAllTCAtypes('be_groups', 'feld', 'acl,classic')` einem Typ und den klassischen Gruppen zugeordnet. Ab dann verwaltet R1 sie. `classic` gehört dazu, weil klassische Gruppen alle Rechtefelder zeigen und nach der Installation alle Gruppen klassisch sind; be_groups kopiert das Core-Formular beim Laden seines eigenen Overrides nach `classic`, ein später geladener Override erreicht `classic` also nur ausdrücklich.
 - **Bezeichnungen in den gruppierten Listen** ergänzt eine Extension über `itemGroups` der Rollen- und Benutzerfelder: in der Rolle vor den Gruppen, die keiner Rolle hinzugefügt werden können, beim Benutzer mit dem Hinweis der Bausteine („über eine Rolle zuweisen“).
 - **Felder pro Typ** werden über die Schema-API ermittelt (`TcaSchema::getSubSchema()`), einschließlich Begleitfeldern wie `tables_select`.
-- **Bekannte Einschränkung:** Rechtefelder einer Extension, die vor be_groups geladen wird und das Feld keinem Typ zuordnet, erscheinen nur bei klassischen Gruppen und werden nicht durchgesetzt (Doku: „Known limitations“).
+- **Bekannte Einschränkung:** Rechtefelder, die eine Extension keinem Typ zuordnet, gehören zu keinem Typ und werden nicht durchgesetzt (Doku: „Known limitations“): Lädt die Extension vor be_groups, erscheinen sie nur bei klassischen Gruppen; fügt sie das Feld nach be_groups allen Typen hinzu (`addToAllTCAtypes()` ohne Typliste, z. B. „Permission Sets“ von b13/permission-sets), erscheint es in jedem Formular. Ein Feld, das die Formulare aller Typen von be_groups zeigen, ordnet `KindFieldResolver` deshalb keinem Typ zu.
 
 ---
 

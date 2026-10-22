@@ -73,6 +73,11 @@ What it does not do
     their subgroups as usual.
 *   It is not a "permissions as code" tool. Extensions such as
     `b13/permission-sets <https://github.com/b13/permission-sets>`__ cover
-    deployable permissions and can be combined with this extension.
+    deployable permissions. They can be installed next to this extension,
+    but a permission set can grant permissions of several kinds, so its
+    field belongs to no kind: the rules do not restrict it, the consistency
+    check reports permission sets of roles and building blocks, and the
+    assistants leave groups with permission sets classic, see
+    :ref:`concept-limitations`.
 *   It does not manage page permissions (owner, group, everybody). Use the
     core module :guilabel:`Permissions` for this.

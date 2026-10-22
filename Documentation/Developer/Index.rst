@@ -34,9 +34,11 @@ and cleared for all others. Classic groups show every permission field, like
 the groups of TYPO3 without this extension, and after the installation all
 groups are classic: without ``classic``, the field cannot be set in their form
 until they are converted. A field that is not assigned to any kind (and is no
-permission field of the core) is only shown for classic groups and is not
-enforced – see :ref:`concept-limitations`. Fields that grant no permissions,
-such as identifiers of a synchronisation tool, are never touched.
+permission field of the core) is not enforced: neither a field that only
+classic groups show nor one that the forms of all kinds of this extension
+show, as ``addToAllTCAtypes()`` without a list of types adds it – see
+:ref:`concept-limitations`. Fields that grant no permissions, such as
+identifiers of a synchronisation tool, are never touched.
 
 ..  code-block:: php
     :caption: EXT:my_extension/Configuration/TCA/Overrides/be_groups.php

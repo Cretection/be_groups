@@ -79,7 +79,11 @@ Was die Extension nicht macht
     wie gewohnt auf.
 *   Sie ist kein Werkzeug für „Rechte als Code“. Extensions wie
     `b13/permission-sets <https://github.com/b13/permission-sets>`__ decken
-    das Ausrollen von Rechten ab und lassen sich mit dieser Extension
-    kombinieren.
+    das Ausrollen von Rechten ab. Sie lassen sich neben dieser Extension
+    installieren, aber ein Permission Set kann Rechte mehrerer Typen
+    vergeben, sein Feld gehört deshalb zu keinem Typ: Die Regeln schränken
+    es nicht ein, die Konsistenzprüfung meldet Permission Sets von Rollen
+    und Bausteinen, und die Assistenten lassen Gruppen mit Permission Sets
+    klassisch, siehe :ref:`concept-limitations`.
 *   Sie verwaltet keine Seitenrechte (Besitzer, Gruppe, Alle). Dafür gibt es
     das Core-Modul :guilabel:`Berechtigungen`.

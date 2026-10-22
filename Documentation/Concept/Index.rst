@@ -176,7 +176,8 @@ never brings back a forbidden configuration.
 R1: A building block only grants what its kind displays
     Permission fields that do not belong to the kind are cleared. The
     managed fields are the permission fields of :sql:`be_groups` in the core
-    and every field shown in the form of a role or a building block. This
+    and every field shown in the form of a role or a building block, unless
+    the forms of all kinds show it (see :ref:`concept-limitations`). This
     also applies to default values: a new group of the kind "Page tree mount"
     does not get the default file permissions.
 
@@ -296,13 +297,18 @@ Permissions on backend user records
     Existing users keep theirs; clear them in the user record.
 
 Permission fields of other extensions
-    A permission field that another extension adds to :sql:`be_groups` only
-    through the core form – because the extension is loaded before this one
-    and does not assign the field to a kind – is only shown for classic
-    groups and is not enforced by rule R1. Assign such fields to a kind, see
-    :ref:`developer-fields`. The consistency check reports values in such
-    fields on groups of other kinds, and the assistants do not convert
-    groups that have values in them.
+    A permission field that another extension adds to :sql:`be_groups`
+    belongs to no kind if only the form of classic groups shows it – for
+    example because the extension is loaded before this one – or if the
+    forms of all kinds show it, because the extension adds it to every type
+    (``addToAllTCAtypes()`` without a list of types). The field
+    :guilabel:`Permission Sets` of
+    `b13/permission-sets <https://github.com/b13/permission-sets>`__ is such
+    a field: a permission set can grant permissions of several kinds. Rule R1
+    does not restrict fields of no kind. Assign permission fields to a kind,
+    see :ref:`developer-fields`. The consistency check reports values in
+    fields of no kind on roles and building blocks (``unassigned-fields``),
+    and the assistants do not convert groups that have values in them.
 
 Rejected records during imports
     When a rule rejects a record or a relation, for example a classic group

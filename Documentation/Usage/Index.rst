@@ -322,9 +322,10 @@ consistency check. It reads all groups and users and changes nothing:
     *   - ``unassigned-fields``
         - ``warning``
         - A role or a building block has values in fields of other
-          extensions that belong to no kind, so its form does not show them.
-          If they grant permissions, assign the fields to a kind, see
-          :ref:`developer-fields`.
+          extensions that belong to no kind: only the form of classic groups
+          or the forms of all kinds show them, so its kind does not restrict
+          them. If they grant permissions, assign the fields to a kind, see
+          :ref:`developer-fields` and :ref:`concept-limitations`.
     *   - ``unclean-group-list``
         - ``warning``
         - The subgroups of a group or the groups of a user contain duplicates

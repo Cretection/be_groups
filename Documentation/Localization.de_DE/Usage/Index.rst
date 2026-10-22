@@ -335,9 +335,11 @@ Konsistenzprüfung. Sie liest alle Gruppen und Benutzer und ändert nichts:
     *   - ``unassigned-fields``
         - ``warning``
         - Eine Rolle oder ein Baustein hat Werte in Feldern anderer
-          Extensions, die zu keinem Typ gehören; sein Formular zeigt sie
-          also nicht. Gewähren sie Rechte, ordnen Sie die Felder einem Typ
-          zu, siehe :ref:`developer-fields`.
+          Extensions, die zu keinem Typ gehören: Nur das Formular klassischer
+          Gruppen oder die Formulare aller Typen zeigen sie, der Typ schränkt
+          sie also nicht ein. Gewähren sie Rechte, ordnen Sie die Felder einem
+          Typ zu, siehe :ref:`developer-fields` und
+          :ref:`concept-limitations`.
     *   - ``unclean-group-list``
         - ``warning``
         - Die Untergruppen einer Gruppe oder die Gruppen eines Benutzers

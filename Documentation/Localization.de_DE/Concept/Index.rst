@@ -186,9 +186,10 @@ eine verbotene Konfiguration zurückbringt.
 R1: Ein Baustein vergibt nur, was sein Typ anzeigt
     Rechtefelder, die nicht zum Typ gehören, werden geleert. Verwaltet werden
     die Rechtefelder von :sql:`be_groups` im Core und jedes Feld, das im
-    Formular einer Rolle oder eines Bausteins angezeigt wird. Das gilt auch
-    für Standardwerte: Eine neue Gruppe vom Typ „Seitenbaum-Freigabe“ bekommt
-    nicht die Standard-Dateirechte.
+    Formular einer Rolle oder eines Bausteins angezeigt wird, sofern es nicht
+    die Formulare aller Typen zeigen (siehe :ref:`concept-limitations`). Das
+    gilt auch für Standardwerte: Eine neue Gruppe vom Typ
+    „Seitenbaum-Freigabe“ bekommt nicht die Standard-Dateirechte.
 
 R2: Einer Rolle werden nur Bausteine hinzugefügt
     Rollen, klassische Gruppen, Gruppen mit unbekanntem Typ, gelöschte oder
@@ -320,13 +321,19 @@ Rechte an Backend-Benutzer-Datensätzen
     Sie sie im Benutzer-Datensatz.
 
 Rechtefelder anderer Extensions
-    Ein Rechtefeld, das eine andere Extension nur über das Core-Formular zu
-    :sql:`be_groups` hinzufügt – weil die Extension vor dieser geladen wird
-    und das Feld keinem Typ zuordnet –, wird nur bei klassischen Gruppen
-    angezeigt und von Regel R1 nicht durchgesetzt. Ordnen Sie solche Felder
-    einem Typ zu, siehe :ref:`developer-fields`. Die Konsistenzprüfung
-    meldet Werte in solchen Feldern bei Gruppen anderer Typen, und die
-    Assistenten stellen Gruppen mit Werten darin nicht um.
+    Ein Rechtefeld, das eine andere Extension zu :sql:`be_groups` hinzufügt,
+    gehört zu keinem Typ, wenn nur das Formular klassischer Gruppen es
+    zeigt – zum Beispiel, weil die Extension vor dieser geladen wird – oder
+    wenn die Formulare aller Typen es zeigen, weil die Extension es jedem Typ
+    hinzufügt (``addToAllTCAtypes()`` ohne Liste der Typen). Das Feld
+    :guilabel:`Permission Sets` von
+    `b13/permission-sets <https://github.com/b13/permission-sets>`__ ist ein
+    solches Feld: Ein Permission Set kann Rechte mehrerer Typen vergeben.
+    Regel R1 schränkt Felder ohne Typ nicht ein. Ordnen Sie Rechtefelder
+    einem Typ zu, siehe :ref:`developer-fields`. Die Konsistenzprüfung meldet
+    Werte in Feldern ohne Typ bei Rollen und Bausteinen
+    (``unassigned-fields``), und die Assistenten stellen Gruppen mit Werten
+    darin nicht um.
 
 Abgelehnte Datensätze bei Importen
     Lehnt eine Regel einen Datensatz oder eine Verknüpfung ab, zum Beispiel

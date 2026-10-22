@@ -34,11 +34,13 @@ bleibt bei diesem Typ erhalten und wird bei allen anderen geleert. Klassische
 Gruppen zeigen jedes Rechtefeld, wie die Gruppen von TYPO3 ohne diese
 Extension, und nach der Installation sind alle Gruppen klassisch: Ohne
 ``classic`` lässt sich das Feld in ihrem Formular nicht setzen, bis sie
-umgestellt sind. Ein Feld, das keinem Typ
-zugeordnet ist (und kein Rechtefeld des Core ist), wird nur bei klassischen
-Gruppen angezeigt und nicht durchgesetzt – siehe
-:ref:`concept-limitations`. Felder, die keine Rechte vergeben, etwa Kennungen
-eines Synchronisierungs-Werkzeugs, werden nie angefasst.
+umgestellt sind. Ein Feld, das keinem Typ zugeordnet ist (und kein
+Rechtefeld des Core ist), wird nicht durchgesetzt: weder ein Feld, das nur
+klassische Gruppen zeigen, noch eines, das die Formulare aller Typen dieser
+Extension zeigen, wie ``addToAllTCAtypes()`` ohne Liste der Typen es
+hinzufügt – siehe :ref:`concept-limitations`. Felder, die keine Rechte
+vergeben, etwa Kennungen eines Synchronisierungs-Werkzeugs, werden nie
+angefasst.
 
 ..  code-block:: php
     :caption: EXT:my_extension/Configuration/TCA/Overrides/be_groups.php

@@ -154,6 +154,12 @@ final class ManualTest extends UnitTestCase
             'German: a failed conversion names all logged errors' => ['Localization.de_DE/', 'das Ergebnis nennt die vom DataHandler protokollierten Fehler'],
             'English: every classic group is split' => ['', 'A classic group. Split it into building blocks and a role.'],
             'German: every classic group is split' => ['Localization.de_DE/', 'Eine klassische Gruppe. Teilen Sie sie in Bausteine und eine Rolle auf.'],
+            'English: only classic groups show fields of no kind' => ['', 'is only shown for classic groups and is not enforced'],
+            'German: only classic groups show fields of no kind' => ['Localization.de_DE/', 'wird nur bei klassischen Gruppen angezeigt und nicht durchgesetzt'],
+            'English: the form does not show fields of no kind' => ['', 'so its form does not show them'],
+            'German: the form does not show fields of no kind' => ['Localization.de_DE/', 'sein Formular zeigt sie also nicht'],
+            'English: permission sets combine with the kinds' => ['', 'can be combined with this extension'],
+            'German: permission sets combine with the kinds' => ['Localization.de_DE/', 'lassen sich mit dieser Extension kombinieren'],
         ];
     }
 
