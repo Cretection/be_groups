@@ -54,8 +54,23 @@ final class GroupPermissionResolverTest extends FunctionalTestCase
     {
         parent::setUp();
         $this->importCSVDataSet(__DIR__ . '/Fixtures/Resolution.csv');
-        // The core only mounts folders that exist in a storage
-        $this->getConnectionPool()->getConnectionForTable('sys_file_storage')->insert('sys_file_storage', [
+        $this->createFileStorage();
+        foreach (['images', 'documents'] as $folder) {
+            GeneralUtility::mkdir_deep(Environment::getPublicPath() . '/fileadmin/' . $folder);
+        }
+    }
+
+    /**
+     * The core only mounts folders that exist in a storage. TYPO3 15 configures storages in a file
+     * instead of the table sys_file_storage and assumes storage 1 for fileadmin without that file.
+     */
+    private function createFileStorage(): void
+    {
+        $connection = $this->getConnectionPool()->getConnectionForTable('sys_file_storage');
+        if (!$connection->createSchemaManager()->tablesExist(['sys_file_storage'])) {
+            return;
+        }
+        $connection->insert('sys_file_storage', [
             'uid' => 1,
             'pid' => 0,
             'name' => 'fileadmin',
@@ -71,9 +86,6 @@ final class GroupPermissionResolverTest extends FunctionalTestCase
             'is_writable' => 1,
             'is_default' => 1,
         ]);
-        foreach (['images', 'documents'] as $folder) {
-            GeneralUtility::mkdir_deep(Environment::getPublicPath() . '/fileadmin/' . $folder);
-        }
     }
 
     /**
