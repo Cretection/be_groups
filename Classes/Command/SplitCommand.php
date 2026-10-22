@@ -103,13 +103,13 @@ final class SplitCommand extends Command
             return $failed ? Command::FAILURE : Command::SUCCESS;
         }
         Bootstrap::initializeBackendAuthentication();
-        foreach ($classifications as $classification) {
-            $result = $this->groupConverter->split($classification->uid);
+        foreach ($classifications as $planned) {
+            $result = $this->groupConverter->split($planned->uid);
             $failed = $failed || $result->status !== ConversionStatus::Converted;
             $io->writeln(ConsoleTextUtility::escape(sprintf(
                 'be_groups:%d %s: %s %s%s',
                 $result->uid,
-                $classification->title,
+                $planned->title,
                 $result->status->value,
                 $result->message,
                 $result->createdBlockUids !== [] ? ' Created: ' . implode(', ', $result->createdBlockUids) . '.' : '',
