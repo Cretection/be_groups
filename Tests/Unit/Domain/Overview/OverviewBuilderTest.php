@@ -230,6 +230,28 @@ final class OverviewBuilderTest extends UnitTestCase
     }
 
     #[Test]
+    public function selectedKindWithoutBuildingBlocksStaysSelectable(): void
+    {
+        // The last workspace building block was deleted while the filter was set
+        $overview = $this->subject->build(
+            [$this->group(1, 'ACL a', 'acl')],
+            [],
+            [
+                new KindDefinition('role', 'Role', 'status-user-group-backend'),
+                new KindDefinition('acl', 'Access rights', 'actions-shield'),
+                new KindDefinition('workspace', 'Workspace', 'actions-workspace'),
+                new KindDefinition('tsconfig', 'TSconfig', 'actions-code'),
+            ],
+            OverviewBuilder::SORT_TITLE,
+            'workspace',
+        );
+
+        // The selection stays visible, so it can be seen and switched off; other kinds without blocks are not offered
+        self::assertSame(['acl', 'workspace'], array_map(static fn(KindDefinition $kind): string => $kind->value, $overview->buildingBlockKinds));
+        self::assertSame([], $overview->buildingBlockSections);
+    }
+
+    #[Test]
     public function groupsAreHiddenUnlessTheirHiddenFlagIsZeroLikeInTypo3(): void
     {
         // The HiddenRestriction of TYPO3 only lets "hidden = 0" pass

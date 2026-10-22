@@ -123,11 +123,12 @@ final readonly class OverviewBuilder
                 $buildingBlocks,
                 static fn(BuildingBlockItem $buildingBlock): bool => $buildingBlock->group->kind === $definition->value,
             ));
-            if ($blocksOfKind === []) {
+            // The selected kind stays selectable after its last building block is gone, so the selection remains visible
+            if ($blocksOfKind === [] && $kindFilter !== $definition->value) {
                 continue;
             }
             $buildingBlockKinds[] = $definition;
-            if ($kindFilter === '' || $kindFilter === $definition->value) {
+            if ($blocksOfKind !== [] && ($kindFilter === '' || $kindFilter === $definition->value)) {
                 $sections[] = new BuildingBlockSection(
                     $definition->value,
                     $definition->label,

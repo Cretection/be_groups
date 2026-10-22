@@ -29,7 +29,7 @@ final readonly class Overview
      * @param list<BuildingBlockSection> $buildingBlockSections building blocks, filtered by kind if requested
      * @param list<GroupItem> $classicGroups
      * @param list<GroupItem> $unknownKindGroups groups whose kind is not configured (e.g. the kind of an uninstalled extension)
-     * @param list<KindDefinition> $buildingBlockKinds kinds of all existing building blocks, for filtering
+     * @param list<KindDefinition> $buildingBlockKinds kinds of all existing building blocks and the selected kind, for filtering
      * @param int $issueCount entries not following the role model, independent of any filter
      */
     public function __construct(
