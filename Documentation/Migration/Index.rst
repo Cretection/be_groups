@@ -111,12 +111,35 @@ Afterwards:
     the module *Roles & Building Blocks*.
 #.  Resolve roles that contain roles (``role-invalid-member``). They occur
     when a combining group contained mixed groups, which are roles after the
-    split. The permissions are unchanged; the assistants do not resolve this
-    themselves, because the inner role may own pages or be a member of a
-    workspace. Replace the inner role by its building blocks where that
-    suits you.
-#.  Decide on the groups the assistants could not convert.
-#.  Switch off classic groups, see :ref:`configuration`.
+    split. The permissions are unchanged, but ``begroups:audit`` reports
+    each of these roles as an error and exits with code ``1`` until they are
+    resolved, so a deployment that runs the check stops there. The
+    assistants do not resolve them themselves, because the inner role may
+    own pages or be a member of a workspace. Check this first: without the
+    inner role, the users of the outer role lose that access.
+
+    Replace the inner role by its building blocks where that suits you, at
+    the position of the inner role. The field adds selected items at the
+    end, so move the building blocks up to the inner role with
+    :guilabel:`Move selected items upwards` – or with
+    :guilabel:`Move selected items to top` if the inner role is the first
+    member – before you save. The first group of a user becomes the owner
+    group of the pages the user creates, and the order decides the
+    precedence of TSconfig. Check the precedence in the module afterwards.
+
+    Converted roles also keep references to groups that were deleted before
+    (``role-missing-member``, an error as well). TYPO3 ignores them; saving
+    the role in the backend form removes them.
+#.  Decide on the groups the assistants could not convert. A group with the
+    root of the page tree as page mount (``0``) cannot be split, because
+    TYPO3 does not store the root as page mount of a new building block.
+    Keep it classic, or replace the root by the pages on the top level of
+    the page tree and split the group then. This is not quite the same:
+    pages created on the top level later are not mounted.
+#.  Switch off classic groups, see :ref:`configuration`, once
+    ``begroups:audit`` reports no classic group (``classic-group``) any
+    more. Remaining classic groups keep working, but are reported as errors
+    from then on (``classic-group-disabled``).
 
 ..  attention::
 

@@ -117,13 +117,41 @@ Danach:
     Modul *Rollen & Bausteine* prüfen.
 #.  Rollen auflösen, die Rollen enthalten (``role-invalid-member``). Sie
     entstehen, wenn eine zusammenfassende Gruppe gemischte Gruppen enthielt,
-    die nach dem Aufteilen Rollen sind. Die Rechte sind unverändert; die
-    Assistenten lösen das nicht selbst auf, weil die innere Rolle Seiten
-    besitzen oder Workspace-Mitglied sein kann. Ersetzen Sie die innere
-    Rolle durch ihre Bausteine, wo das passt.
+    die nach dem Aufteilen Rollen sind. Die Rechte sind unverändert, aber
+    ``begroups:audit`` meldet jede dieser Rollen als Fehler und endet mit
+    dem Exit-Code ``1``, bis sie aufgelöst sind; ein Deployment, das die
+    Prüfung ausführt, bricht also dort ab. Die Assistenten lösen das nicht
+    selbst auf, weil die innere Rolle Seiten besitzen oder
+    Workspace-Mitglied sein kann. Prüfen Sie das zuerst: Ohne die innere
+    Rolle verlieren die Benutzer der äußeren Rolle diesen Zugriff.
+
+    Ersetzen Sie die innere Rolle durch ihre Bausteine, wo das passt, und
+    zwar an der Stelle der inneren Rolle. Das Feld hängt ausgewählte
+    Einträge hinten an. Schieben Sie die Bausteine deshalb vor dem Speichern
+    mit :guilabel:`Ausgewählte Objekte nach oben verschieben` bis zur
+    inneren Rolle – oder mit
+    :guilabel:`Ausgewählte Objekte zum Anfang verschieben`, wenn die innere
+    Rolle das erste Mitglied ist. Die erste Gruppe eines Benutzers wird
+    Eigentümergruppe der Seiten, die er anlegt, und die Reihenfolge
+    bestimmt den Vorrang des TSconfig. Prüfen Sie den Vorrang danach im
+    Modul.
+
+    Umgestellte Rollen behalten außerdem Verweise auf Gruppen, die schon
+    vorher gelöscht waren (``role-missing-member``, ebenfalls ein Fehler).
+    TYPO3 ignoriert sie; Speichern der Rolle im Backend-Formular entfernt
+    sie.
 #.  Über die Gruppen entscheiden, die die Assistenten nicht umstellen
-    konnten.
-#.  Klassische Gruppen abschalten, siehe :ref:`configuration`.
+    konnten. Eine Gruppe mit der Wurzel des Seitenbaums als Freigabe
+    (``0``) lässt sich nicht aufteilen, weil TYPO3 die Wurzel nicht als
+    Freigabe eines neuen Bausteins speichert. Behalten Sie sie als
+    klassische Gruppe, oder ersetzen Sie die Wurzel durch die Seiten auf der
+    obersten Ebene des Seitenbaums und teilen Sie die Gruppe dann auf. Das
+    ist nicht ganz dasselbe: Seiten, die später auf der obersten Ebene
+    entstehen, sind nicht freigegeben.
+#.  Klassische Gruppen abschalten, siehe :ref:`configuration`, sobald
+    ``begroups:audit`` keine klassische Gruppe (``classic-group``) mehr
+    meldet. Verbliebene klassische Gruppen wirken weiter, werden ab dann
+    aber als Fehler gemeldet (``classic-group-disabled``).
 
 ..  attention::
 
