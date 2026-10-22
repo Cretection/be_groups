@@ -96,7 +96,8 @@ Deinstallation
 
 Entfernen Sie die Extension mit :bash:`composer remove cretection/be-groups`
 (im klassischen Modus im Modul :guilabel:`System > Extension`). Alle Rechte
-bleiben in den Core-Feldern und wirken weiter: Rollen werden zu normalen
+bleiben in den Core-Feldern und wirken weiter, solange die Listen der
+Untergruppen in 255 Zeichen passen (siehe unten): Rollen werden zu normalen
 Gruppen mit Untergruppen.
 
 Lange Listen von Untergruppen
@@ -135,10 +136,21 @@ Die Typen
     „Klassisch (alle Einstellungen)“, mit unveränderten Rechten. Der
     Datenbank-Vergleich benennt die Spalte zuerst in
     :sql:`zzz_deleted_tx_begroups_kind` um. Solange diese Spalte existiert,
-    können Sie die Typen nach einer erneuten Installation wiederherstellen
-    und die Gruppen danach mit ``begroups:audit`` prüfen:
+    können Sie die Typen nach einer erneuten Installation wiederherstellen:
 
     ..  code-block:: sql
 
         UPDATE be_groups SET tx_begroups_kind = zzz_deleted_tx_begroups_kind
             WHERE zzz_deleted_tx_begroups_kind <> '';
+
+    Die Anweisung schreibt die Typen am DataHandler und seinen Regeln
+    vorbei. Stattdessen können Sie die klassischen Gruppen auch erneut mit
+    den Assistenten umstellen, die jede Umstellung prüfen, siehe
+    :ref:`migration`.
+
+    Prüfen Sie die Gruppen nach jeder erneuten Installation – auch wenn Sie
+    die Spalte behalten haben – mit ``begroups:audit``: Gruppen, die im
+    Core-Formular bearbeitet wurden, während die Extension entfernt war,
+    können Rechte tragen, die ihr Typ nicht anzeigt. Beheben Sie Fehler wie
+    ``foreign-permissions``, bevor Sie diese Gruppen speichern, denn das
+    Speichern einer Gruppe entfernt solche Rechte.

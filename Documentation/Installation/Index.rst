@@ -95,7 +95,8 @@ Uninstallation
 
 Remove the extension with :bash:`composer remove cretection/be-groups` (in
 classic mode in the module :guilabel:`System > Extensions`). All permissions
-stay in the core fields and keep working: roles become plain groups with
+stay in the core fields and keep working, as long as the lists of subgroups
+fit into 255 characters (see below): roles become plain groups with
 subgroups.
 
 Long lists of subgroups
@@ -132,10 +133,19 @@ The kinds
     "Classic (all settings)" after a new installation, with unchanged
     permissions. The analyzer first renames the column to
     :sql:`zzz_deleted_tx_begroups_kind`. As long as that column exists, you
-    can restore the kinds after a new installation, and then check the
-    groups with ``begroups:audit``:
+    can restore the kinds after a new installation:
 
     ..  code-block:: sql
 
         UPDATE be_groups SET tx_begroups_kind = zzz_deleted_tx_begroups_kind
             WHERE zzz_deleted_tx_begroups_kind <> '';
+
+    The statement writes the kinds past the DataHandler and its rules.
+    Instead, you can convert the classic groups again with the assistants,
+    which verify every conversion, see :ref:`migration`.
+
+    After every new installation – also if you kept the column – check the
+    groups with ``begroups:audit``: groups that were edited in the core form
+    while the extension was removed can carry permissions their kind does
+    not show. Resolve errors such as ``foreign-permissions`` before you save
+    these groups, because saving a group removes such permissions.
