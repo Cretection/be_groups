@@ -134,7 +134,7 @@ final readonly class GroupClassifier
         }
         if ($fieldsWithoutKind !== []) {
             return $proposal(ClassificationAction::Manual, null, sprintf(
-                'The fields %s belong to no kind of building block. Assign them to a kind or keep the group classic.',
+                'Fields that belong to no kind of building block have values: %s. Assign them to a kind or keep the group classic.',
                 implode(', ', $fieldsWithoutKind),
             ));
         }
@@ -160,17 +160,22 @@ final readonly class GroupClassifier
             return $proposal(ClassificationAction::ChangeKind, $concerns[0]->kind, sprintf('Only grants permissions of the kind "%s".', $concerns[0]->kind));
         }
         if (in_array('0', GeneralUtility::trimExplode(',', $values['db_mountpoints'] ?? '', true), true)) {
-            return $proposal(ClassificationAction::Manual, null, 'Mounts the root of the page tree (page mount "0"), which the DataHandler cannot copy into a building block.');
+            return $proposal(
+                ClassificationAction::Manual,
+                null,
+                'Mounts the root of the page tree (page mount "0"), which the DataHandler cannot copy into a building block. '
+                . 'Keep the group classic, or replace the root by the pages on the top level of the page tree.',
+            );
         }
         // The DataHandler drops or rewrites entries such as "05", "pages_5" or empty ones when it writes the
         // building block (see RelationHandler::readList()), while TYPO3 reads them differently or ignores them.
-        $schema = $this->tcaSchemaFactory->get('be_groups');
+        $schema = $this->tcaSchemaFactory->get(KindFieldResolver::TABLE);
         foreach ($values as $fieldName => $value) {
             if ($schema->getField($fieldName) instanceof RelationalFieldTypeInterface
                 && preg_grep('/^-?[1-9]\d*$/', explode(',', $value), PREG_GREP_INVERT) !== []
             ) {
                 return $proposal(ClassificationAction::Manual, null, sprintf(
-                    'The field "%s" contains entries that the DataHandler cannot copy into a building block ("%s"), e.g. "05", "pages_5" or empty entries. Clean them up first; saving the group in the backend can change them.',
+                    'The field "%s" contains entries ("%s") that the DataHandler cannot copy into a building block, e.g. "05", "pages_5" or empty entries. Clean them up first; saving the group in the backend can change them.',
                     $fieldName,
                     $value,
                 ));

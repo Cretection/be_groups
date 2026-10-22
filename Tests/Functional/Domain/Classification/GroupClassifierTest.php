@@ -77,7 +77,10 @@ final class GroupClassifierTest extends FunctionalTestCase
             'Grants no permissions and is assigned to no user directly. Choose a kind; delete it only if no group, workspace or TSconfig condition refers to it.',
             $classifier->classify(4)?->reason,
         );
-        self::assertStringContainsString('workspace_perms belong to no kind', (string)$classifier->classify(8)?->reason);
+        self::assertSame(
+            'Fields that belong to no kind of building block have values: workspace_perms. Assign them to a kind or keep the group classic.',
+            $classifier->classify(8)?->reason,
+        );
         self::assertSame(
             'Is assigned to 1 user(s) directly, so it stays their role. A new page group becomes the owner group of the pages its users create.',
             $classifier->classify(6)?->reason,
@@ -188,7 +191,21 @@ final class GroupClassifierTest extends FunctionalTestCase
 
         self::assertNotNull($classification);
         self::assertSame(ClassificationAction::Manual, $classification->action);
-        self::assertStringContainsString(sprintf('The field "%s" contains entries that the DataHandler cannot copy into a building block ("%s")', $fieldName, $value), $classification->reason);
+        self::assertStringStartsWith(sprintf('The field "%s" contains entries ("%s") that the DataHandler cannot copy into a building block, ', $fieldName, $value), $classification->reason);
+    }
+
+    #[Test]
+    public function explainsWhatToDoWithGroupsThatMountTheRoot(): void
+    {
+        $this->getConnectionPool()->getConnectionForTable('be_groups')->update('be_groups', ['db_mountpoints' => '0'], ['uid' => 2]);
+
+        $classification = $this->get(GroupClassifier::class)->classify(2);
+
+        self::assertSame(ClassificationAction::Manual, $classification?->action);
+        self::assertSame(
+            'Mounts the root of the page tree (page mount "0"), which the DataHandler cannot copy into a building block. Keep the group classic, or replace the root by the pages on the top level of the page tree.',
+            $classification->reason,
+        );
     }
 
     #[Test]
