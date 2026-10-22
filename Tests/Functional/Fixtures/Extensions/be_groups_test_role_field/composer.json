@@ -1,0 +1,18 @@
+{
+	"name": "cretection/be-groups-test-role-field",
+	"description": "Test fixture - Adds a permission field to the forms of roles and of a kind of building block",
+	"license": "GPL-2.0-or-later",
+	"type": "typo3-cms-extension",
+	"require": {
+		"typo3/cms-core": "*"
+	},
+	"extra": {
+		"typo3/cms": {
+			"Package": {
+				"providesPackages": {}
+			},
+			"extension-key": "be_groups_test_role_field",
+			"version": "1.0.0"
+		}
+	}
+}

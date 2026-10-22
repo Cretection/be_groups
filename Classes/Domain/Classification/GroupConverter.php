@@ -19,6 +19,7 @@ use Cretection\BeGroups\DataHandling\CacheCommandDeferral;
 use Cretection\BeGroups\DataHandling\RelationList;
 use Cretection\BeGroups\Domain\Kind\GroupKind;
 use Cretection\BeGroups\Domain\Kind\KindFieldResolver;
+use Cretection\BeGroups\Domain\Kind\KindRegistry;
 use Cretection\BeGroups\Domain\Repository\BackendGroupRepository;
 use Cretection\BeGroups\Domain\Repository\BackendUserRepository;
 use Cretection\BeGroups\Domain\Repository\DatabaseRow;
@@ -58,6 +59,7 @@ final readonly class GroupConverter
         private BackendUserRepository $backendUserRepository,
         private SystemLogRepository $systemLogRepository,
         private KindFieldResolver $kindFieldResolver,
+        private KindRegistry $kindRegistry,
         private ConnectionPool $connectionPool,
         private CacheCommandDeferral $cacheCommandDeferral,
     ) {}
@@ -128,16 +130,17 @@ final readonly class GroupConverter
                 // itself, so the TSconfig of the group keeps its precedence.
                 $subgroups = $subgroups->withEntryAfter($blockUid, null);
             }
+            $emptiedFields = $this->kindFieldResolver->getForeignFieldsWithEmptyValue(GroupKind::Role->value) + $this->getEmptyValuesOfMovedFields($classification);
             $this->process([self::TABLE => [$uid => [
                 GroupKind::FIELD_NAME => GroupKind::Role->value,
                 'subgroup' => $subgroups->toString(),
-            ] + $this->kindFieldResolver->getForeignFieldsWithEmptyValue(GroupKind::Role->value)]]);
+            ] + $emptiedFields]]);
 
             $role = $this->backendGroupRepository->findByUid($uid);
             if ($role === null || $role->get(GroupKind::FIELD_NAME) !== GroupKind::Role->value) {
                 return new ConversionResult($uid, ConversionStatus::Failed, 'The group could not be changed into a role; nothing was changed.');
             }
-            foreach ($this->kindFieldResolver->getForeignFieldsWithEmptyValue(GroupKind::Role->value) as $fieldName => $emptyValue) {
+            foreach ($emptiedFields as $fieldName => $emptyValue) {
                 if (!$this->kindFieldResolver->isEmptyValue($fieldName, $role->get($fieldName))) {
                     return new ConversionResult($uid, ConversionStatus::Failed, sprintf('The field "%s" of the role could not be emptied; nothing was changed.', $fieldName));
                 }
@@ -158,6 +161,27 @@ final readonly class GroupConverter
                 $blockUids,
             );
         });
+    }
+
+    /**
+     * The permissions move into the building blocks, they are not copied: a field that the form of a role
+     * shows as well is emptied on the role, too. The value that empties a field depends on its type only,
+     * so it is the one the rules write for the kinds whose form does not show the field. A field that the
+     * forms of all kinds show has no such value and stays on the role.
+     *
+     * @return array<string, string|int>
+     */
+    private function getEmptyValuesOfMovedFields(Classification $classification): array
+    {
+        $movedFields = [];
+        foreach ($classification->concerns as $concern) {
+            $movedFields += $concern->values;
+        }
+        $emptyValues = [];
+        foreach ($this->kindRegistry->getDefinitions() as $definition) {
+            $emptyValues += $this->kindFieldResolver->getForeignFieldsWithEmptyValue($definition->value);
+        }
+        return array_intersect_key($emptyValues, $movedFields);
     }
 
     /**
