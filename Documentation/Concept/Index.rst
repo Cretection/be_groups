@@ -66,7 +66,8 @@ extended by "TSconfig" and "Workspace".
     *   -   ``page_group``
         -   Page permission group
         -   ``PG``
-        -   No own fields. Used as owner group for page permissions.
+        -   No own fields. Used as owner group of pages; put it first in a
+            role, see :ref:`concept-combination`.
     *   -   ``db_mount``
         -   Page tree mount
         -   ``DBM``
@@ -111,6 +112,54 @@ no such item – for example the kind of an uninstalled extension, or a value
 written by SQL – is neither
 a role nor a building block. Such groups are not changed, cannot be added to
 roles and are listed separately in the module.
+
+..  _concept-combination:
+
+How TYPO3 combines building blocks
+==================================
+
+TYPO3 merges the permissions of all groups of a user – the building blocks of
+all their roles – and of the user record. For most kinds, every building block
+adds permissions. Four things work differently:
+
+Languages and category mounts restrict
+    A user without any language may edit all languages, and a user without any
+    category mount sees all categories. A "Languages" or "Category mount"
+    building block therefore grants its languages or categories and at the
+    same time restricts the user to the languages or categories of all their
+    groups – in all their roles. A role without such a building block allows
+    all languages and categories, unless another role of the user restricts
+    them, and removing or hiding the last such building block of a user
+    gives the user all languages or categories. Give every role whose users
+    are to be restricted a building block of its own.
+
+The live workspace needs a "Workspace" building block
+    With EXT:workspaces, a user may only work in the live workspace if one of
+    their groups or the user record allows it (:sql:`workspace_perms`,
+    :guilabel:`Edit Live (Online)`). TYPO3 allows it neither for new groups
+    nor for new users. As user records stay free of permissions, give every
+    role whose users work in the live workspace a "Workspace" building block
+    that allows it; one shared building block is enough. Users without live
+    access and without membership in a custom workspace see no module at all
+    (*No workspace access*). Custom workspaces are granted in the workspace
+    record, where roles and building blocks can be members or owners.
+
+The first building block owns the new pages
+    TYPO3 makes the first group it resolves for a user the owner group of the
+    pages the user creates. It resolves the subgroups of a group before the
+    group itself, so this is the first building block of the user's first
+    role that is not hidden. By default, members of the owner group may show
+    and edit these pages, create subpages and edit their content
+    (``$GLOBALS['TYPO3_CONF_VARS']['BE']['defaultPermissions']['group']``).
+    Every other role that contains this building block gets this access to
+    the new pages as well. Put a "Page permission group" of the role first,
+    as the assistants do (see :ref:`migration`), or set the owner group of
+    new pages with ``TCEMAIN.permissions.groupid`` in page TSconfig.
+
+Page tree mounts need page permissions
+    A page tree mount only shows the pages the user may read. Give the pages
+    a "Page permission group" of the role as group in the core module
+    :guilabel:`Permissions`, or grant the access to everybody there.
 
 ..  _concept-rules:
 

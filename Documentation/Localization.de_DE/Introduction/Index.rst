@@ -22,7 +22,7 @@ Backend Group Kinds bringt Ordnung hinein:
 *   Jede Gruppe bekommt einen **Typ**. Der Typ legt fest, welche Felder die
     Gruppe zeigt und welche Rechte sie vergeben darf. Eine Gruppe vom Typ
     „Dateifreigabe“ vergibt nur Dateifreigaben, eine Gruppe vom Typ
-    „Sprachen“ nur Sprachen.
+    „Sprachen“ entscheidet nur über Sprachen.
 *   **Rollen** fassen Bausteine zusammen. Eine Rolle „Redaktion Marketing“
     besteht aus den Zugriffsrechten, Seitenbaum-Einstiegspunkten,
     Dateifreigaben und Sprachen, die eine Redakteurin im Marketing braucht.

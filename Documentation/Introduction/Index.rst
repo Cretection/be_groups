@@ -20,7 +20,7 @@ Backend Group Kinds brings order into this:
 
 *   Every group gets a **kind**. A kind defines which fields the group shows
     and which permissions it may grant. A "File mount" group only grants file
-    mounts, a "Languages" group only grants languages.
+    mounts, a "Languages" group only decides about languages.
 *   **Roles** combine building blocks. An "Editor Marketing" role is composed
     of the access rights, page tree entry points, file mounts and languages
     an editor of the marketing team needs.

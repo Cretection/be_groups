@@ -66,7 +66,9 @@ ergänzt um „TSconfig“ und „Workspace“.
     *   -   ``page_group``
         -   Seitenrechte-Gruppe
         -   ``PG``
-        -   Keine eigenen Felder. Dient als Eigentümergruppe für Seitenrechte.
+        -   Keine eigenen Felder. Dient als Eigentümergruppe von Seiten;
+            stellen Sie sie in einer Rolle an den Anfang, siehe
+            :ref:`concept-combination`.
     *   -   ``db_mount``
         -   Seitenbaum-Freigabe
         -   ``DBM``
@@ -112,6 +114,60 @@ deinstallierten Extension oder ein per SQL geschriebener Wert –, ist weder
 Rolle noch Baustein. Solche Gruppen
 werden nicht verändert, können keiner Rolle hinzugefügt werden und werden im
 Modul gesondert aufgeführt.
+
+..  _concept-combination:
+
+Wie TYPO3 Bausteine zusammenführt
+=================================
+
+TYPO3 führt die Rechte aller Gruppen eines Benutzers – der Bausteine aller
+seiner Rollen – und des Benutzer-Datensatzes zusammen. Bei den meisten Typen
+fügt jeder Baustein Rechte hinzu. Vier Dinge funktionieren anders:
+
+Sprachen und Kategorie-Freigaben schränken ein
+    Ein Benutzer ohne Sprache darf alle Sprachen bearbeiten, und ein Benutzer
+    ohne Kategorie-Freigabe sieht alle Kategorien. Ein Baustein vom Typ
+    „Sprachen“ oder „Kategorie-Freigabe“ vergibt deshalb seine Sprachen oder
+    Kategorien und beschränkt den Benutzer zugleich auf die Sprachen oder
+    Kategorien all seiner Gruppen – in allen seinen Rollen. Eine Rolle ohne
+    einen solchen Baustein erlaubt alle Sprachen und Kategorien, sofern keine
+    andere Rolle des Benutzers sie einschränkt, und wer den letzten solchen
+    Baustein eines Benutzers entfernt oder versteckt, gibt dem Benutzer alle
+    Sprachen oder Kategorien. Geben Sie jeder Rolle, deren Benutzer
+    eingeschränkt sein sollen, einen eigenen solchen Baustein.
+
+Die Live-Arbeitsumgebung braucht einen Baustein vom Typ „Workspace“
+    Mit EXT:workspaces darf ein Benutzer nur dann in der Live-Arbeitsumgebung
+    arbeiten, wenn eine seiner Gruppen oder sein Benutzer-Datensatz es erlaubt
+    (:sql:`workspace_perms`, :guilabel:`Live bearbeiten (Online)`). TYPO3
+    erlaubt es weder neuen Gruppen noch neuen Benutzern. Da
+    Benutzer-Datensätze frei von Rechten bleiben, geben Sie jeder Rolle, deren
+    Benutzer live arbeiten, einen Baustein vom Typ „Workspace“, der es
+    erlaubt; ein gemeinsamer Baustein genügt. Benutzer ohne Live-Zugriff und
+    ohne Mitgliedschaft in einer eigenen Arbeitsumgebung sehen gar kein Modul
+    (*Kein Workspace-Zugriff*). Eigene Arbeitsumgebungen
+    werden im Datensatz der Arbeitsumgebung vergeben, in dem Rollen und
+    Bausteine Mitglieder oder Besitzer sein können.
+
+Der erste Baustein besitzt die neuen Seiten
+    TYPO3 macht die erste Gruppe, die es für einen Benutzer auflöst, zur
+    Eigentümergruppe der Seiten, die der Benutzer anlegt. Es löst die
+    Untergruppen einer Gruppe vor der Gruppe selbst auf; das ist also der
+    erste nicht versteckte Baustein der ersten Rolle des Benutzers.
+    Mitglieder der Eigentümergruppe dürfen diese Seiten standardmäßig
+    anzeigen und bearbeiten, Unterseiten anlegen und Inhalte bearbeiten
+    (``$GLOBALS['TYPO3_CONF_VARS']['BE']['defaultPermissions']['group']``).
+    Jede andere Rolle, die diesen Baustein enthält, bekommt diesen Zugriff
+    auf die neuen Seiten ebenfalls. Stellen Sie eine Seitenrechte-Gruppe der
+    Rolle an den Anfang, wie es die Assistenten tun (siehe
+    :ref:`migration`), oder legen Sie die Eigentümergruppe neuer Seiten per
+    ``TCEMAIN.permissions.groupid`` im Page-TSconfig fest.
+
+Seitenbaum-Freigaben brauchen Seitenrechte
+    Eine Seitenbaum-Freigabe zeigt nur die Seiten, die der Benutzer lesen
+    darf. Geben Sie den Seiten im Core-Modul :guilabel:`Berechtigungen` eine
+    Seitenrechte-Gruppe der Rolle als Gruppe, oder erlauben Sie dort allen
+    den Zugriff.
 
 ..  _concept-rules:
 

@@ -41,7 +41,9 @@ The field :guilabel:`Building blocks` of a role is the side-by-side list of
 the core. The available groups are grouped by kind; roles and classic groups
 appear in groups of their own, marked as not allowed. Adding one of them is
 rejected when the role is saved. The order of the selected building blocks
-is kept – it decides the precedence of their TSconfig.
+is kept. It matters twice: later building blocks override the TSconfig of
+earlier ones, and the first one becomes the owner group of the pages created
+by users who have this role as their first role.
 
 ..  figure:: /Images/RoleForm.png
     :alt: Form of the role "META: Content manager" with its building blocks on the left and the available groups, grouped by kind, on the right
@@ -50,6 +52,20 @@ is kept – it decides the precedence of their TSconfig.
 
 A role can combine many building blocks: the extension enlarges the field
 :sql:`subgroup` to 2048 characters.
+
+TYPO3 merges the building blocks of all roles of a user. Before you assign a
+role, check what follows from that, see :ref:`concept-combination`:
+
+*   Without a "Languages" or "Category mount" building block, the users of
+    the role may edit all languages and see all categories, unless another of
+    their roles restricts them.
+*   With EXT:workspaces, the users of the role need a "Workspace" building
+    block that allows the live workspace, unless they only work in custom
+    workspaces.
+*   The first building block owns the pages created by users who have this
+    role as their first role; put a "Page permission group" of the role
+    first.
+*   The pages of its page tree mounts need page permissions for the role.
 
 ..  _usage-user-form:
 

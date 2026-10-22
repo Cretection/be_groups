@@ -41,8 +41,10 @@ Das Feld :guilabel:`Bausteine` einer Rolle ist die zweispaltige Auswahlliste
 des Core. Die verfügbaren Gruppen sind nach Typ gruppiert; Rollen und
 klassische Gruppen stehen in eigenen Gruppen und sind als nicht zulässig
 gekennzeichnet. Wird eine davon hinzugefügt, wird das beim Speichern der
-Rolle abgelehnt. Die Reihenfolge der gewählten Bausteine bleibt erhalten –
-sie bestimmt den Vorrang ihres TSconfig.
+Rolle abgelehnt. Die Reihenfolge der gewählten Bausteine bleibt erhalten. Sie
+zählt doppelt: Spätere Bausteine überschreiben das TSconfig früherer, und der
+erste wird zur Eigentümergruppe der Seiten, die Benutzer mit dieser Rolle als
+erster Rolle anlegen.
 
 ..  figure:: /Images/RoleForm.png
     :alt: Formular der Rolle „META: Content manager“ mit ihren Bausteinen links und den verfügbaren Gruppen rechts, nach Typ gruppiert
@@ -52,6 +54,22 @@ sie bestimmt den Vorrang ihres TSconfig.
 
 Eine Rolle kann viele Bausteine kombinieren: Die Extension vergrößert das
 Feld :sql:`subgroup` auf 2048 Zeichen.
+
+TYPO3 führt die Bausteine aller Rollen eines Benutzers zusammen. Prüfen Sie,
+bevor Sie eine Rolle zuweisen, was daraus folgt, siehe
+:ref:`concept-combination`:
+
+*   Ohne einen Baustein vom Typ „Sprachen“ oder „Kategorie-Freigabe“ dürfen
+    die Benutzer der Rolle alle Sprachen bearbeiten und sehen alle
+    Kategorien, sofern keine andere ihrer Rollen sie einschränkt.
+*   Mit EXT:workspaces brauchen die Benutzer der Rolle einen Baustein vom Typ
+    „Workspace“, der die Live-Arbeitsumgebung erlaubt, sofern sie nicht nur
+    in eigenen Arbeitsumgebungen arbeiten.
+*   Der erste Baustein besitzt die Seiten, die Benutzer mit dieser Rolle als
+    erster Rolle anlegen; stellen Sie eine Seitenrechte-Gruppe der Rolle an
+    den Anfang.
+*   Die Seiten ihrer Seitenbaum-Freigaben brauchen Seitenrechte für die
+    Rolle.
 
 ..  _usage-user-form:
 
