@@ -83,8 +83,17 @@ beim Speichern des Benutzers abgelehnt.
 
 Keine der beiden Listen ist gefiltert. Eine gefilterte Liste würde beim
 Speichern jeden gespeicherten Wert verwerfen, der nicht in ihr enthalten ist –
-mit der vollständigen Liste entfernt das Speichern eines Formulars nie eine
-bestehende Zuweisung.
+mit der vollständigen Liste behält das Speichern eines Formulars jede
+Zuweisung einer bestehenden Gruppe.
+
+Gelöschte und nicht vorhandene Gruppen stehen, wie überall in TYPO3, in
+keiner Liste: Das Speichern des Formulars einer Rolle oder eines Benutzers
+entfernt sie, auch wenn sonst nichts geändert wurde, und ein späteres
+Wiederherstellen der Gruppe im :guilabel:`Papierkorb` bringt die Zuweisung
+nicht zurück. Stellen Sie eine gelöschte Gruppe wieder her, bevor Sie die
+Rollen und Benutzer bearbeiten, die sie enthalten. Das Modul und die
+Konsistenzprüfung (``role-missing-member``) nennen die Rollen, die eine
+gelöschte Gruppe enthalten.
 
 ..  _usage-prefixes:
 

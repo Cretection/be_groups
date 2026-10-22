@@ -79,7 +79,15 @@ user is saved.
 
 Neither list is filtered. A filtered list would drop every stored value that
 is not part of it whenever the form is saved – with the full list, saving a
-form never removes an existing assignment.
+form keeps every assignment of an existing group.
+
+Deleted groups and groups that do not exist are part of no list, as
+everywhere in TYPO3: saving the form of a role or a user removes them, even
+if nothing else was changed, and restoring the group in the
+:guilabel:`Recycler` afterwards does not bring the assignment back. Restore
+a deleted group before you edit the roles and users that contain it. The
+module and the consistency check (``role-missing-member``) name the roles
+that contain a deleted group.
 
 ..  _usage-prefixes:
 
