@@ -26,6 +26,9 @@ Relaunch für TYPO3 14.3 LTS.
     Daten früherer Versionen werden nicht übernommen, siehe :ref:`migration`.
 *   Die Regeln R1 – R4 werden bei jedem Speichern durchgesetzt, siehe
     :ref:`concept-rules`.
+*   Das Modul „Rollen & Bausteine“ zeigt ohne Bearbeitung jede Rolle mit
+    ihren Bausteinen und Benutzern, wo jeder Baustein verwendet wird und was
+    nicht dem Rollenmodell folgt, siehe :ref:`usage-module`.
 *   Die Konsistenzprüfung ``begroups:audit`` findet alles, was nicht dem
     Rollenmodell folgt, mit Exit-Codes für Deployments und Monitoring und
     dem Event ``AfterAuditFindingsCollectedEvent`` für Prüfungen anderer

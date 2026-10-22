@@ -26,6 +26,9 @@ Relaunch for TYPO3 14.3 LTS.
     versions is not migrated, see :ref:`migration`.
 *   The rules R1 – R4 are enforced on every save operation, see
     :ref:`concept-rules`.
+*   The read-only module "Roles & Building Blocks" shows every role with its
+    building blocks and users, where each building block is used and what
+    does not follow the role model, see :ref:`usage-module`.
 *   The consistency check ``begroups:audit`` finds everything that does
     not follow the role model, with exit codes for deployments and
     monitoring and the event ``AfterAuditFindingsCollectedEvent`` for checks
