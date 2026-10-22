@@ -128,6 +128,20 @@ final class OverviewControllerTest extends FunctionalTestCase
     }
 
     #[Test]
+    public function separatesRolesAndOtherGroupsUsingABuildingBlockWithoutASpaceBeforeTheComma(): void
+    {
+        $this->setUpBackendUserWithLanguage(1);
+        // "ACL editing" is part of the roles "R editor" and "R other" and of the classic group "Classic all-in-one"
+        $this->get(ConnectionPool::class)->getConnectionForTable('be_groups')
+            ->update('be_groups', ['subgroup' => '1'], ['uid' => 5]);
+
+        $html = $this->renderModule();
+
+        self::assertMatchesRegularExpression('#>META: R other</a>, (?:(?!</td>).)*>Classic all-in-one</a>#s', $html);
+        self::assertDoesNotMatchRegularExpression('#</a>\s+,#', $html);
+    }
+
+    #[Test]
     public function namesAMissingKindOfAGroup(): void
     {
         $this->setUpBackendUserWithLanguage(1);

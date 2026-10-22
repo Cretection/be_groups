@@ -159,9 +159,8 @@
                             </th>
                             <td>
                                 <f:for each="{buildingBlock.roles}" as="usingGroup" iteration="iterator">
-                                    <f:render section="GroupLink" arguments="{group: usingGroup, returnUrl: returnUrl, withKind: 1}" /><f:if condition="!{iterator.isLast}">, </f:if>
+                                    <f:render section="GroupLink" arguments="{group: usingGroup, returnUrl: returnUrl, withKind: 1}" /><f:if condition="!{iterator.isLast} || {buildingBlock.otherGroups}">, </f:if>
                                 </f:for>
-                                <f:if condition="{buildingBlock.roles} && {buildingBlock.otherGroups}">, </f:if>
                                 <f:for each="{buildingBlock.otherGroups}" as="usingGroup" iteration="iterator">
                                     <f:render section="GroupLink" arguments="{group: usingGroup, returnUrl: returnUrl, withKind: 1}" /><f:if condition="!{iterator.isLast}">, </f:if>
                                 </f:for>
