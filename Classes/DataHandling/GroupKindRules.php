@@ -28,6 +28,8 @@ use Psr\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\DependencyInjection\Attribute\Autoconfigure;
 use TYPO3\CMS\Backend\Utility\BackendUtility;
 use TYPO3\CMS\Core\DataHandling\DataHandler;
+use TYPO3\CMS\Core\Localization\LanguageService;
+use TYPO3\CMS\Core\Localization\LanguageServiceFactory;
 use TYPO3\CMS\Core\Schema\TcaSchemaFactory;
 use TYPO3\CMS\Core\Utility\MathUtility;
 
@@ -80,6 +82,7 @@ final class GroupKindRules
         private readonly KindPrefix $kindPrefix,
         private readonly TcaSchemaFactory $tcaSchemaFactory,
         private readonly RelationsEmptiedByImport $relationsEmptiedByImport,
+        private readonly LanguageServiceFactory $languageServiceFactory,
     ) {}
 
     /**
@@ -139,7 +142,7 @@ final class GroupKindRules
             return false;
         }
 
-        $this->removeForeignFieldValues($incomingFieldArray, $kind, $uid, $id);
+        $this->removeForeignFieldValues($incomingFieldArray, $kind, $uid, $id, $dataHandler);
         if ($kind === GroupKind::Role->value) {
             $this->rejectAddedRelations(
                 $incomingFieldArray,
@@ -280,7 +283,7 @@ final class GroupKindRules
      *
      * @param array<string, mixed> $incomingFieldArray
      */
-    private function removeForeignFieldValues(array &$incomingFieldArray, string $kind, ?int $uid, string|int $id): void
+    private function removeForeignFieldValues(array &$incomingFieldArray, string $kind, ?int $uid, string|int $id, DataHandler $dataHandler): void
     {
         $foreignFields = $this->kindFieldResolver->getForeignFieldsWithEmptyValue($kind);
         if ($foreignFields === []) {
@@ -305,15 +308,35 @@ final class GroupKindRules
         }
 
         if ($removedFields !== []) {
+            // The log names the kind and the fields by their identifiers, the message by their labels.
+            $languageService = $this->languageServiceFactory->createFromUserPreferences($dataHandler->BE_USER);
+            $schema = $this->tcaSchemaFactory->get(self::GROUPS_TABLE);
             $this->addCorrection(
                 self::GROUPS_TABLE,
                 $id,
                 'rules.foreignFieldsRemoved',
                 'Fields not belonging to kind "{kind}" have been emptied: {fields}',
-                ['kind' => $kind, 'fields' => implode(', ', $removedFields)],
+                [
+                    'kind' => $kind,
+                    'fields' => implode(', ', $removedFields),
+                    'kindLabel' => $this->translateLabel($languageService, $this->kindRegistry->getDefinitions()[$kind]->label ?? '', $kind),
+                    'fieldLabels' => implode(', ', array_map(
+                        fn(string $fieldName): string => $this->translateLabel($languageService, $schema->hasField($fieldName) ? $schema->getField($fieldName)->getLabel() : '', $fieldName),
+                        $removedFields,
+                    )),
+                ],
                 true,
             );
         }
+    }
+
+    /**
+     * @param string $fallback what the message shows if the label is empty
+     */
+    private function translateLabel(LanguageService $languageService, string $label, string $fallback): string
+    {
+        $translation = $languageService->sL($label);
+        return $translation !== '' ? $translation : $fallback;
     }
 
     /**

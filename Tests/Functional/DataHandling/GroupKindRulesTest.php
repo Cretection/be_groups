@@ -589,6 +589,38 @@ final class GroupKindRulesTest extends FunctionalTestCase
     }
 
     #[Test]
+    public function aKindChangeNamesTheKindAndTheFieldsByTheirLabels(): void
+    {
+        $this->writeGroup(1, ['tx_begroups_kind' => 'db_mount']);
+
+        // The log keeps the identifiers, the message uses the labels.
+        $logData = $this->getLastExtensionLogEntry()['data'];
+        self::assertSame('db_mount', $logData['kind'] ?? null);
+        self::assertSame('groupMods', $logData['fields'] ?? null);
+        self::assertSame('Page tree mount', $logData['kindLabel'] ?? null);
+        self::assertSame('Allowed modules', $logData['fieldLabels'] ?? null);
+        self::assertSame(
+            'These settings do not belong to the kind "Page tree mount" and have been removed: Allowed modules',
+            $this->translateMessage('default', 'rules.foreignFieldsRemoved', $logData, ['kind', 'fields', 'kindLabel', 'fieldLabels']),
+        );
+        self::assertSame(
+            'Diese Einstellungen gehören nicht zum Typ „Page tree mount“ und wurden entfernt: Allowed modules',
+            $this->translateMessage('de', 'rules.foreignFieldsRemoved', $logData, ['kind', 'fields', 'kindLabel', 'fieldLabels']),
+        );
+    }
+
+    #[Test]
+    public function aKindChangeNamesTheKindInTheLanguageOfTheUser(): void
+    {
+        $this->get(ConnectionPool::class)->getConnectionForTable('be_users')->update('be_users', ['lang' => 'de'], ['uid' => 1]);
+        $this->setUpBackendUserWithLanguage(1);
+
+        $this->writeGroup(1, ['tx_begroups_kind' => 'db_mount']);
+
+        self::assertSame('Seitenbaum-Freigabe', $this->getLastExtensionLogEntry()['data']['kindLabel'] ?? null);
+    }
+
+    #[Test]
     public function fieldsTheCallerEmptiesItselfAreNotReported(): void
     {
         $this->writeGroup(1, ['tx_begroups_kind' => 'db_mount', 'groupMods' => '']);
@@ -683,6 +715,18 @@ final class GroupKindRulesTest extends FunctionalTestCase
             'details' => is_string($row['details']) ? $row['details'] : '',
             'data' => is_array($data) ? $data : [],
         ];
+    }
+
+    /**
+     * The message of a report as the editor reads it, from the arguments in the order the rules pass them.
+     *
+     * @param array<array-key, mixed> $logData
+     * @param list<string> $argumentNames
+     */
+    private function translateMessage(string $locale, string $labelKey, array $logData, array $argumentNames): string
+    {
+        $arguments = array_map(static fn(string $name): string => is_string($logData[$name] ?? null) ? $logData[$name] : '', $argumentNames);
+        return (string)$this->get(LanguageServiceFactory::class)->create($locale)->translate($labelKey . '.message', 'be_groups.messages', $arguments);
     }
 
     /**

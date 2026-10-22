@@ -22,7 +22,7 @@
         <source>Settings removed</source>
       </trans-unit>
       <trans-unit id="rules.foreignFieldsRemoved.message">
-        <source>These settings do not belong to the kind "%1$s" and have been removed: %2$s</source>
+        <source>These settings do not belong to the kind "%3$s" and have been removed: %4$s</source>
       </trans-unit>
       <trans-unit id="rules.subgroupsRejected.title">
         <source>Groups not added</source>

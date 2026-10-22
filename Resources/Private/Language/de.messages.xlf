@@ -28,8 +28,8 @@
         <target>Einstellungen entfernt</target>
       </trans-unit>
       <trans-unit id="rules.foreignFieldsRemoved.message" approved="yes">
-        <source>These settings do not belong to the kind "%1$s" and have been removed: %2$s</source>
-        <target>Diese Einstellungen gehören nicht zum Typ „%1$s“ und wurden entfernt: %2$s</target>
+        <source>These settings do not belong to the kind "%3$s" and have been removed: %4$s</source>
+        <target>Diese Einstellungen gehören nicht zum Typ „%3$s“ und wurden entfernt: %4$s</target>
       </trans-unit>
       <trans-unit id="rules.subgroupsRejected.title" approved="yes">
         <source>Groups not added</source>
