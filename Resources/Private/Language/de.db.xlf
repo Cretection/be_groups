@@ -112,11 +112,11 @@
         <target>Bausteine</target>
       </trans-unit>
       <trans-unit id="be_groups.subgroup.role.description" approved="yes">
-        <source>Select the building blocks this role consists of. Users with this role receive all permissions of the selected building blocks.</source>
+        <source>Select the building blocks this role consists of, in the order of their TSconfig precedence. Users with this role receive all permissions of the selected building blocks. Roles and classic groups cannot be added.</source>
         <target>Wählen Sie die Bausteine, aus denen diese Rolle besteht, in der Reihenfolge ihres TSconfig-Vorrangs. Benutzer mit dieser Rolle erhalten alle Rechte der gewählten Bausteine. Rollen und klassische Gruppen können nicht hinzugefügt werden.</target>
       </trans-unit>
       <trans-unit id="be_users.usergroup.description" approved="yes">
-        <source>Assign roles. Building blocks are not assigned to users directly but combined in roles.</source>
+        <source>Assign roles. Building blocks are not assigned to users directly but combined in roles; assigning them here is rejected when saving.</source>
         <target>Weisen Sie Rollen zu. Bausteine werden Benutzern nicht direkt zugewiesen, sondern in Rollen zusammengefasst; eine Zuweisung hier wird beim Speichern abgelehnt.</target>
       </trans-unit>
       <trans-unit id="be_users.usergroup.description.classicDisabled" approved="yes">
