@@ -193,6 +193,26 @@ final class OverviewControllerTest extends FunctionalTestCase
         self::assertDoesNotMatchRegularExpression('#</(?:bdi|a|span)>\s+,#', $html);
     }
 
+    /**
+     * A link without text has no accessible name: untitled groups are named like in the lists of the core.
+     */
+    #[Test]
+    public function namesUntitledGroupsInTheirLinks(): void
+    {
+        $this->setUpBackendUserWithLanguage(1);
+        $connection = $this->get(ConnectionPool::class)->getConnectionForTable('be_groups');
+        // A building block, a role in "Used in" and a classic group, also as invalid member of "R other"
+        foreach ([1, 6, 5] as $uid) {
+            $connection->update('be_groups', ['title' => ''], ['uid' => $uid]);
+        }
+
+        $html = $this->renderModule();
+
+        self::assertDoesNotMatchRegularExpression('#<bdi>\s*</bdi>|<bdi>META: </bdi>#', $html);
+        self::assertMatchesRegularExpression('#<a title="Edit &quot;\[No title\]&quot;" href="[^"]+"><bdi>\[No title\]</bdi></a>#', $html);
+        self::assertMatchesRegularExpression('#<a title="Edit &quot;META: \[No title\]&quot;" href="[^"]+"><bdi>META: \[No title\]</bdi></a>#', $html);
+    }
+
     #[Test]
     public function namesAMissingKindOfAGroup(): void
     {
@@ -255,6 +275,9 @@ final class OverviewControllerTest extends FunctionalTestCase
 
         self::assertStringNotContainsString('<script>alert(1)</script>', $html);
         self::assertStringContainsString('&lt;script&gt;alert(1)&lt;/script&gt;', $html);
+        // Escaped once, in the links of the role and of "Used in" and in their titles
+        self::assertStringNotContainsString('&amp;lt;', $html);
+        self::assertSame(6, substr_count($html, '&lt;script&gt;alert(1)&lt;/script&gt;'));
     }
 
     #[Test]

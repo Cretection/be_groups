@@ -144,6 +144,24 @@ final class UserModuleTest extends FunctionalTestCase
         self::assertSame('[META: Editors][ACL: Editors][Legacy &lt;b&gt;][Missing]', trim($view->render()));
     }
 
+    /**
+     * The module "Users" passes the stored titles: an untitled group must become neither an empty
+     * link nor a bare prefix.
+     */
+    #[Test]
+    public function rendersUntitledGroupsLikeTheListsOfTheCore(): void
+    {
+        $view = $this->get(ViewFactoryInterface::class)->create(new ViewFactoryData(templatePathAndFilename: __DIR__ . '/Fixtures/GroupTitle.fluid.html'));
+        $view->assign('groups', [
+            ['uid' => 1, 'title' => ''],
+            ['uid' => 2, 'title' => '  '],
+            ['uid' => 3, 'title' => ''],
+            ['uid' => 99, 'title' => null],
+        ]);
+
+        self::assertSame('[META: [No title]][ACL: [No title]][[No title]][[No title]]', trim($view->render()));
+    }
+
     #[Test]
     public function rendersTheIconsOfGroupsForTheirKind(): void
     {
@@ -199,6 +217,19 @@ final class UserModuleTest extends FunctionalTestCase
         $this->get(EventDispatcherInterface::class)->dispatch($event);
 
         self::assertSame(['', ['uid' => 2, 'title' => 'ACL: Editors']], $event->backendGroups);
+    }
+
+    #[Test]
+    public function showsUntitledGroupsInTheGroupFilterLikeTheListsOfTheCore(): void
+    {
+        $this->getConnectionPool()->getConnectionForTable('be_groups')->update('be_groups', ['title' => ''], ['uid' => 2]);
+        $group = self::createStub(DomainObjectInterface::class);
+        $group->method('getUid')->willReturn(2);
+        $event = new AfterBackendGroupFilterListIsAssembledEvent(self::createStub(RequestInterface::class), [$group]);
+
+        $this->get(EventDispatcherInterface::class)->dispatch($event);
+
+        self::assertSame([['uid' => 2, 'title' => 'ACL: [No title]']], $event->backendGroups);
     }
 
     /**

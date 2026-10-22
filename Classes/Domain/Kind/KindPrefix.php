@@ -27,6 +27,7 @@ use TYPO3\CMS\Core\Localization\LanguageServiceFactory;
 final readonly class KindPrefix
 {
     private const LABEL_PREFIX = 'LLL:EXT:be_groups/Resources/Private/Language/db.xlf:kind.prefix.';
+    private const NO_TITLE_LABEL = 'core.core:labels.no_title';
 
     public function __construct(
         private KindRegistry $kindRegistry,
@@ -47,8 +48,15 @@ final readonly class KindPrefix
         return $prefix !== '' ? $prefix : $languageService->sL($this->kindRegistry->getDefinitions()[$kind]->label);
     }
 
+    /**
+     * The title of a group as the lists of TYPO3 show it, e.g. "META: Editors". A group without title is
+     * shown as "[No title]", like every record without title, e.g. "DBM: [No title]".
+     */
     public function prefixTitle(string $kind, string $title): string
     {
+        if (trim($title) === '') {
+            $title = '[' . $this->getLanguageService()->sL(self::NO_TITLE_LABEL) . ']';
+        }
         $prefix = $this->getPrefix($kind);
         return $prefix === '' ? $title : $prefix . ': ' . $title;
     }

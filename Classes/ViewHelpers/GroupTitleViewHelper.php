@@ -21,9 +21,12 @@ use TYPO3Fluid\Fluid\Core\ViewHelper\AbstractViewHelper;
 
 /**
  * The title of a backend group with the prefix of its kind, e.g. "META: Editors", for templates
- * that only know uid and title (the core module "Users").
+ * that only know uid and title (the core module "Users"). A group without title is shown as
+ * "[No title]", like in the lists of the core. Without prefix, e.g. under a heading that names
+ * the kind, only that fallback applies.
  *
  * Usage: {begroups:groupTitle(uid: group.uid, title: group.title)}
+ *        {begroups:groupTitle(uid: group.uid, title: group.title, prefix: 0)}
  *
  * @internal
  */
@@ -38,15 +41,15 @@ final class GroupTitleViewHelper extends AbstractViewHelper
     {
         $this->registerArgument('uid', 'mixed', 'The uid of the group', true);
         $this->registerArgument('title', 'mixed', 'The title of the group', true);
+        $this->registerArgument('prefix', 'bool', 'Whether the title starts with the prefix of the kind', false, true);
     }
 
     public function render(): string
     {
         $uid = $this->arguments['uid'];
         $title = $this->arguments['title'];
-        return $this->kindPrefix->prefixTitle(
-            $this->groupKindLookup->getKind(is_numeric($uid) ? (int)$uid : 0),
-            is_scalar($title) ? (string)$title : '',
-        );
+        // Without the kind, only an untitled group gets a title.
+        $kind = $this->arguments['prefix'] === false ? '' : $this->groupKindLookup->getKind(is_numeric($uid) ? (int)$uid : 0);
+        return $this->kindPrefix->prefixTitle($kind, is_scalar($title) ? (string)$title : '');
     }
 }
