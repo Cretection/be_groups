@@ -9,7 +9,20 @@
  * LICENSE.txt file that was distributed with this source code.
  */
 
+import type { Locator } from '@playwright/test';
 import { test, expect } from '../fixtures/backend.ts';
+
+// Links in the module are smaller than 24 px, so the centres of their lines must be at least
+// 24 px apart (WCAG 2.2, success criterion 2.5.8). Every line a link wraps onto counts.
+async function expectLinesOfLinksApart(container: Locator): Promise<void> {
+  const lines = await container.getByRole('link').evaluateAll((links) => [...new Set(links.flatMap(
+    (link) => [...link.getClientRects()].map((rect) => Math.round(rect.top + rect.height / 2)),
+  ))].sort((a, b) => a - b));
+  expect(lines.length, 'lines with links').toBeGreaterThan(1);
+  for (let i = 1; i < lines.length; i++) {
+    expect((lines[i] ?? 0) - (lines[i - 1] ?? 0), `centres of the lines: ${lines.join(', ')}`).toBeGreaterThanOrEqual(24);
+  }
+}
 
 // The module "Roles & Building Blocks" with the scenario of "scenario.php"
 test.describe('Module "Roles & Building Blocks"', () => {
@@ -78,6 +91,34 @@ test.describe('Module "Roles & Building Blocks"', () => {
     const frame = backend.contentFrame;
     await frame.getByRole('rowheader', { name: 'Content manager' }).getByRole('link').click();
     await expect(frame.getByRole('heading', { level: 1 })).toHaveText('META: Content manager');
+  });
+
+  test('keeps the lines of the rows of roles 24 px apart', async ({ backend }) => {
+    const frame = backend.contentFrame;
+    for (const role of ['Content manager', 'Team lead']) {
+      await expectLinesOfLinksApart(frame.getByRole('row').filter({ has: frame.getByRole('rowheader', { name: role }) }).getByRole('cell').first());
+    }
+  });
+
+  test('keeps wrapped lists of groups 24 px apart', async ({ backend, page }) => {
+    await page.setViewportSize({ width: 480, height: 900 });
+    const frame = backend.contentFrame;
+    const contentEditing = frame.getByRole('table', { name: /Access rights/ }).getByRole('row').filter({ has: frame.getByRole('rowheader', { name: 'Content editing' }) });
+    // "Used in": META: Content manager, META: Marketing
+    await expectLinesOfLinksApart(contentEditing.getByRole('cell').first());
+  });
+
+  test('keeps the classic groups 24 px apart', async ({ backend }) => {
+    const items = backend.contentFrame.getByRole('heading', { name: /Classic groups/ }).locator('xpath=following-sibling::ul[1]/li');
+    // The scenario has one classic group, so the space each item takes up in the list counts
+    const pitches = await items.evaluateAll((elements) => elements.map((item) => {
+      const gap = parseFloat(getComputedStyle(item.parentElement ?? item).rowGap);
+      return item.getBoundingClientRect().height + Math.max(parseFloat(getComputedStyle(item).marginBottom), Number.isNaN(gap) ? 0 : gap);
+    }));
+    expect(pitches.length).toBeGreaterThan(0);
+    for (const pitch of pitches) {
+      expect(pitch).toBeGreaterThanOrEqual(24);
+    }
   });
 
   test('meets WCAG 2.2 AA @a11y', async ({ backend }) => {

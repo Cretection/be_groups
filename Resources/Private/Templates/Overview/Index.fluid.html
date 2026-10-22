@@ -78,7 +78,8 @@
                         <f:for each="{overview.roles}" as="role">
                             <tr>
                                 <th scope="row"><f:render section="Group" arguments="{group: role.group, returnUrl: returnUrl}" /></th>
-                                <td>
+                                <f:comment>Lines of 24 px keep the links 24 px apart, also when a line wraps (WCAG 2.2, 2.5.8)</f:comment>
+                                <td class="lh-lg">
                                     <f:for each="{role.buildingBlocks}" as="kindGroups">
                                         <div class="mb-1">
                                             <core:icon identifier="{kindGroups.iconIdentifier}" size="small" />
@@ -160,7 +161,7 @@
                                     <span class="badge badge-danger"><f:translate key="issue.buildingBlockWithSubgroups" domain="be_groups.modules.overview" /></span>
                                 </f:if>
                             </th>
-                            <td>
+                            <td class="lh-lg">
                                 <f:for each="{buildingBlock.roles}" as="usingGroup" iteration="iterator">
                                     <f:render section="GroupLink" arguments="{group: usingGroup, returnUrl: returnUrl, withKind: 1}" /><f:if condition="!{iterator.isLast} || {buildingBlock.otherGroups}">, </f:if>
                                 </f:for>
@@ -209,9 +210,9 @@
                 </f:be.infobox>
             </f:else>
         </f:if>
-        <ul class="list-unstyled">
+        <ul class="list-unstyled d-flex flex-column gap-2">
             <f:for each="{overview.classicGroups}" as="classicGroup">
-                <li class="mb-1"><f:render section="Group" arguments="{group: classicGroup, returnUrl: returnUrl}" /></li>
+                <li><f:render section="Group" arguments="{group: classicGroup, returnUrl: returnUrl}" /></li>
             </f:for>
         </ul>
     </f:if>
@@ -226,9 +227,9 @@
         >
             <p><f:translate key="unknownKind.message" domain="be_groups.modules.overview" /></p>
         </f:be.infobox>
-        <ul class="list-unstyled">
+        <ul class="list-unstyled d-flex flex-column gap-2">
             <f:for each="{overview.unknownKindGroups}" as="unknownKindGroup">
-                <li class="mb-1">
+                <li>
                     <f:render section="Group" arguments="{group: unknownKindGroup, returnUrl: returnUrl}" />
                     <span class="badge badge-warning"><f:if condition="{unknownKindGroup.kind} == ''"><f:then><f:translate key="unknownKind.badge.empty" domain="be_groups.modules.overview" /></f:then><f:else><f:translate key="unknownKind.badge" domain="be_groups.modules.overview" arguments="{0: unknownKindGroup.kind}" /></f:else></f:if></span>
                 </li>
