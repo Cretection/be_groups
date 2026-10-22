@@ -51,6 +51,17 @@ final class ManualTest extends UnitTestCase
     }
 
     /**
+     * @return array<string, array{string}>
+     */
+    public static function manualPathDataProvider(): array
+    {
+        return [
+            'English' => [''],
+            'German' => ['Localization.de_DE/'],
+        ];
+    }
+
+    /**
      * @return array<string, array{string, string, string}>
      */
     public static function mentionDataProvider(): array
@@ -250,7 +261,7 @@ final class ManualTest extends UnitTestCase
     }
 
     #[Test]
-    #[DataProvider('manualDataProvider')]
+    #[DataProvider('manualPathDataProvider')]
     public function theSitePackageOfTheFunctionalTestUsesTheExampleOfTheManual(string $manual): void
     {
         $found = preg_match('/:caption: EXT:my_sitepackage\/ext_localconf\.php\n\n((?: {4}.*\n)+)/', $this->readChapter($manual, 'Usage'), $match);
@@ -262,7 +273,7 @@ final class ManualTest extends UnitTestCase
     }
 
     #[Test]
-    #[DataProvider('manualDataProvider')]
+    #[DataProvider('manualPathDataProvider')]
     public function theExtensionOfTheFunctionalTestUsesTheExamplesOfTheDeveloperChapter(string $manual): void
     {
         preg_match_all('/:caption: EXT:my_extension\/(Configuration\/TCA\/Overrides\/[a-z_]+\.php)\n\n((?: {4}.*\n|\n)+)/', $this->readChapter($manual, 'Developer'), $blocks, PREG_SET_ORDER);
