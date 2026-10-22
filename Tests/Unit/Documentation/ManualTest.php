@@ -37,6 +37,7 @@ final class ManualTest extends UnitTestCase
     private const CHAPTERS = ['Introduction', 'Concept', 'Usage'];
     private const XLIFF_NAMESPACE = 'urn:oasis:names:tc:xliff:document:1.2';
     private const SITE_PACKAGE_PATH = __DIR__ . '/../../Functional/Fixtures/Extensions/be_groups_test_sitepackage/';
+    private const DEVELOPER_EXTENSION_PATH = __DIR__ . '/../../Functional/Fixtures/Extensions/be_groups_test_developer/';
 
     /**
      * @return array<string, array{string, string}>
@@ -181,6 +182,24 @@ final class ManualTest extends UnitTestCase
         $example = str_replace('my_sitepackage', 'be_groups_test_sitepackage', (string)preg_replace('/^ {4}/m', '', $match[1]));
 
         self::assertStringContainsString($example, (string)file_get_contents(self::SITE_PACKAGE_PATH . 'ext_localconf.php'));
+    }
+
+    #[Test]
+    #[DataProvider('manualDataProvider')]
+    public function theExtensionOfTheFunctionalTestUsesTheExamplesOfTheDeveloperChapter(string $manual): void
+    {
+        preg_match_all('/:caption: EXT:my_extension\/(Configuration\/TCA\/Overrides\/[a-z_]+\.php)\n\n((?: {4}.*\n|\n)+)/', $this->readChapter($manual, 'Developer'), $blocks, PREG_SET_ORDER);
+        self::assertNotSame([], $blocks, 'the examples of TCA overrides');
+
+        foreach ($blocks as [, $file, $code]) {
+            // The code with the indentation of the block and the head of the file removed
+            $code = (string)preg_replace('/^ {4}/m', '', $code);
+            $code = (string)preg_replace('/\A(?:<\?php|declare\(strict_types=1\);|use [^;]+;|defined\(\'TYPO3\'\) or die\(\);|\s)+/', '', $code);
+            $code = str_replace('my_extension', 'be_groups_test_developer', rtrim($code));
+            $content = file_get_contents(self::DEVELOPER_EXTENSION_PATH . $file);
+            self::assertIsString($content, $file);
+            self::assertStringContainsString($code, $content, $file);
+        }
     }
 
     private function readChapter(string $manual, string $chapter): string

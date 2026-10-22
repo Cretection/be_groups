@@ -18,8 +18,9 @@ registry – you use the TCA API you already know.
 
 A kind is valid if it is an item of the field :sql:`tx_begroups_kind` and has
 a type of its own. Everything except ``role`` and ``classic`` is a building
-block. Values that are no item – kinds of an uninstalled extension, values
-written by SQL – are neither roles nor building blocks.
+block. Other values – kinds of an uninstalled extension, items without a type
+of their own, values written by SQL – are neither roles nor building blocks:
+their groups have an unknown kind.
 
 ..  _developer-fields:
 
@@ -27,12 +28,15 @@ Assign your own fields to a kind
 ================================
 
 If your extension adds a permission field to :sql:`be_groups`, add it to the
-kind it belongs to. As soon as a field is shown in the form of a role or a
-building block, rule R1 manages it: it is kept for that kind and cleared for
-all others. A field that is not assigned to any kind (and is no permission
-field of the core) is only shown for classic groups and is not enforced –
-see :ref:`concept-limitations`. Fields that grant no permissions, such as
-identifiers of a synchronisation tool, are never touched.
+kind it belongs to and to ``classic``. As soon as a field is shown in the form
+of a role or a building block, rule R1 manages it: it is kept for that kind
+and cleared for all others. Classic groups show every permission field, like
+the groups of TYPO3 without this extension, and after the installation all
+groups are classic: without ``classic``, the field cannot be set in their form
+until they are converted. A field that is not assigned to any kind (and is no
+permission field of the core) is only shown for classic groups and is not
+enforced – see :ref:`concept-limitations`. Fields that grant no permissions,
+such as identifiers of a synchronisation tool, are never touched.
 
 ..  code-block:: php
     :caption: EXT:my_extension/Configuration/TCA/Overrides/be_groups.php
@@ -48,13 +52,16 @@ identifiers of a synchronisation tool, are never touched.
     ExtensionManagementUtility::addToAllTCAtypes(
         'be_groups',
         'tx_myextension_permissions',
-        'acl',
+        'acl,classic',
         'after:custom_options',
     );
 
 Declare a dependency on ``cretection/be-groups`` (``require`` or
 ``suggest`` in :file:`composer.json`) so that your TCA override is loaded
-after this extension.
+after this extension. This extension creates the types of its kinds when its
+own override is loaded, ``classic`` as a copy of the core form. Before that,
+the types ``acl`` and ``classic`` do not exist, and the field is shown in no
+form.
 
 ..  _developer-own-kind:
 
@@ -79,6 +86,7 @@ Add your own kind
             'label' => 'my_extension.db:be_groups.kind.news',
             'value' => 'my_news',
             'icon' => 'content-news',
+            'group' => 'buildingBlocks',
         ],
     );
 
@@ -96,20 +104,42 @@ Add your own kind
         ',
     ];
 
+    // Classic groups show every permission field
+    ExtensionManagementUtility::addToAllTCAtypes(
+        'be_groups',
+        'tx_myextension_news_permissions',
+        'classic',
+        'after:custom_options',
+    );
+
 Use a prefixed, non-numeric identifier for your kind (``my_news``, not
-``news``) to avoid collisions with future kinds of this extension.
+``news``) to avoid collisions with future kinds of this extension. The item
+group ``buildingBlocks`` lists the kind among the building blocks of the
+field :guilabel:`Kind`; without it, the kind is listed above all groups.
 
 The label of your kind is shown as prefix in front of the titles of its
 groups, see :ref:`usage-prefixes`.
 
 Optionally give your kind a label in the lists of the role and user forms,
-which are grouped by kind (otherwise the identifier is shown):
+which are grouped by kind (otherwise the identifier is shown). In the form of
+a role, keep the groups that cannot be added to a role at the end:
 
 ..  code-block:: php
     :caption: EXT:my_extension/Configuration/TCA/Overrides/be_groups.php
 
-    $GLOBALS['TCA']['be_groups']['types']['role']['columnsOverrides']['subgroup']['config']['itemGroups']['my_news']
-        = 'my_extension.db:be_groups.kind.news';
+    $itemGroups = &$GLOBALS['TCA']['be_groups']['types']['role']['columnsOverrides']['subgroup']['config']['itemGroups'];
+    $itemGroups['my_news'] = 'my_extension.db:be_groups.kind.news';
+    // The groups that cannot be added to a role stay at the end
+    foreach (['role', 'classic'] as $kind) {
+        $label = $itemGroups[$kind];
+        unset($itemGroups[$kind]);
+        $itemGroups[$kind] = $label;
+    }
+
+In the form of a user, give the label the hint of the building blocks of this
+extension, for example ``News (building blocks, assign through a role)``:
+building blocks are assigned through roles, a direct assignment is rejected
+(R4).
 
 ..  code-block:: php
     :caption: EXT:my_extension/Configuration/TCA/Overrides/be_users.php
@@ -153,15 +183,18 @@ of listeners affect the exit code like any other.
                 'my-news-editor-without-storage',
                 'be_groups',
                 12,
-                'News editors',
+                'META: News editors',
                 'The role grants the news module, but no storage folder.',
             ));
         }
     }
 
 Use an identifier with a prefix of your extension, so it cannot collide with
-future checks of this extension. :php:`AuditFinding`, :php:`AuditSeverity`
-and the event are public API and follow semantic versioning.
+future checks of this extension. Pass the title as the backend shows it, as
+the findings of this extension do: groups with the prefix of their kind.
+:php:`\TYPO3\CMS\Backend\Utility\BackendUtility::getRecordTitle('be_groups', $row)`
+returns it. :php:`AuditFinding`, :php:`AuditSeverity` and the event are
+public API and follow semantic versioning.
 
 ..  _developer-kind-event:
 
@@ -170,8 +203,10 @@ Choosing the kind of new groups
 
 Import and synchronisation tools (e.g. for LDAP) often create groups through
 the DataHandler without a kind. Such groups get the default kind: the TCA
-default, overridden by ``TCAdefaults.be_groups.tx_begroups_kind`` in user and
-page TSconfig. The event
+default, overridden by ``TCAdefaults.be_groups.tx_begroups_kind`` in user
+TSconfig and in the global page TSconfig (groups are stored on the root
+level, so the TSconfig of a page has no effect, see :ref:`concept-rules`).
+The event
 :php:`\Cretection\BeGroups\Event\ModifyKindOfNewGroupEvent` lets you choose
 the kind from the values of the record instead, for example from a prefix of
 the title:
@@ -204,9 +239,11 @@ the title:
         }
     }
 
-The event is only dispatched for new groups without a kind; an explicit
-kind is never replaced. A kind that is not configured is ignored. All rules
-apply to the chosen kind – a group that becomes a building block keeps only
+The event is dispatched for every new group without a valid kind: the record
+sets no kind, an empty one or one that is not configured. Such a value is
+ignored and logged as user error. A configured kind is never replaced. A kind
+that a listener sets and that is not configured is ignored as well: the group
+gets the default kind. All rules apply to the chosen kind – a group that becomes a building block keeps only
 the permissions of its kind, and a classic group is rejected while classic
 groups are disabled.
 

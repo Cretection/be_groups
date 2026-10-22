@@ -147,9 +147,9 @@ Geplant war ein Typ-Filter für die Gruppenliste über `AfterBackendGroupListCon
 
 ## 6. Erweiterbarkeit
 
-- **Typen sind TCA.** Eigene Typen legt man mit der normalen TCA-API an (Item in `tx_begroups_kind` und `types[...]`). Die `KindRegistry` liest die gültigen Typen aus diesen Items; eine eigene Registrierungs-API gibt es nicht.
-- **Felder anderer Extensions** werden mit `addToAllTCAtypes('be_groups', 'feld', 'acl')` einem Typ zugeordnet. Ab dann verwaltet R1 sie.
-- **Bezeichnungen in den gruppierten Listen** ergänzt eine Extension über `itemGroups` der Rollen- und Benutzerfelder.
+- **Typen sind TCA.** Eigene Typen legt man mit der normalen TCA-API an (Item in `tx_begroups_kind` mit der Item-Gruppe `buildingBlocks` und `types[...]`). Die `KindRegistry` liest die gültigen Typen aus diesen Items; eine eigene Registrierungs-API gibt es nicht.
+- **Felder anderer Extensions** werden mit `addToAllTCAtypes('be_groups', 'feld', 'acl,classic')` einem Typ und den klassischen Gruppen zugeordnet. Ab dann verwaltet R1 sie. `classic` gehört dazu, weil klassische Gruppen alle Rechtefelder zeigen und nach der Installation alle Gruppen klassisch sind; be_groups kopiert das Core-Formular beim Laden seines eigenen Overrides nach `classic`, ein später geladener Override erreicht `classic` also nur ausdrücklich.
+- **Bezeichnungen in den gruppierten Listen** ergänzt eine Extension über `itemGroups` der Rollen- und Benutzerfelder: in der Rolle vor den Gruppen, die keiner Rolle hinzugefügt werden können, beim Benutzer mit dem Hinweis der Bausteine („über eine Rolle zuweisen“).
 - **Felder pro Typ** werden über die Schema-API ermittelt (`TcaSchema::getSubSchema()`), einschließlich Begleitfeldern wie `tables_select`.
 - **Bekannte Einschränkung:** Rechtefelder einer Extension, die vor be_groups geladen wird und das Feld keinem Typ zuordnet, erscheinen nur bei klassischen Gruppen und werden nicht durchgesetzt (Doku: „Known limitations“).
 
