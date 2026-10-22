@@ -14,7 +14,8 @@ import { test, expect } from '../fixtures/backend.ts';
 // The module "Roles & Building Blocks" with the scenario of "scenario.php"
 test.describe('Module "Roles & Building Blocks"', () => {
   test.beforeEach(async ({ backend }) => {
-    await backend.open('module/users/roles');
+    // The sorting and the kind filter are kept per user: start every test with the defaults
+    await backend.open('module/users/roles?sorting=title&kind=');
   });
 
   test('lists the roles with their building blocks and users', async ({ backend }) => {
