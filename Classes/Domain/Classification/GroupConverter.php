@@ -371,6 +371,9 @@ final readonly class GroupConverter
      * Cache commands of page TSconfig are held back until the commit: flushing a cache group
      * truncates tables, which would commit the transaction implicitly on MySQL and MariaDB.
      *
+     * An exception other than a database error is thrown on after the rollback, so whatever escapes
+     * this method happened before the commit and changed nothing.
+     *
      * @param \Closure(): ConversionResult $conversion
      */
     private function transactional(int $uid, \Closure $conversion): ConversionResult
@@ -407,7 +410,17 @@ final readonly class GroupConverter
             return $result;
         }
         $connection->commit();
-        $this->runCacheCommands($cacheCommands);
+        try {
+            $this->runCacheCommands($cacheCommands);
+        } catch (\Throwable $exception) {
+            // The conversion is committed, so its result must reach the caller all the same.
+            return new ConversionResult(
+                $uid,
+                $result->status,
+                sprintf('%s Then the cache commands of page TSconfig (TCEMAIN.clearCacheCmd) failed, so clear the caches yourself: %s', $result->message, $exception->getMessage()),
+                $result->createdBlockUids,
+            );
+        }
         return $result;
     }
 

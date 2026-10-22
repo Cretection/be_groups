@@ -94,6 +94,26 @@ final class ClassifyCommandTest extends FunctionalTestCase
     }
 
     #[Test]
+    public function namesTheGroupWhoseConversionAnErrorStopped(): void
+    {
+        // The test extension throws an exception while the kind of the group changes.
+        $this->getConnectionPool()->getConnectionForTable('be_groups')->update('be_groups', ['description' => 'rewrite:throw'], ['uid' => 1]);
+        $commandTester = new CommandTester($this->get(ClassifyCommand::class));
+
+        try {
+            $commandTester->execute([]);
+            self::fail('The error of the other extension is not reported.');
+        } catch (\RuntimeException $exception) {
+            self::assertSame('Another extension failed while saving.', $exception->getMessage());
+        }
+        self::assertStringContainsString(
+            'be_groups:1 Mounts only: failed An error stopped the conversion; nothing was changed. 2 further group(s) were not processed.',
+            $commandTester->getDisplay(),
+        );
+        self::assertSame(['classic', 'classic', 'classic'], $this->getKinds([1, 3, 5]));
+    }
+
+    #[Test]
     public function marksDisabledGroupsInTheResult(): void
     {
         $this->getConnectionPool()->getConnectionForTable('be_groups')->update('be_groups', ['hidden' => 1], ['uid' => 1]);

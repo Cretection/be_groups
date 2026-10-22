@@ -134,8 +134,20 @@ final class SplitCommand extends Command
         }
         Bootstrap::initializeBackendAuthentication();
         $split = 0;
-        foreach ($classifications as $planned) {
-            $result = $this->groupConverter->split($planned->uid);
+        foreach ($classifications as $position => $planned) {
+            try {
+                $result = $this->groupConverter->split($planned->uid);
+            } catch (\Throwable $exception) {
+                // The split of the group was rolled back (see GroupConverter); the error itself is shown by the console.
+                $io->writeln(ConsoleTextUtility::escape(sprintf(
+                    'be_groups:%d %s%s: failed An error stopped the conversion; nothing was changed. %d further group(s) were not processed.',
+                    $planned->uid,
+                    $planned->title,
+                    $planned->hidden ? ' (disabled)' : '',
+                    count($classifications) - $position - 1,
+                )));
+                throw $exception;
+            }
             if ($result->status === ConversionStatus::Converted) {
                 $split++;
             }

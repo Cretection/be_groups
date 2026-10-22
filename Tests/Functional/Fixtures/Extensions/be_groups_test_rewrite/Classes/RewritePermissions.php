@@ -33,7 +33,8 @@ use TYPO3\CMS\Core\DataHandling\DataHandler;
  * - "rewrite:add-group-to-user": user 2 gets group 12,
  * - "rewrite:create-user": user 100 is created with group 12,
  * - "rewrite:show-group": the group is no longer hidden,
- * - "rewrite:move-first-subgroup-last": the first subgroup of the new role becomes the last one.
+ * - "rewrite:move-first-subgroup-last": the first subgroup of the new role becomes the last one,
+ * - "rewrite:throw": an exception stops the saving when the kind changes.
  */
 final readonly class RewritePermissions
 {
@@ -80,6 +81,7 @@ final readonly class RewritePermissions
             'rewrite:create-user' => $this->connectionPool->getConnectionForTable('be_users')->insert('be_users', ['uid' => 100, 'pid' => 0, 'username' => 'created', 'usergroup' => '12']),
             'rewrite:show-group' => $fieldArray['hidden'] = 0,
             'rewrite:move-first-subgroup-last' => $fieldArray['subgroup'] = $this->moveFirstEntryLast($fieldArray['subgroup'] ?? ''),
+            'rewrite:throw' => throw new \RuntimeException('Another extension failed while saving.', 1792703336),
             default => null,
         };
     }

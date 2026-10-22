@@ -109,8 +109,20 @@ final class ClassifyCommand extends Command
         Bootstrap::initializeBackendAuthentication();
         $changed = 0;
         $failed = 0;
-        foreach ($toChange as $classification) {
-            $result = $this->groupConverter->changeKind($classification->uid);
+        foreach ($toChange as $position => $classification) {
+            try {
+                $result = $this->groupConverter->changeKind($classification->uid);
+            } catch (\Throwable $exception) {
+                // The change was rolled back (see GroupConverter); the error itself is shown by the console.
+                $io->writeln(ConsoleTextUtility::escape(sprintf(
+                    'be_groups:%d %s%s: failed An error stopped the conversion; nothing was changed. %d further group(s) were not processed.',
+                    $classification->uid,
+                    $classification->title,
+                    $classification->hidden ? ' (disabled)' : '',
+                    count($toChange) - $position - 1,
+                )));
+                throw $exception;
+            }
             $changed += $result->status === ConversionStatus::Converted ? 1 : 0;
             $failed += $result->status === ConversionStatus::Failed ? 1 : 0;
             $io->writeln(ConsoleTextUtility::escape(sprintf(
