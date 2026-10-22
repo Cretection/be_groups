@@ -68,4 +68,17 @@ final class GroupFormWithClassicGroupsDisabledTest extends AbstractFormTestCase
             $this->getTypesOfferedByTheNewRecordWizard(),
         );
     }
+
+    #[Test]
+    public function userFormMarksClassicGroupsAsNotAssignable(): void
+    {
+        $formData = $this->compileForm('be_users', 4);
+
+        $groupLabels = $this->getItemGroupLabels($formData, 'usergroup');
+        self::assertContains('Classic groups (disabled, cannot be assigned)', $groupLabels);
+        self::assertNotContains('Classic groups', $groupLabels);
+        self::assertStringContainsString('classic groups are disabled', $this->getFieldDescription($formData, 'usergroup'));
+        // Marked, not filtered: a filtered list would drop stored assignments of classic groups
+        self::assertContains('5', $this->getItemValues($formData, 'usergroup'));
+    }
 }

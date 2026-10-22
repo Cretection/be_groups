@@ -20,6 +20,7 @@ use Psr\Http\Message\ServerRequestFactoryInterface;
 use TYPO3\CMS\Backend\Controller\Event\ModifyNewRecordCreationLinksEvent;
 use TYPO3\CMS\Backend\Form\FormDataCompiler;
 use TYPO3\CMS\Backend\Form\FormDataGroup\TcaDatabaseRecord;
+use TYPO3\CMS\Core\Localization\LanguageService;
 use TYPO3\CMS\Core\Localization\LanguageServiceFactory;
 use TYPO3\CMS\Core\Schema\TcaSchema;
 use TYPO3\CMS\Core\Schema\TcaSchemaFactory;
@@ -106,20 +107,25 @@ abstract class AbstractFormTestCase extends FunctionalTestCase
      */
     protected function getItemLabels(array $formData, string $field): array
     {
-        $processedTca = $formData['processedTca'] ?? null;
-        self::assertIsArray($processedTca);
-        $columns = $processedTca['columns'] ?? null;
-        self::assertIsArray($columns);
-        $column = $columns[$field] ?? null;
-        self::assertIsArray($column);
-        $config = $column['config'] ?? null;
-        self::assertIsArray($config);
-        $items = $config['items'] ?? null;
-        self::assertIsArray($items);
         $labels = [];
-        foreach ($items as $item) {
+        foreach ($this->getItems($formData, $field) as $item) {
             if (is_array($item) && is_scalar($item['value'] ?? null) && is_scalar($item['label'] ?? null)) {
                 $labels[(string)$item['value']] = (string)$item['label'];
+            }
+        }
+        return $labels;
+    }
+
+    /**
+     * @param array<array-key, mixed> $formData
+     * @return list<string> the labels of the groups of a grouped list, in their order
+     */
+    protected function getItemGroupLabels(array $formData, string $field): array
+    {
+        $labels = [];
+        foreach ($this->getItems($formData, $field) as $item) {
+            if (is_array($item) && ($item['value'] ?? null) === '--div--' && is_scalar($item['label'] ?? null)) {
+                $labels[] = (string)$item['label'];
             }
         }
         return $labels;
@@ -131,23 +137,37 @@ abstract class AbstractFormTestCase extends FunctionalTestCase
      */
     protected function getItemValues(array $formData, string $field): array
     {
-        $processedTca = $formData['processedTca'] ?? null;
-        self::assertIsArray($processedTca);
-        $columns = $processedTca['columns'] ?? null;
-        self::assertIsArray($columns);
-        $column = $columns[$field] ?? null;
-        self::assertIsArray($column);
-        $config = $column['config'] ?? null;
-        self::assertIsArray($config);
-        $items = $config['items'] ?? null;
-        self::assertIsArray($items);
         $values = [];
-        foreach ($items as $item) {
+        foreach ($this->getItems($formData, $field) as $item) {
             if (is_array($item) && is_scalar($item['value'] ?? null)) {
                 $values[] = (string)$item['value'];
             }
         }
         return $values;
+    }
+
+    /**
+     * @param array<array-key, mixed> $formData
+     * @return string the translated description of a field
+     */
+    protected function getFieldDescription(array $formData, string $field): string
+    {
+        $description = $this->getColumn($formData, $field)['description'] ?? null;
+        self::assertIsString($description);
+        $languageService = $GLOBALS['LANG'] ?? null;
+        self::assertInstanceOf(LanguageService::class, $languageService);
+        return $languageService->sL($description);
+    }
+
+    /**
+     * @param array<array-key, mixed> $formData
+     * @return array<array-key, mixed> the configuration of a field
+     */
+    protected function getFieldConfiguration(array $formData, string $field): array
+    {
+        $config = $this->getColumn($formData, $field)['config'] ?? null;
+        self::assertIsArray($config);
+        return $config;
     }
 
     /**
@@ -166,5 +186,31 @@ abstract class AbstractFormTestCase extends FunctionalTestCase
             $values[] = (string)$entry;
         }
         return $values;
+    }
+
+    /**
+     * @param array<array-key, mixed> $formData
+     * @return array<array-key, mixed>
+     */
+    private function getItems(array $formData, string $field): array
+    {
+        $items = $this->getFieldConfiguration($formData, $field)['items'] ?? null;
+        self::assertIsArray($items);
+        return $items;
+    }
+
+    /**
+     * @param array<array-key, mixed> $formData
+     * @return array<array-key, mixed>
+     */
+    private function getColumn(array $formData, string $field): array
+    {
+        $processedTca = $formData['processedTca'] ?? null;
+        self::assertIsArray($processedTca);
+        $columns = $processedTca['columns'] ?? null;
+        self::assertIsArray($columns);
+        $column = $columns[$field] ?? null;
+        self::assertIsArray($column);
+        return $column;
     }
 }

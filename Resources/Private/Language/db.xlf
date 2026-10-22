@@ -90,6 +90,9 @@
       <trans-unit id="be_users.usergroup.description">
         <source>Assign roles. Building blocks are not assigned to users directly but combined in roles; assigning them here is rejected when saving.</source>
       </trans-unit>
+      <trans-unit id="be_users.usergroup.description.classicDisabled">
+        <source>Assign roles. Building blocks are not assigned to users directly but combined in roles, and classic groups are disabled; assigning them here is rejected when saving.</source>
+      </trans-unit>
       <trans-unit id="extConf.allowClassicGroups">
         <source>Allow classic groups: groups of kind "classic" can be created and assigned to users. Switch this off after migrating to roles and building blocks to enforce the clean model. Existing assignments keep working.</source>
       </trans-unit>
@@ -125,6 +128,9 @@
       </trans-unit>
       <trans-unit id="kind.group.notAssignable.workspace">
         <source>Workspace (building blocks, assign through a role)</source>
+      </trans-unit>
+      <trans-unit id="kind.group.notAssignable.classic">
+        <source>Classic groups (disabled, cannot be assigned)</source>
       </trans-unit>
     </body>
   </file>

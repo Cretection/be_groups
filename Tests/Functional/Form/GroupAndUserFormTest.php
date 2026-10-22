@@ -44,6 +44,15 @@ final class GroupAndUserFormTest extends AbstractFormTestCase
     }
 
     #[Test]
+    public function userFormOffersClassicGroupsWhileTheyAreAllowed(): void
+    {
+        $formData = $this->compileForm('be_users', 4);
+
+        self::assertContains('Classic groups', $this->getItemGroupLabels($formData, 'usergroup'));
+        self::assertStringNotContainsString('classic groups are disabled', $this->getFieldDescription($formData, 'usergroup'));
+    }
+
+    #[Test]
     public function roleFormKeepsStoredMembersThatAreNoBuildingBlocksInTheirOrder(): void
     {
         $formData = $this->compileForm('be_groups', 7);
