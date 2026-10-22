@@ -98,6 +98,10 @@ final class GroupConverterTest extends FunctionalTestCase
         self::assertSame(['title' => 'Editors', 'tx_begroups_kind' => 'db_mount', 'db_mountpoints' => '1', 'file_permissions' => ''], $this->getGroup($mountUid, ['title', 'tx_begroups_kind', 'db_mountpoints', 'file_permissions']));
         self::assertSame(['title' => 'Editors', 'tx_begroups_kind' => 'tsconfig', 'TSconfig' => 'options.clearCache.pages = 1'], $this->getGroup($tsConfigUid, ['title', 'tx_begroups_kind', 'TSconfig']));
         self::assertSame('2', $this->getConnectionPool()->getConnectionForTable('be_users')->select(['usergroup'], 'be_users', ['uid' => 2])->fetchOne());
+        // The form of every building block shows where it comes from; the text is stored, so it is English like the output of the command.
+        foreach ($result->createdBlockUids as $blockUid) {
+            self::assertSame(['description' => 'Created by begroups:split from group 2 "Editors".'], $this->getGroup($blockUid, ['description']));
+        }
     }
 
     #[Test]
