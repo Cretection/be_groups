@@ -133,6 +133,8 @@ defined('TYPO3') or die();
         'config' => [
             'foreign_table_item_group' => $kindField,
             'itemGroups' => $memberGroups,
+            // Each kind heading takes a row: keep the five rows of the core for the groups.
+            'size' => 5 + count($memberGroups),
         ],
     ];
 

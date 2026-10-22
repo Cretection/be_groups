@@ -59,6 +59,8 @@ test.describe('Forms of groups', () => {
       'Roles (cannot be added to a role)',
       'Classic groups (cannot be added to a role)',
     ]);
+    // Next to its 11 headings, the list keeps the five rows of the core for the groups
+    await expect(available).toHaveAttribute('size', '16');
     // The stored order of the building blocks is their TSconfig precedence
     await expect(backend.contentFrame.locator('select[multiple][data-formengine-input-name$="[subgroup]"] option')).toHaveText([
       /ACL: Content editing/,

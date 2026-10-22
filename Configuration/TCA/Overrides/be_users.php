@@ -27,4 +27,6 @@ defined('TYPO3') or die();
     $usergroupConfig['description'] = $labels . 'be_users.usergroup.description';
     $usergroupConfig['config']['foreign_table_item_group'] = GroupKind::FIELD_NAME;
     $usergroupConfig['config']['itemGroups'] = $itemGroups;
+    // Each kind heading takes a row: keep the five rows of the core for the groups.
+    $usergroupConfig['config']['size'] = 5 + count($itemGroups);
 })();

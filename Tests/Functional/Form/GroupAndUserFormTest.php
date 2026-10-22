@@ -60,6 +60,21 @@ final class GroupAndUserFormTest extends AbstractFormTestCase
         self::assertSame(['5', '1'], $this->getRowValues($formData, 'subgroup'));
     }
 
+    /**
+     * Every kind heading of a grouped list takes a row of its own: next to the headings, the
+     * lists keep the five rows of the core for the groups.
+     */
+    #[Test]
+    public function groupedListsShowTheRowsOfTheCoreNextToTheKindHeadings(): void
+    {
+        foreach (['subgroup' => $this->compileForm('be_groups', 7), 'usergroup' => $this->compileForm('be_users', 4)] as $field => $formData) {
+            $config = $this->getFieldConfiguration($formData, $field);
+            $itemGroups = $config['itemGroups'] ?? null;
+            self::assertIsArray($itemGroups);
+            self::assertGreaterThanOrEqual(5 + count($itemGroups), $config['size'] ?? 0, $field);
+        }
+    }
+
     #[Test]
     public function groupsAreShownWithThePrefixOfTheirKind(): void
     {
