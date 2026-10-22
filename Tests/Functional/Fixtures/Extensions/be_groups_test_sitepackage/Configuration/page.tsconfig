@@ -1,0 +1,2 @@
+TCAdefaults.be_users.file_permissions =
+TCAdefaults.be_groups.tx_begroups_kind = db_mount

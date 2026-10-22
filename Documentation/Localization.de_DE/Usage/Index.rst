@@ -264,7 +264,8 @@ Konsistenzprüfung. Sie liest alle Gruppen und Benutzer und ändert nichts:
         - Ein Benutzer-Datensatz trägt eigene Rechte, die TYPO3 zu denen der
           Rollen hinzufügt. Neue Benutzer erhalten standardmäßig alle
           Dateioperationen (Core-Standardwert von :sql:`file_permissions`);
-          entfernen Sie sie im Benutzer-Datensatz.
+          entfernen Sie sie im Benutzer-Datensatz. Wie neue Benutzer ohne sie
+          angelegt werden, steht unter :ref:`concept-limitations`.
     *   - ``unassigned-fields``
         - Warnung
         - Eine Rolle oder ein Baustein hat Werte in Feldern anderer

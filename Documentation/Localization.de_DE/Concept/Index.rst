@@ -172,9 +172,17 @@ Einzelheiten der Regeln:
     ausdrücklich.
 *   **Neue Datensätze ohne Typ** bekommen den Typ, den der DataHandler setzen
     würde: den Standardwert aus TCA, überschrieben durch ``TCAdefaults`` im
-    User-TSconfig, überschrieben durch ``TCAdefaults`` im Page-TSconfig. Die
-    Regeln werden für genau diesen Typ geprüft, und genau dieser Typ wird
-    gespeichert.
+    User-TSconfig, überschrieben durch ``TCAdefaults`` im Page-TSconfig.
+    Gruppen liegen auf der Wurzelebene, deshalb gilt für sie nur das globale
+    Page-TSconfig, zum Beispiel :file:`Configuration/page.tsconfig` eines
+    Sitepackages. Das TSconfig einer Seite, auch einer Wurzelseite, wirkt
+    nicht auf Gruppen. Die Regeln werden für genau diesen Typ geprüft, und
+    genau dieser Typ wird gespeichert.
+
+    ..  code-block:: typoscript
+        :caption: EXT:my_sitepackage/Configuration/page.tsconfig
+
+        TCAdefaults.be_groups.tx_begroups_kind = role
 *   **Unbekannte Typen werden ignoriert.** Ein Wert, der kein konfigurierter
     Typ ist, wird nicht gespeichert; die Gruppe behält ihren Typ (oder eine
     neue Gruppe bekommt den Standardtyp).
@@ -218,9 +226,24 @@ Rechte an Backend-Benutzer-Datensätzen
     Dateirechte, Module, TSconfig und Freigaben. TYPO3 führt sie mit den
     Rechten der Gruppen zusammen. Das Rollenmodell kann sie nicht steuern.
     Halten Sie Benutzer-Datensätze frei von Rechten und vergeben Sie alles
-    über Rollen. Neue Benutzer erhalten standardmäßig alle Dateioperationen
-    (Core-Standardwert). Die Konsistenzprüfung meldet Rechte an
+    über Rollen. Die Konsistenzprüfung meldet Rechte an
     Benutzer-Datensätzen, siehe :ref:`usage-audit`.
+
+    Neue Benutzer erhalten standardmäßig alle Dateioperationen
+    (Core-Standardwert). Um Benutzer ohne sie anzulegen, setzen Sie im
+    globalen Page-TSconfig einen leeren Standardwert; auch Backend-Benutzer
+    liegen auf der Wurzelebene:
+
+    ..  code-block:: typoscript
+        :caption: EXT:my_sitepackage/Configuration/page.tsconfig
+
+        TCAdefaults.be_users.file_permissions =
+
+    Das Formular eines neuen Benutzers beginnt dann ohne Dateioperationen,
+    und Benutzer, die über den DataHandler angelegt werden, zum Beispiel mit
+    ``vendor/bin/typo3 backend:user:create`` oder durch einen Import,
+    bekommen ebenfalls keine. Bestehende Benutzer behalten ihre; entfernen
+    Sie sie im Benutzer-Datensatz.
 
 Rechtefelder anderer Extensions
     Ein Rechtefeld, das eine andere Extension nur über das Core-Formular zu

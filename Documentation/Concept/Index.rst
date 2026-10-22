@@ -164,8 +164,16 @@ Details of the rules:
     value and store the result explicitly.
 *   **New records without kind** get the kind the DataHandler would set: the
     default of the TCA, overridden by ``TCAdefaults`` in user TSconfig,
-    overridden by ``TCAdefaults`` in page TSconfig. The rules are checked for
-    exactly this kind, and exactly this kind is stored.
+    overridden by ``TCAdefaults`` in page TSconfig. Groups are stored on the
+    root level, so only the global page TSconfig applies to them, for example
+    :file:`Configuration/page.tsconfig` of a site package. The TSconfig of a
+    page, even of a root page, has no effect on groups. The rules are checked
+    for exactly this kind, and exactly this kind is stored.
+
+    ..  code-block:: typoscript
+        :caption: EXT:my_sitepackage/Configuration/page.tsconfig
+
+        TCAdefaults.be_groups.tx_begroups_kind = role
 *   **Unknown kinds are ignored.** A value that is no configured kind is not
     stored; the group keeps its kind (or a new group gets the default kind).
 
@@ -205,9 +213,22 @@ Permissions on backend user records
     file permissions, modules, TSconfig and mounts. TYPO3 merges them with
     the permissions of the groups. The role model cannot control them. Keep
     backend user records free of permissions and grant everything through
-    roles. New users get all file operations by default (core default). The
-    consistency check reports permissions on user records, see
+    roles. The consistency check reports permissions on user records, see
     :ref:`usage-audit`.
+
+    New users get all file operations by default (core default). To create
+    users without them, set an empty default in the global page TSconfig;
+    backend users are stored on the root level as well:
+
+    ..  code-block:: typoscript
+        :caption: EXT:my_sitepackage/Configuration/page.tsconfig
+
+        TCAdefaults.be_users.file_permissions =
+
+    The form of a new user then starts without file operations, and users
+    created through the DataHandler, for example with
+    ``vendor/bin/typo3 backend:user:create`` or by an import, get none either.
+    Existing users keep theirs; clear them in the user record.
 
 Permission fields of other extensions
     A permission field that another extension adds to :sql:`be_groups` only

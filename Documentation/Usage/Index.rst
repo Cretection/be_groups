@@ -257,7 +257,8 @@ consistency check. It reads all groups and users and changes nothing:
         - A user record carries permissions of its own, which TYPO3 adds to
           those of the roles. New users get all file operations by default
           (core default of :sql:`file_permissions`); clear them in the user
-          record.
+          record. To create new users without them, see
+          :ref:`concept-limitations`.
     *   - ``unassigned-fields``
         - warning
         - A role or a building block has values in fields of other
