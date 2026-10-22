@@ -92,8 +92,13 @@ final class UserModuleTest extends FunctionalTestCase
         $overridePath = $this->get(PackageManager::class)->getPackage('be_groups')->getPackagePath() . 'Resources/Private/TemplateOverrides/typo3/cms-beuser/';
         foreach (array_keys(OverrideUserModuleTemplates::BASE_TEMPLATES) as $file) {
             $override = preg_replace(
-                ['#^    xmlns:begroups="http://typo3\\.org/ns/Cretection/BeGroups/ViewHelpers"\\n#m', '#\\{begroups:groupTitle\\(uid: [\\w.]+, title: ([\\w.]+)\\)\\}#'],
-                ['', '{$1}'],
+                [
+                    '#^    xmlns:begroups="http://typo3\\.org/ns/Cretection/BeGroups/ViewHelpers"\\n#m',
+                    // A title as the only argument of a label, e.g. in a confirmation
+                    '#arguments:\\{0:\'\\{begroups:groupTitle\\(uid: [\\w.]+, title: ([\\w.]+)\\)\\}\'\\}#',
+                    '#\\{begroups:groupTitle\\(uid: [\\w.]+, title: ([\\w.]+)\\)\\}#',
+                ],
+                ['', 'arguments:\'{0:$1}\'', '{$1}'],
                 (string)file_get_contents($overridePath . $file),
             );
             self::assertSame((string)file_get_contents($corePath . $file), $override, $file);

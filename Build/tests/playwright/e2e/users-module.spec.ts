@@ -9,7 +9,16 @@
  * LICENSE.txt file that was distributed with this source code.
  */
 
-import { test, expect } from '../fixtures/backend.ts';
+import type { Locator } from '@playwright/test';
+import { test, expect, type Backend } from '../fixtures/backend.ts';
+
+/**
+ * The row of a group in the list of groups, by the title in its first column (the subgroups of
+ * other rows may have the same title).
+ */
+const groupRow = (backend: Backend, title: string): Locator => backend.contentFrame
+  .locator('#typo3-backend-user-group-list tbody tr')
+  .filter({ has: backend.contentFrame.locator('td:nth-child(2)').getByText(title, { exact: true }) });
 
 // The Core module "Users" shows the kind as prefix of every group (template overrides)
 test.describe('Core module "Users"', () => {
@@ -23,6 +32,14 @@ test.describe('Core module "Users"', () => {
     await backend.open('module/users/management/BackendUser/groups');
     const teamLead = backend.contentFrame.getByRole('row').filter({ hasText: 'META: Team lead' });
     await expect(teamLead).toContainText('ACL: Page properties, TS: Clear page cache, META: Content manager');
+  });
+
+  test('names the kind of a group in the confirmation of its deletion', async ({ backend }) => {
+    await backend.open('module/users/management/BackendUser/groups');
+    await expect(groupRow(backend, 'META: Team lead').locator('button.t3js-modal-trigger')).toHaveAttribute(
+      'data-content',
+      "Are you sure you want to delete the backend user group 'META: Team lead'?",
+    );
   });
 
   test('meets WCAG 2.2 AA in the list of users @a11y', async ({ backend }) => {
