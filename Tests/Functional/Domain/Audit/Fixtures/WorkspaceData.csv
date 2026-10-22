@@ -1,0 +1,13 @@
+"be_groups"
+,"uid","pid","title","tx_begroups_kind","subgroup","groupMods","db_mountpoints","file_permissions","workspace_perms"
+,1,0,"ACL ok","acl","","web_layout","","",0
+,2,0,"DBM ok","db_mount","","","1","",0
+,3,0,"WS live","workspace","","","","",1
+,4,0,"Role ok","role","1,2","","","",0
+,5,0,"Role with live","role","1,2,3","","","",0
+"be_users"
+,"uid","pid","username","admin","usergroup","options","file_permissions","workspace_perms"
+,1,0,"admin",1,"",0,"",1
+,2,0,"live-own",0,"4",3,"",1
+,3,0,"no-live",0,"4",3,"",0
+,4,0,"live-by-role",0,"5",3,"",0

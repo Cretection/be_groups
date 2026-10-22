@@ -25,6 +25,7 @@ use Cretection\BeGroups\Domain\Repository\BackendUserRepository;
 use Cretection\BeGroups\Domain\Repository\DatabaseRow;
 use Cretection\BeGroups\Event\AfterAuditFindingsCollectedEvent;
 use Psr\EventDispatcher\EventDispatcherInterface;
+use TYPO3\CMS\Core\Schema\TcaSchemaFactory;
 use TYPO3\CMS\Core\Type\Bitmask\BackendGroupMountOption;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 
@@ -44,7 +45,7 @@ final readonly class PermissionAudit
 
     /**
      * Permission fields on user records that TYPO3 merges with the permissions of the groups.
-     * "workspace_perms" is left out on purpose: its default grants access to the live workspace.
+     * "workspace_perms" is added only with workspaces (see getUserPermissionFields()).
      */
     private const USER_PERMISSION_FIELDS = [
         'userMods', 'allowed_languages', 'db_mountpoints', 'file_mountpoints', 'file_permissions',
@@ -58,6 +59,7 @@ final readonly class PermissionAudit
         private KindFieldResolver $kindFieldResolver,
         private ExtensionSettings $extensionSettings,
         private EventDispatcherInterface $eventDispatcher,
+        private TcaSchemaFactory $tcaSchemaFactory,
     ) {}
 
     /**
@@ -74,12 +76,13 @@ final readonly class PermissionAudit
         foreach ($groups as $group) {
             $findings = [...$findings, ...$this->checkGroup($group, $groups), ...$this->checkList(self::GROUPS_TABLE, $group, 'subgroup', $group->get('title'))];
         }
-        foreach ($this->backendUserRepository->findAllForAudit(self::USER_PERMISSION_FIELDS) as $user) {
+        $userPermissionFields = $this->getUserPermissionFields();
+        foreach ($this->backendUserRepository->findAllForAudit($userPermissionFields) as $user) {
             if ($user->get('admin') === '1') {
                 // Administrators have all permissions; the role model does not apply to them.
                 continue;
             }
-            $findings = [...$findings, ...$this->checkUser($user, $groups), ...$this->checkList(self::USERS_TABLE, $user, 'usergroup', $user->get('username'))];
+            $findings = [...$findings, ...$this->checkUser($user, $groups, $userPermissionFields), ...$this->checkList(self::USERS_TABLE, $user, 'usergroup', $user->get('username'))];
         }
 
         $event = new AfterAuditFindingsCollectedEvent($findings);
@@ -174,9 +177,10 @@ final readonly class PermissionAudit
 
     /**
      * @param array<int, DatabaseRow> $groups all non-deleted groups, indexed by uid
+     * @param list<string> $userPermissionFields
      * @return list<AuditFinding>
      */
-    private function checkUser(DatabaseRow $user, array $groups): array
+    private function checkUser(DatabaseRow $user, array $groups, array $userPermissionFields): array
     {
         $title = $this->describe($user->get('username'), $user->get('disable') === '1');
         $finding = fn(AuditSeverity $severity, string $identifier, string $message): AuditFinding
@@ -195,7 +199,7 @@ final readonly class PermissionAudit
         }
 
         $userPermissions = array_values(array_filter(
-            self::USER_PERMISSION_FIELDS,
+            $userPermissionFields,
             fn(string $fieldName): bool => !$this->kindFieldResolver->isEmptyValue($fieldName, $user->get($fieldName), self::USERS_TABLE),
         ));
         if ($userPermissions !== []) {
@@ -215,6 +219,20 @@ final readonly class PermissionAudit
             );
         }
         return $findings;
+    }
+
+    /**
+     * The permission fields of user records. Without workspaces, every user works in the live workspace
+     * and TYPO3 ignores "workspace_perms", whose default is 1 then. With workspaces, its default is 0,
+     * and a set value grants access to the live workspace outside the roles.
+     *
+     * @return list<string>
+     */
+    private function getUserPermissionFields(): array
+    {
+        return $this->tcaSchemaFactory->has('sys_workspace')
+            ? [...self::USER_PERMISSION_FIELDS, 'workspace_perms']
+            : self::USER_PERMISSION_FIELDS;
     }
 
     /**
