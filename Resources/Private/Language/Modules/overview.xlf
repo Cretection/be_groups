@@ -147,6 +147,15 @@
       <trans-unit id="unknownKind.badge.empty">
         <source>no kind</source>
       </trans-unit>
+      <trans-unit id="inactiveWorkspace.heading">
+        <source>Workspace building blocks without EXT:workspaces</source>
+      </trans-unit>
+      <trans-unit id="inactiveWorkspace.title">
+        <source>The kind "Workspace" needs EXT:workspaces</source>
+      </trans-unit>
+      <trans-unit id="inactiveWorkspace.message">
+        <source>These groups are building blocks of the kind "Workspace". Without EXT:workspaces, they are neither roles nor building blocks, and TYPO3 ignores their access to the live workspace, as every user works in the live workspace. Keep them if EXT:workspaces may be installed again: choosing another kind clears that access, which their users then lack. If you no longer use workspaces, remove them from their roles and delete them.</source>
+      </trans-unit>
     </body>
   </file>
 </xliff>

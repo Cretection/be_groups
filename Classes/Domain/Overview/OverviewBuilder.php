@@ -94,6 +94,7 @@ final readonly class OverviewBuilder
         $roles = [];
         $classicGroups = [];
         $unknownKindGroups = [];
+        $inactiveWorkspaceGroups = [];
         $buildingBlocks = [];
         foreach ($groups as $uid => $group) {
             if ($group->kind === GroupKind::Role->value) {
@@ -108,12 +109,15 @@ final readonly class OverviewBuilder
                     $this->sortUsers($usersByGroup[$uid] ?? [], $collator),
                     $members[$uid] !== [],
                 );
+            } elseif ($group->kind === GroupKind::Workspace->value) {
+                // The kind of this extension that is only configured with EXT:workspaces
+                $inactiveWorkspaceGroups[] = $group;
             } else {
                 $unknownKindGroups[] = $group;
             }
         }
 
-        $issueCount = count($unknownKindGroups);
+        $issueCount = count($unknownKindGroups) + count($inactiveWorkspaceGroups);
         foreach ($roles as $role) {
             $issueCount += $role->hasIssues() ? 1 : 0;
         }
@@ -148,6 +152,7 @@ final readonly class OverviewBuilder
             $sections,
             $this->sortGroups($classicGroups, $collator),
             $this->sortGroups($unknownKindGroups, $collator),
+            $this->sortGroups($inactiveWorkspaceGroups, $collator),
             $buildingBlockKinds,
             $issueCount,
         );

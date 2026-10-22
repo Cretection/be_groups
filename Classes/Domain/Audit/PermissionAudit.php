@@ -117,9 +117,16 @@ final readonly class PermissionAudit
             return [$finding(
                 AuditSeverity::Error,
                 'unknown-kind',
-                $kind === ''
-                    ? 'The group has no kind (e.g. written by SQL). It is neither a role nor a building block; assign a kind.'
-                    : sprintf('The kind "%s" is not configured or has no type of its own (e.g. the kind of an uninstalled extension, or written by SQL). The group is neither a role nor a building block; assign a kind.', $kind),
+                match ($kind) {
+                    '' => 'The group has no kind (e.g. written by SQL). It is neither a role nor a building block; assign a kind.',
+                    // Unlike the fields of an uninstalled extension, workspace_perms stays a managed field of the core:
+                    // another kind clears it, so its users lack live access once EXT:workspaces is installed again.
+                    GroupKind::Workspace->value => 'The kind "workspace" (Workspace building blocks) needs EXT:workspaces. Without it, the group is neither a role nor a building block, '
+                        . 'and TYPO3 ignores its access to the live workspace (workspace_perms), as every user works in the live workspace. '
+                        . 'Keep the group if EXT:workspaces may be installed again: choosing another kind clears that access, which its users then lack. '
+                        . 'If you no longer use workspaces, remove it from its roles and delete it.',
+                    default => sprintf('The kind "%s" is not configured or has no type of its own (e.g. the kind of an uninstalled extension, or written by SQL). The group is neither a role nor a building block; assign a kind.', $kind),
+                },
             )];
         }
         if ($kind === GroupKind::Classic->value) {

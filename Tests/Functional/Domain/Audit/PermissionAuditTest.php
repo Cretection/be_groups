@@ -134,6 +134,29 @@ final class PermissionAuditTest extends FunctionalTestCase
     }
 
     #[Test]
+    public function explainsWhatToDoWithWorkspaceBuildingBlocksWithoutWorkspaces(): void
+    {
+        $this->importCSVDataSet(__DIR__ . '/Fixtures/AuditData.csv');
+        // A Workspace building block of an installation that removed EXT:workspaces
+        $this->getConnectionPool()->getConnectionForTable('be_groups')
+            ->insert('be_groups', ['uid' => 17, 'pid' => 0, 'title' => 'Drafts', 'tx_begroups_kind' => 'workspace', 'workspace_perms' => 1]);
+
+        $findings = [];
+        foreach ($this->get(PermissionAudit::class)->run() as $finding) {
+            $findings[$finding->table . ':' . $finding->uid][] = $finding->identifier . ': ' . $finding->message;
+        }
+
+        // Choosing another kind would clear workspace_perms, so its users lack live access once EXT:workspaces is back.
+        self::assertSame([
+            'unknown-kind: The kind "workspace" (Workspace building blocks) needs EXT:workspaces. Without it, the group is neither a role nor a building block, '
+            . 'and TYPO3 ignores its access to the live workspace (workspace_perms), as every user works in the live workspace. '
+            . 'Keep the group if EXT:workspaces may be installed again: choosing another kind clears that access, which its users then lack. '
+            . 'If you no longer use workspaces, remove it from its roles and delete it.',
+        ], $findings['be_groups:17']);
+        self::assertStringEndsWith('The group is neither a role nor a building block; assign a kind.', $findings['be_groups:5'][0]);
+    }
+
+    #[Test]
     public function saysThatTheAccessToTheLiveWorkspaceHasNoEffectWithoutWorkspaces(): void
     {
         $this->importCSVDataSet(__DIR__ . '/Fixtures/AuditData.csv');

@@ -105,14 +105,42 @@ final class OverviewBuilderTest extends UnitTestCase
     {
         $overview = $this->build();
 
-        self::assertSame(['Orphaned workspace', 'Unknown kind'], array_map(static fn(GroupItem $group): string => $group->title, $overview->unknownKindGroups));
-        self::assertSame('3', $overview->unknownKindGroups[1]->kind);
+        self::assertSame(['Unknown kind'], array_map(static fn(GroupItem $group): string => $group->title, $overview->unknownKindGroups));
+        self::assertSame('3', $overview->unknownKindGroups[0]->kind);
+    }
+
+    #[Test]
+    public function workspaceBuildingBlocksWithoutTheirKindAreListedSeparately(): void
+    {
+        // Without EXT:workspaces, the kind "workspace" is not configured. Choosing another kind would clear
+        // the access to the live workspace, so these groups get advice of their own.
+        $overview = $this->build();
+
+        self::assertSame(['Orphaned workspace'], array_map(static fn(GroupItem $group): string => $group->title, $overview->inactiveWorkspaceGroups));
+        self::assertNotSame(GroupKind::Role->iconIdentifier(), $overview->inactiveWorkspaceGroups[0]->iconIdentifier);
+        $sorted = $this->subject->build([$this->group(1, 'Drafts', 'workspace'), $this->group(2, 'Approval', 'workspace')], [], [], OverviewBuilder::SORT_TITLE, '');
+        self::assertSame(['Approval', 'Drafts'], array_map(static fn(GroupItem $group): string => $group->title, $sorted->inactiveWorkspaceGroups));
+    }
+
+    #[Test]
+    public function workspaceBuildingBlocksAreBuildingBlocksWhileTheirKindIsConfigured(): void
+    {
+        $overview = $this->subject->build(
+            [$this->group(1, 'Drafts', 'workspace')],
+            [],
+            [new KindDefinition('workspace', 'Workspace', 'actions-workspace')],
+            OverviewBuilder::SORT_TITLE,
+            '',
+        );
+
+        self::assertSame([], $overview->inactiveWorkspaceGroups);
+        self::assertSame('Drafts', $this->findBuildingBlock($overview, 'Drafts')->group->title);
     }
 
     #[Test]
     public function issueCountIsIndependentOfTheKindFilter(): void
     {
-        // broken role, direct user of ACL a, building block with subgroups, two unknown kinds
+        // broken role, direct user of ACL a, building block with subgroups, unknown kind, workspace building block without its kind
         self::assertSame(5, $this->build()->issueCount);
         self::assertSame(5, $this->build(OverviewBuilder::SORT_TITLE, 'tsconfig')->issueCount);
     }

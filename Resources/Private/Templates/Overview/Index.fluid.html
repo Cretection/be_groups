@@ -236,6 +236,21 @@
             </f:for>
         </ul>
     </f:if>
+    <f:comment>Choosing another kind would clear the access to the live workspace of these groups, so they get advice of their own.</f:comment>
+    <f:if condition="{overview.inactiveWorkspaceGroups}">
+        <h2><f:translate key="inactiveWorkspace.heading" domain="be_groups.modules.overview" /> <span class="badge badge-warning">{overview.inactiveWorkspaceGroups -> f:count()}</span></h2>
+        <f:be.infobox
+            state="{f:constant(name: 'TYPO3\CMS\Core\Type\ContextualFeedbackSeverity::WARNING')}"
+            title="{f:translate(key: 'inactiveWorkspace.title', domain: 'be_groups.modules.overview')}"
+        >
+            <p><f:translate key="inactiveWorkspace.message" domain="be_groups.modules.overview" /></p>
+        </f:be.infobox>
+        <ul class="list-unstyled d-flex flex-column gap-2">
+            <f:for each="{overview.inactiveWorkspaceGroups}" as="workspaceGroup">
+                <li><f:render section="Group" arguments="{group: workspaceGroup, returnUrl: returnUrl}" /></li>
+            </f:for>
+        </ul>
+    </f:if>
 </f:section>
 
 <f:section name="Group">

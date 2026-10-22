@@ -195,6 +195,18 @@
         <source>no kind</source>
         <target>kein Typ</target>
       </trans-unit>
+      <trans-unit id="inactiveWorkspace.heading" approved="yes">
+        <source>Workspace building blocks without EXT:workspaces</source>
+        <target>Workspace-Bausteine ohne EXT:workspaces</target>
+      </trans-unit>
+      <trans-unit id="inactiveWorkspace.title" approved="yes">
+        <source>The kind "Workspace" needs EXT:workspaces</source>
+        <target>Der Typ „Workspace“ braucht EXT:workspaces</target>
+      </trans-unit>
+      <trans-unit id="inactiveWorkspace.message" approved="yes">
+        <source>These groups are building blocks of the kind "Workspace". Without EXT:workspaces, they are neither roles nor building blocks, and TYPO3 ignores their access to the live workspace, as every user works in the live workspace. Keep them if EXT:workspaces may be installed again: choosing another kind clears that access, which their users then lack. If you no longer use workspaces, remove them from their roles and delete them.</source>
+        <target>Diese Gruppen sind Bausteine vom Typ „Workspace“. Ohne EXT:workspaces sind sie weder Rollen noch Bausteine, und TYPO3 ignoriert ihren Zugriff auf die Live-Arbeitsumgebung, weil jeder Benutzer in der Live-Arbeitsumgebung arbeitet. Behalten Sie sie, wenn EXT:workspaces wieder installiert werden könnte: Ein anderer Typ leert diesen Zugriff, und ihren Benutzern fehlt er dann. Wenn Sie keine Arbeitsumgebungen mehr nutzen, entfernen Sie sie aus ihren Rollen und löschen Sie sie.</target>
+      </trans-unit>
     </body>
   </file>
 </xliff>

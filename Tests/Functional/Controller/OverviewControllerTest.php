@@ -230,6 +230,25 @@ final class OverviewControllerTest extends FunctionalTestCase
     }
 
     #[Test]
+    public function explainsWhatToDoWithWorkspaceBuildingBlocksWithoutWorkspaces(): void
+    {
+        $this->setUpBackendUserWithLanguage(1);
+        // Without EXT:workspaces, the kind "workspace" is not configured
+        $this->get(ConnectionPool::class)->getConnectionForTable('be_groups')
+            ->update('be_groups', ['tx_begroups_kind' => 'workspace', 'allowed_languages' => ''], ['uid' => 9]);
+
+        $html = $this->renderModule();
+
+        self::assertMatchesRegularExpression(
+            '#<h2>Workspace building blocks without EXT:workspaces <span class="badge badge-warning">1</span></h2>(?:(?!<h2>).)*>Classic default language</bdi></a>#s',
+            $html,
+        );
+        // Choosing another kind would clear the access to the live workspace
+        self::assertStringContainsString('Keep them if EXT:workspaces may be installed again: choosing another kind clears that access, which their users then lack.', $html);
+        self::assertStringNotContainsString('Assign a kind.', $html);
+    }
+
+    #[Test]
     public function sortsTitlesForTheLanguageOfTheEditor(): void
     {
         $this->setUpBackendUser(1);
