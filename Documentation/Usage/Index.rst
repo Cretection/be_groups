@@ -284,11 +284,13 @@ consistency check. It reads all groups and users and changes nothing:
           a kind.
     *   - ``classic-group``
         - ``warning``
-        - A classic group. Split it into building blocks and a role.
+        - A classic group. Convert it into a role or building blocks:
+          ``begroups:classify`` shows how, or what needs your decision, see
+          :ref:`migration-vanilla`.
     *   - ``classic-group-disabled``
         - ``error``
         - A classic group, although classic groups are disabled, see
-          :ref:`configuration`.
+          :ref:`configuration`. Convert it as well.
     *   - ``building-block-with-subgroups``
         - ``error``
         - A building block has subgroups.

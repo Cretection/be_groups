@@ -38,17 +38,22 @@ ihren Plan zuerst mit ``--dry-run``:
     Beispiel wird eine Gruppe, die nur Seitenbaum-Einstiegspunkte hat, zu
     einer „Seitenbaum-Freigabe“.
 *   Eine Gruppe, die selbst nichts gewährt, aber andere Gruppen
-    zusammenfasst, wird zur „Rolle“.
+    zusammenfasst, wird zur „Rolle“. Eine Gruppe, die nichts gewährt, nichts
+    zusammenfasst und keine Seiten besitzt, aber Benutzern direkt zugewiesen
+    ist, wird ebenfalls zur „Rolle“; sie behält ihre Benutzer und alle
+    Verweise auf ihre uid, etwa als Workspace-Mitglied oder Verantwortliche
+    einer Stufe.
 *   Eine Gruppe, die nichts gewährt, aber Seiten besitzt, wird zur
-    „Seitenrechte-Gruppe“.
+    „Seitenrechte-Gruppe“, sofern sie keinem Benutzer direkt zugewiesen ist.
 *   Alle anderen Gruppen werden aufgelistet: Gruppen zum Aufteilen und
     Gruppen, über die Sie entscheiden müssen, jeweils mit Begründung – zum
-    Beispiel eine leere Gruppe, ein Rechtefeld, das zu keinem Typ gehört,
-    die Wurzel des Seitenbaums als Freigabe, Untergruppen mit Duplikaten
-    oder Einträgen, die TYPO3 und das Backend-Formular unterschiedlich lesen
-    (etwa ``be_groups_5`` oder ``05``), oder Seiten-, Datei- oder
-    Kategoriefreigaben mit Einträgen, die der DataHandler nicht in einen
-    Baustein übernehmen kann (etwa ``05``, ``pages_5`` oder leere Einträge).
+    Beispiel eine leere Gruppe, die keinem Benutzer direkt zugewiesen ist,
+    ein Rechtefeld, das zu keinem Typ gehört, die Wurzel des Seitenbaums als
+    Freigabe, Untergruppen mit Duplikaten oder Einträgen, die TYPO3 und das
+    Backend-Formular unterschiedlich lesen (etwa ``be_groups_5`` oder
+    ``05``), oder Seiten-, Datei- oder Kategoriefreigaben mit Einträgen, die
+    der DataHandler nicht in einen Baustein übernehmen kann (etwa ``05``,
+    ``pages_5`` oder leere Einträge).
 
 ``begroups:split`` teilt die per uid genannten Gruppen auf, oder mit
 ``--all`` jede Gruppe, für die ``begroups:classify`` das Aufteilen vorschlägt:
@@ -82,10 +87,13 @@ Beide Assistenten zeigen ihren Plan als Tabelle, geben das Ergebnis jeder
 Gruppe aus, die sie umstellen – umgestellt oder fehlgeschlagen, mit
 Begründung –, und schließen mit einer Zusammenfassung. ``begroups:split``
 nennt außerdem jede per uid angegebene Gruppe, die es überspringt, mit
-Begründung. Der Exit-Code ist ``1``, wenn eine Umstellung fehlgeschlagen ist
-oder eine per uid angegebene Gruppe sich nicht aufteilen lässt (auch mit
-``--dry-run``), ``2`` bei ungültigen Argumenten von ``begroups:split`` und
-sonst ``0``.
+Begründung; für eine Gruppe, die nicht aufgeteilt werden muss, nennt es den
+Typ, in den ``begroups:classify`` sie umstellt. Der Exit-Code ist ``1``,
+wenn eine Umstellung fehlgeschlagen ist oder eine per uid angegebene Gruppe
+sich nicht aufteilen lässt (auch mit ``--dry-run``), ``2`` bei ungültigen
+Argumenten von ``begroups:split`` und sonst ``0``. Eine uid ist eine ganze
+Zahl von 1 bis 2147483647, der größten uid, die jede Datenbank von TYPO3
+speichern kann.
 
 Beide Assistenten schreiben über den DataHandler: Jede Änderung steht im
 Systemprotokoll und in der Historie des Datensatzes. Jede Gruppe wird in
@@ -103,13 +111,22 @@ einer Transaktion umgestellt, die nur abgeschlossen wird, wenn
 
 Andernfalls – zum Beispiel, weil eine andere Extension beim Speichern eine
 Gruppe oder einen Benutzer ändert – wird die Transaktion zurückgerollt und
-die Gruppe bleibt unverändert. Das gilt auch für Datenbankfehler; das Ergebnis nennt die vom
-DataHandler protokollierten Fehler, da auch das Systemprotokoll
+die Gruppe bleibt unverändert; das Ergebnis nennt den Benutzer oder die
+Gruppe, die sich geändert hat, und die geänderten Felder. Das gilt auch für
+Datenbankfehler; das Ergebnis nennt die ersten drei vom DataHandler
+protokollierten Fehler und zählt die übrigen, da auch das Systemprotokoll
 zurückgerollt wird. Unter PostgreSQL nennt das Ergebnis nur die
-abgebrochene Transaktion. Cache-Befehle aus dem Page-TSconfig
-(``TCEMAIN.clearCacheCmd``) laufen erst nach dem Abschluss der Transaktion:
-Das Leeren von Caches würde die Transaktion unter MySQL und MariaDB
-vorzeitig beenden.
+abgebrochene Transaktion. Bricht ein anderer Fehler eine Umstellung ab,
+zum Beispiel eine Exception einer anderen Extension, wird auch sie
+zurückgerollt: Der Befehl nennt die Gruppe als fehlgeschlagen, zählt die
+nicht bearbeiteten Gruppen, zeigt den Fehler und endet mit einem Exit-Code
+ungleich ``0``.
+
+Cache-Befehle aus dem Page-TSconfig (``TCEMAIN.clearCacheCmd``) laufen erst
+nach dem Abschluss der Transaktion: Das Leeren von Caches würde die
+Transaktion unter MySQL und MariaDB vorzeitig beenden. Schlagen die
+Cache-Befehle nach dem Abschluss fehl, bleibt die Gruppe umgestellt, und das
+Ergebnis weist darauf hin; leeren Sie die Caches dann selbst.
 
 Grenzen der Prüfung:
 
@@ -162,7 +179,10 @@ Danach:
     TYPO3 ignoriert sie; Speichern der Rolle im Backend-Formular entfernt
     sie.
 #.  Über die Gruppen entscheiden, die die Assistenten nicht umstellen
-    konnten. Eine Gruppe mit der Wurzel des Seitenbaums als Freigabe
+    konnten. Wählen Sie für eine leere Gruppe, die keinem Benutzer direkt
+    zugewiesen ist, einen Typ; löschen Sie sie nur, wenn keine Gruppe, kein
+    Workspace und keine TSconfig-Bedingung auf sie verweist. Eine Gruppe mit
+    der Wurzel des Seitenbaums als Freigabe
     (``0``) lässt sich nicht aufteilen, weil TYPO3 die Wurzel nicht als
     Freigabe eines neuen Bausteins speichert. Behalten Sie sie als
     klassische Gruppe, oder ersetzen Sie die Wurzel durch die Seiten auf der

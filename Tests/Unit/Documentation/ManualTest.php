@@ -148,6 +148,12 @@ final class ManualTest extends UnitTestCase
             'German: the event only decides without a kind' => ['Localization.de_DE/', 'nur für neue Gruppen ohne Typ ausgelöst'],
             'English: the assistants roll back any change of other extensions' => ['', 'because another extension changes data while saving'],
             'German: the assistants roll back any change of other extensions' => ['Localization.de_DE/', 'weil eine andere Extension beim Speichern Daten ändert'],
+            'English: every empty group needs a decision' => ['', 'an empty group, a permission field'],
+            'German: every empty group needs a decision' => ['Localization.de_DE/', 'eine leere Gruppe, ein Rechtefeld'],
+            'English: a failed conversion names all logged errors' => ['', 'the result names the errors the DataHandler logged'],
+            'German: a failed conversion names all logged errors' => ['Localization.de_DE/', 'das Ergebnis nennt die vom DataHandler protokollierten Fehler'],
+            'English: every classic group is split' => ['', 'A classic group. Split it into building blocks and a role.'],
+            'German: every classic group is split' => ['Localization.de_DE/', 'Eine klassische Gruppe. Teilen Sie sie in Bausteine und eine Rolle auf.'],
         ];
     }
 

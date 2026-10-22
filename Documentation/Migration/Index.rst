@@ -37,16 +37,20 @@ kind where nothing else changes:
     for example, a group with nothing but page tree entry points becomes a
     "Page tree mount".
 *   A group that grants nothing itself but combines other groups becomes a
-    "Role".
+    "Role". A group that grants nothing, combines nothing and owns no pages,
+    but is assigned to users directly, becomes a "Role" as well; it keeps its
+    users and every reference to its uid, for example as workspace member or
+    person responsible for a stage.
 *   A group that grants nothing but owns pages becomes a
-    "Page permission group".
+    "Page permission group", unless it is assigned to users directly.
 *   All other groups are listed: groups to split, and groups that need your
-    decision, with the reason – for example an empty group, a permission
-    field that belongs to no kind, the root of the page tree as page mount,
-    subgroups with duplicates or entries that TYPO3 and the backend form
-    read differently (such as ``be_groups_5`` or ``05``), or page, file or
-    category mounts with entries that the DataHandler cannot copy into a
-    building block (such as ``05``, ``pages_5`` or empty entries).
+    decision, with the reason – for example an empty group that no user has
+    directly, a permission field that belongs to no kind, the root of the
+    page tree as page mount, subgroups with duplicates or entries that TYPO3
+    and the backend form read differently (such as ``be_groups_5`` or
+    ``05``), or page, file or category mounts with entries that the
+    DataHandler cannot copy into a building block (such as ``05``,
+    ``pages_5`` or empty entries).
 
 ``begroups:split`` splits the groups you name by uid, or with ``--all`` every
 group that ``begroups:classify`` proposes to split:
@@ -76,9 +80,12 @@ group that ``begroups:classify`` proposes to split:
 Both assistants show their plan as a table, print the result of every group
 they convert – converted or failed, with the reason – and close with a
 summary. ``begroups:split`` also names every group given by uid that it
-skips, with the reason. The exit code is ``1`` if a conversion failed or a
-group given by uid cannot be split (also with ``--dry-run``), ``2`` if the
-arguments of ``begroups:split`` are invalid, and ``0`` otherwise.
+skips, with the reason; for a group that needs no split, it names the kind
+``begroups:classify`` changes it to. The exit code is ``1`` if a conversion
+failed or a group given by uid cannot be split (also with ``--dry-run``),
+``2`` if the arguments of ``begroups:split`` are invalid, and ``0``
+otherwise. A uid is a whole number from 1 to 2147483647, the largest uid
+every database of TYPO3 can store.
 
 Both assistants write through the DataHandler: every change is in the system
 log and the history of the record. Each group is converted in a
@@ -95,13 +102,21 @@ transaction, which is only committed if
     page permission group.
 
 Otherwise – for example because another extension changes a group or a user
-while saving – the transaction is rolled back and the group stays unchanged. This
-also applies to database errors; the result names the errors the
-DataHandler logged, as the system log is rolled back as well. On
-PostgreSQL, the result only names the aborted transaction. Cache commands of
-page TSconfig (``TCEMAIN.clearCacheCmd``) run only after the transaction is
-committed: flushing caches would end the transaction early on MySQL and
-MariaDB.
+while saving – the transaction is rolled back and the group stays unchanged;
+the result names the user or group that changed and its changed fields. This
+also applies to database errors; the result names the first three errors the
+DataHandler logged and counts the others, as the system log is rolled back
+as well. On PostgreSQL, the result only names the aborted transaction. If
+another error stops a conversion, for example an exception of another
+extension, the conversion is rolled back as well: the command names the
+group as failed, counts the groups it did not process, shows the error and
+ends with an exit code other than ``0``.
+
+Cache commands of page TSconfig (``TCEMAIN.clearCacheCmd``) run only after
+the transaction is committed: flushing caches would end the transaction
+early on MySQL and MariaDB. If the cache commands fail after the commit, the
+group stays converted and the result says so; clear the caches yourself
+then.
 
 Limits of the verification:
 
@@ -147,7 +162,9 @@ Afterwards:
     Converted roles also keep references to groups that were deleted before
     (``role-missing-member``, an error as well). TYPO3 ignores them; saving
     the role in the backend form removes them.
-#.  Decide on the groups the assistants could not convert. A group with the
+#.  Decide on the groups the assistants could not convert. For an empty
+    group that no user has directly, choose a kind; delete it only if no
+    group, workspace or TSconfig condition refers to it. A group with the
     root of the page tree as page mount (``0``) cannot be split, because
     TYPO3 does not store the root as page mount of a new building block.
     Keep it classic, or replace the root by the pages on the top level of

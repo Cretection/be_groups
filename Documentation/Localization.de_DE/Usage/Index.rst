@@ -295,12 +295,13 @@ Konsistenzprüfung. Sie liest alle Gruppen und Benutzer und ändert nichts:
           deinstallierten Extension. Wählen Sie einen Typ.
     *   - ``classic-group``
         - ``warning``
-        - Eine klassische Gruppe. Teilen Sie sie in Bausteine und eine Rolle
-          auf.
+        - Eine klassische Gruppe. Stellen Sie sie in eine Rolle oder
+          Bausteine um: ``begroups:classify`` zeigt, wie, oder was Sie
+          entscheiden müssen, siehe :ref:`migration-vanilla`.
     *   - ``classic-group-disabled``
         - ``error``
         - Eine klassische Gruppe, obwohl klassische Gruppen abgeschaltet
-          sind, siehe :ref:`configuration`.
+          sind, siehe :ref:`configuration`. Stellen Sie auch sie um.
     *   - ``building-block-with-subgroups``
         - ``error``
         - Ein Baustein hat Untergruppen.
