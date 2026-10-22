@@ -28,6 +28,7 @@ use Cretection\BeGroups\Domain\Repository\BackendUserRepository;
 use Cretection\BeGroups\Domain\Repository\DatabaseRow;
 use Cretection\BeGroups\Domain\Repository\PageOwnerRepository;
 use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
 use TYPO3\TestingFramework\Core\Functional\FunctionalTestCase;
 
@@ -106,6 +107,45 @@ final class GroupClassifierTest extends FunctionalTestCase
         self::assertSame(ClassificationAction::Manual, $duplicates->action);
         self::assertStringContainsString('duplicates or entries that TYPO3 and the backend form read differently', $duplicates->reason);
         self::assertSame(ClassificationAction::Manual, $ignoredEntry->action);
+    }
+
+    /**
+     * @return array<string, array{string, string}>
+     */
+    public static function relationsTheDataHandlerCanNotCopyDataProvider(): array
+    {
+        // TYPO3 and the DataHandler read these entries differently, see RelationHandler::readList().
+        return [
+            'page mount with leading zero' => ['db_mountpoints', '05'],
+            'page mount with sign' => ['db_mountpoints', '+5'],
+            'page mount with table name' => ['db_mountpoints', 'pages_1'],
+            'page mount with space' => ['db_mountpoints', '1, 3'],
+            'empty page mount entry' => ['db_mountpoints', '1,'],
+            'file mount with leading zero' => ['file_mountpoints', '05'],
+            'empty category entry' => ['category_perms', '5,'],
+        ];
+    }
+
+    #[Test]
+    #[DataProvider('relationsTheDataHandlerCanNotCopyDataProvider')]
+    public function leavesGroupsWhoseRelationsTheDataHandlerCanNotCopyToAnAdministrator(string $fieldName, string $value): void
+    {
+        $this->getConnectionPool()->getConnectionForTable('be_groups')->update('be_groups', [$fieldName => $value], ['uid' => 2]);
+
+        $classification = $this->get(GroupClassifier::class)->classify(2);
+
+        self::assertNotNull($classification);
+        self::assertSame(ClassificationAction::Manual, $classification->action);
+        self::assertStringContainsString(sprintf('The field "%s" contains entries that the DataHandler cannot copy into a building block ("%s")', $fieldName, $value), $classification->reason);
+    }
+
+    #[Test]
+    public function splitsGroupsWithNegativePageMounts(): void
+    {
+        // The DataHandler keeps negative page mounts, and so does TYPO3.
+        $this->getConnectionPool()->getConnectionForTable('be_groups')->update('be_groups', ['db_mountpoints' => '1,-3'], ['uid' => 2]);
+
+        self::assertSame(ClassificationAction::Split, $this->get(GroupClassifier::class)->classify(2)?->action);
     }
 
     #[Test]

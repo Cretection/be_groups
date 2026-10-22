@@ -23,6 +23,8 @@ use Cretection\BeGroups\Domain\Repository\BackendGroupRepository;
 use Cretection\BeGroups\Domain\Repository\BackendUserRepository;
 use Cretection\BeGroups\Domain\Repository\DatabaseRow;
 use Cretection\BeGroups\Domain\Repository\PageOwnerRepository;
+use TYPO3\CMS\Core\Schema\Field\RelationalFieldTypeInterface;
+use TYPO3\CMS\Core\Schema\TcaSchemaFactory;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 
 /**
@@ -48,6 +50,7 @@ final readonly class GroupClassifier
         private KindRegistry $kindRegistry,
         private KindFieldResolver $kindFieldResolver,
         private GroupPermissionResolver $groupPermissionResolver,
+        private TcaSchemaFactory $tcaSchemaFactory,
     ) {}
 
     /**
@@ -146,6 +149,20 @@ final readonly class GroupClassifier
         }
         if (in_array('0', GeneralUtility::trimExplode(',', $values['db_mountpoints'] ?? '', true), true)) {
             return $proposal(ClassificationAction::Manual, null, 'Mounts the root of the page tree (page mount "0"), which the DataHandler cannot copy into a building block.');
+        }
+        // The DataHandler drops or rewrites entries such as "05", "pages_5" or empty ones when it writes the
+        // building block (see RelationHandler::readList()), while TYPO3 reads them differently or ignores them.
+        $schema = $this->tcaSchemaFactory->get('be_groups');
+        foreach ($values as $fieldName => $value) {
+            if ($schema->getField($fieldName) instanceof RelationalFieldTypeInterface
+                && preg_grep('/^-?[1-9]\d*$/', explode(',', $value), PREG_GREP_INVERT) !== []
+            ) {
+                return $proposal(ClassificationAction::Manual, null, sprintf(
+                    'The field "%s" contains entries that the DataHandler cannot copy into a building block ("%s"), e.g. "05", "pages_5" or empty entries. Clean them up first; saving the group in the backend can change them.',
+                    $fieldName,
+                    $value,
+                ));
+            }
         }
         if (count($concerns) > 1) {
             $reason = sprintf('Grants permissions of several kinds: %s.', implode(', ', array_map(static fn(Concern $concern): string => $concern->kind, $concerns)));

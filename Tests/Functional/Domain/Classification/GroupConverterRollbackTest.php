@@ -54,6 +54,11 @@ final class GroupConverterRollbackTest extends FunctionalTestCase
         $result = $this->get(GroupConverter::class)->split(2);
 
         self::assertSame(ConversionStatus::Failed, $result->status);
+        self::assertSame(
+            'The new building block of the kind "db_mount" would store "1,2" instead of "1" in the field "db_mountpoints", '
+            . 'e.g. because the DataHandler no longer accepts a value or another extension changes it. Nothing was changed.',
+            $result->message,
+        );
         self::assertSame($groupCount, $this->countGroups());
         self::assertSame(['tx_begroups_kind' => 'classic', 'subgroup' => '', 'db_mountpoints' => '1'], $this->getGroup(2, ['tx_begroups_kind', 'subgroup', 'db_mountpoints']));
     }

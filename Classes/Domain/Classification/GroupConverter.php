@@ -112,13 +112,8 @@ final readonly class GroupConverter
             }
 
             $blockUids = $this->createBlocks($group, $classification);
-            if ($blockUids === null) {
-                return new ConversionResult(
-                    $uid,
-                    ConversionStatus::Failed,
-                    'A building block could not be created with exactly the permissions of the group, e.g. because of values '
-                    . 'the DataHandler no longer accepts. Nothing was changed.',
-                );
+            if (is_string($blockUids)) {
+                return new ConversionResult($uid, ConversionStatus::Failed, $blockUids);
             }
 
             $subgroups = RelationList::fromStoredValue($group->get('subgroup'));
@@ -160,10 +155,10 @@ final readonly class GroupConverter
     }
 
     /**
-     * @return list<int>|null the new building blocks in the order of the concerns, or null if one
-     *                        does not grant exactly the permissions of its concern
+     * @return list<int>|string the new building blocks in the order of the concerns, or why one
+     *                          does not grant exactly the permissions of its concern
      */
-    private function createBlocks(DatabaseRow $group, Classification $classification): ?array
+    private function createBlocks(DatabaseRow $group, Classification $classification): array|string
     {
         $concerns = $classification->concerns;
         $datamap = [];
@@ -188,25 +183,40 @@ final readonly class GroupConverter
         foreach ($concerns as $position => $plannedConcern) {
             $blockUid = $dataHandler->substNEWwithIDs['NEW_begroups_split_' . $position] ?? null;
             $block = is_int($blockUid) ? $this->backendGroupRepository->findByUid($blockUid) : null;
-            if ($block === null || !$this->grantsExactly($block, $plannedConcern)) {
-                return null;
+            if ($block === null) {
+                return 'A building block could not be created; nothing was changed.';
+            }
+            $difference = $this->findDifference($block, $plannedConcern);
+            if ($difference !== null) {
+                return $difference;
             }
             $blockUids[] = $block->getUid();
         }
         return $blockUids;
     }
 
-    private function grantsExactly(DatabaseRow $block, Concern $concern): bool
+    /**
+     * @return string|null why the building block does not grant exactly the permissions of its concern
+     */
+    private function findDifference(DatabaseRow $block, Concern $concern): ?string
     {
         if ($block->get(GroupKind::FIELD_NAME) !== $concern->kind || $block->get('hidden') === '1') {
-            return false;
+            return sprintf('The new building block of the kind "%s" would be hidden or of another kind, e.g. because another extension changes it. Nothing was changed.', $concern->kind);
         }
         foreach ($this->kindFieldResolver->getManagedFieldNames() as $fieldName) {
-            if (!$this->kindFieldResolver->isSameValue($fieldName, $block->get($fieldName), $concern->values[$fieldName] ?? '')) {
-                return false;
+            $plannedValue = $concern->values[$fieldName] ?? '';
+            if (!$this->kindFieldResolver->isSameValue($fieldName, $block->get($fieldName), $plannedValue)) {
+                return sprintf(
+                    'The new building block of the kind "%s" would store "%s" instead of "%s" in the field "%s", '
+                    . 'e.g. because the DataHandler no longer accepts a value or another extension changes it. Nothing was changed.',
+                    $concern->kind,
+                    $block->get($fieldName),
+                    $plannedValue,
+                    $fieldName,
+                );
             }
         }
-        return true;
+        return null;
     }
 
     private function takeSnapshot(): ConversionSnapshot

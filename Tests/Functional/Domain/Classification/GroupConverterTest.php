@@ -197,6 +197,16 @@ final class GroupConverterTest extends FunctionalTestCase
     }
 
     #[Test]
+    public function doesNotSplitGroupsWhosePageMountsTheDataHandlerCanNotCopy(): void
+    {
+        // TYPO3 ignores "05", the DataHandler would not store it in a new building block.
+        $this->getConnectionPool()->getConnectionForTable('be_groups')->update('be_groups', ['db_mountpoints' => '1,05'], ['uid' => 6]);
+
+        self::assertSame(ConversionStatus::Skipped, $this->get(GroupConverter::class)->split(6)->status);
+        self::assertSame(['tx_begroups_kind' => 'classic', 'db_mountpoints' => '1,05'], $this->getGroup(6, ['tx_begroups_kind', 'db_mountpoints']));
+    }
+
+    #[Test]
     public function splitsGroupsAssignedToUsersDirectly(): void
     {
         $result = $this->get(GroupConverter::class)->split(6);
