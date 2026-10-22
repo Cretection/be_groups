@@ -58,6 +58,31 @@ final class SplitCommandTest extends FunctionalTestCase
     }
 
     #[Test]
+    public function keepsThePlanReadableInATerminal(): void
+    {
+        $this->getConnectionPool()->getConnectionForTable('be_groups')->update('be_groups', [
+            'title' => 'Editors of the press releases <fg=red>and</> news',
+            'tables_select' => 'pages,tt_content',
+            'tables_modify' => 'pages,tt_content',
+            'pagetypes_select' => '1,254',
+            'non_exclude_fields' => 'pages:title',
+            'explicit_allowdeny' => 'tt_content:CType:text',
+            'mfa_providers' => 'totp',
+        ], ['uid' => 2]);
+        $commandTester = new CommandTester($this->get(SplitCommand::class));
+
+        $commandTester->execute(['--all' => true, '--dry-run' => true]);
+
+        $display = $commandTester->getDisplay();
+        foreach (explode("\n", $display) as $line) {
+            self::assertLessThanOrEqual(120, mb_strlen($line), $line);
+        }
+        // Wrapped cells stay plain text.
+        self::assertStringContainsString('<fg=red>and</>', $display);
+        self::assertStringContainsString('explicit_allowdeny', $display);
+    }
+
+    #[Test]
     public function splitsTheNamedGroups(): void
     {
         $groupCount = $this->countGroups();

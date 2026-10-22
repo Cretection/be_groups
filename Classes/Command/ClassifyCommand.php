@@ -68,12 +68,13 @@ final class ClassifyCommand extends Command
             $io->success('There are no classic groups.');
             return Command::SUCCESS;
         }
+        // With its borders, the table is at most 120 characters wide, like the blocks of SymfonyStyle.
         $io->table(
             ['Group', 'Proposal', 'Reason'],
             array_map(static fn(Classification $classification): array => [
-                ConsoleTextUtility::escape(sprintf('be_groups:%d %s%s', $classification->uid, $classification->title, $classification->hidden ? ' (disabled)' : '')),
-                ConsoleTextUtility::escape(self::describeProposal($classification)),
-                ConsoleTextUtility::escape($classification->reason),
+                ConsoleTextUtility::wrap(sprintf('be_groups:%d %s%s', $classification->uid, $classification->title, $classification->hidden ? ' (disabled)' : ''), 30),
+                ConsoleTextUtility::wrap(self::describeProposal($classification), 30),
+                ConsoleTextUtility::wrap($classification->reason, 50),
             ], $classifications),
         );
 

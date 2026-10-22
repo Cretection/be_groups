@@ -185,15 +185,26 @@ final class SplitCommand extends Command
         foreach ($classifications as $classification) {
             $group = sprintf('be_groups:%d %s%s', $classification->uid, $classification->title, $classification->hidden ? ' (disabled)' : '');
             foreach ($classification->concerns as $concern) {
-                $rows[] = array_map(ConsoleTextUtility::escape(...), [
+                $rows[] = self::wrapRow([
                     $group,
                     'new ' . $this->kindPrefix->prefixTitle($concern->kind, $classification->title),
                     implode(', ', array_keys($concern->values)),
                 ]);
                 $group = '';
             }
-            $rows[] = array_map(ConsoleTextUtility::escape(...), [$group, 'the group becomes a role', '']);
+            $rows[] = self::wrapRow([$group, 'the group becomes a role', '']);
         }
         return $rows;
+    }
+
+    /**
+     * With its borders, the table is at most 120 characters wide, like the blocks of SymfonyStyle.
+     *
+     * @param array{string, string, string} $cells
+     * @return list<string>
+     */
+    private static function wrapRow(array $cells): array
+    {
+        return [ConsoleTextUtility::wrap($cells[0], 30), ConsoleTextUtility::wrap($cells[1], 40), ConsoleTextUtility::wrap($cells[2], 40)];
     }
 }

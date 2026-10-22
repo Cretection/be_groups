@@ -50,7 +50,7 @@ final class ClassifyCommandTest extends FunctionalTestCase
         self::assertSame(Command::SUCCESS, $commandTester->execute(['--dry-run' => true]));
         $display = $commandTester->getDisplay();
         self::assertStringContainsString('kind: db_mount', $display);
-        self::assertStringContainsString('split: page_group, acl, db_mount, file_operations, tsconfig', $display);
+        self::assertStringContainsString('split: page_group, acl,', $display);
         self::assertStringContainsString('3 group(s) would change their kind.', $display);
         self::assertStringContainsString('3 group(s) can be split', $display);
         self::assertSame(['classic', 'classic', 'classic'], $this->getKinds([1, 3, 5]));
@@ -64,6 +64,25 @@ final class ClassifyCommandTest extends FunctionalTestCase
         self::assertSame(Command::SUCCESS, $commandTester->execute([]));
         self::assertSame(['db_mount', 'classic', 'role', 'classic', 'page_group', 'classic'], $this->getKinds([1, 2, 3, 4, 5, 6]));
         self::assertStringContainsString('be_groups:1 Mounts only: converted', $commandTester->getDisplay());
+    }
+
+    #[Test]
+    public function keepsTheProposalsReadableInATerminal(): void
+    {
+        $connection = $this->getConnectionPool()->getConnectionForTable('be_groups');
+        $connection->update('be_groups', ['subgroup' => implode(',', array_fill(0, 30, '1,2'))], ['uid' => 3]);
+        $connection->update('be_groups', ['title' => 'Editors of the press releases <fg=red>and</> news'], ['uid' => 2]);
+        $commandTester = new CommandTester($this->get(ClassifyCommand::class));
+
+        $commandTester->execute(['--dry-run' => true]);
+
+        $display = $commandTester->getDisplay();
+        foreach (explode("\n", $display) as $line) {
+            self::assertLessThanOrEqual(120, mb_strlen($line), $line);
+        }
+        // Wrapped cells stay plain text.
+        self::assertStringContainsString('<fg=red>and</>', $display);
+        self::assertStringContainsString('entries that TYPO3 and the backend form read', $display);
     }
 
     #[Test]
