@@ -19,11 +19,11 @@ use TYPO3\CMS\Core\Schema\TcaSchema;
 use TYPO3\CMS\Core\Schema\TcaSchemaFactory;
 
 /**
- * The kinds that may be used, as configured in the items of be_groups.tx_begroups_kind.
+ * The kinds that may be used: the items of be_groups.tx_begroups_kind that have a type (form) of their own.
  *
- * Only configured kinds are valid. A stored value that is no item (e.g. the kind of an
- * uninstalled extension, or a value written by SQL) is neither a role nor a building block,
- * so it can never slip into the role model.
+ * Only configured kinds are valid. A stored value that is no such item (e.g. the kind of an
+ * uninstalled extension, a value written by SQL or an item without a type) is neither a role
+ * nor a building block, so it can never slip into the role model.
  *
  * @internal
  */
@@ -104,7 +104,9 @@ final readonly class KindRegistry
                 continue;
             }
             $value = $item['value'] ?? null;
-            if (!is_string($value) || $value === '' || $value === '--div--') {
+            // Dividers and items without a type of their own are no kinds: for such an item, TYPO3
+            // shows the form of the default type, whose permissions the rules cannot manage.
+            if (!is_string($value) || !$schema->hasSubSchema($value)) {
                 continue;
             }
             $label = $item['label'] ?? '';

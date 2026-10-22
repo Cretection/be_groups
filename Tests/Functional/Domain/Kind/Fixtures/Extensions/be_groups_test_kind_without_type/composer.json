@@ -1,0 +1,19 @@
+{
+	"name": "cretection/be-groups-test-kind-without-type",
+	"description": "Test fixture - Adds an item to the kind selector without a type of its own",
+	"license": "GPL-2.0-or-later",
+	"type": "typo3-cms-extension",
+	"require": {
+		"cretection/be-groups": "*",
+		"typo3/cms-core": "*"
+	},
+	"extra": {
+		"typo3/cms": {
+			"Package": {
+				"providesPackages": {}
+			},
+			"extension-key": "be_groups_test_kind_without_type",
+			"version": "1.0.0"
+		}
+	}
+}

@@ -108,7 +108,7 @@ final readonly class PermissionAudit
             return [$finding(
                 AuditSeverity::Error,
                 'unknown-kind',
-                sprintf('The kind "%s" is not configured (e.g. the kind of an uninstalled extension, or written by SQL). The group is neither a role nor a building block; assign a kind.', $kind),
+                sprintf('The kind "%s" is not configured or has no type of its own (e.g. the kind of an uninstalled extension, or written by SQL). The group is neither a role nor a building block; assign a kind.', $kind),
             )];
         }
         if ($kind === GroupKind::Classic->value) {

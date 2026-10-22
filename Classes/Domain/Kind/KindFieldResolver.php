@@ -98,13 +98,11 @@ final readonly class KindFieldResolver
 
     /**
      * Whether the rules for building blocks and roles apply to the kind:
-     * it is configured, has its own form and is not "classic".
+     * it is configured (which includes a form of its own) and is not "classic".
      */
     public function isRestrictedKind(string $kind): bool
     {
-        return $kind !== GroupKind::Classic->value
-            && $this->kindRegistry->isKind($kind)
-            && $this->getSchema()->hasSubSchema($kind);
+        return $kind !== GroupKind::Classic->value && $this->kindRegistry->isKind($kind);
     }
 
     /**
