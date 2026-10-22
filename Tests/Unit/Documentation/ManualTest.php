@@ -34,8 +34,7 @@ final class ManualTest extends UnitTestCase
 {
     private const MANUAL_PATH = __DIR__ . '/../../../Documentation/';
     private const LABEL_PATH = __DIR__ . '/../../../Resources/Private/Language/';
-    private const CHAPTERS = ['Introduction', 'Concept', 'Usage'];
-    private const ALL_CHAPTERS = ['Introduction', 'Installation', 'Configuration', 'Concept', 'Usage', 'Migration', 'Developer', 'Changelog', 'Credits'];
+    private const CHAPTERS = ['Introduction', 'Installation', 'Configuration', 'Concept', 'Usage', 'Migration', 'Developer', 'Changelog', 'Credits'];
     private const XLIFF_NAMESPACE = 'urn:oasis:names:tc:xliff:document:1.2';
     private const SITE_PACKAGE_PATH = __DIR__ . '/../../Functional/Fixtures/Extensions/be_groups_test_sitepackage/';
     private const DEVELOPER_EXTENSION_PATH = __DIR__ . '/../../Functional/Fixtures/Extensions/be_groups_test_developer/';
@@ -156,8 +155,35 @@ final class ManualTest extends UnitTestCase
     #[DataProvider('correctedStatementDataProvider')]
     public function theManualDoesNotRepeatACorrectedStatement(string $manual, string $statement): void
     {
-        foreach (self::ALL_CHAPTERS as $chapter) {
+        foreach (self::CHAPTERS as $chapter) {
             self::assertSame(0, substr_count($this->readTextOfChapter($manual, $chapter), $statement), $chapter);
+        }
+    }
+
+    /**
+     * @return array<string, array{string, list<string>}>
+     */
+    public static function mainModuleDataProvider(): array
+    {
+        return [
+            'English' => ['', ['Content', 'Media', 'Sites', 'Administration', 'System']],
+            'German' => ['Localization.de_DE/', ['Inhalt', 'Medien', 'Websites', 'Verwaltung', 'System']],
+        ];
+    }
+
+    /**
+     * @param list<string> $mainModules
+     */
+    #[Test]
+    #[DataProvider('mainModuleDataProvider')]
+    public function menuPathsStartWithAMainModuleOfTypo3V14(string $manual, array $mainModules): void
+    {
+        foreach (self::CHAPTERS as $chapter) {
+            // :guilabel:`System > Settings > …` and *Administration > Log*
+            preg_match_all('/(?::guilabel:`|\*)([^`*]+?) > /', $this->readTextOfChapter($manual, $chapter), $paths);
+            foreach ($paths[1] as $mainModule) {
+                self::assertContains($mainModule, $mainModules, $chapter);
+            }
         }
     }
 
