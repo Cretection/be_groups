@@ -68,4 +68,17 @@ final class GroupAndUserFormTest extends AbstractFormTestCase
 
         self::assertContains('classic', $this->getItemValues($formData, 'tx_begroups_kind'));
     }
+
+    /**
+     * Type "0" stays the layout of groups with an unknown kind, but it is no kind: a group created
+     * with it would be saved with an unknown kind.
+     */
+    #[Test]
+    public function newRecordWizardOffersTheKindsButNoGroupWithoutKind(): void
+    {
+        self::assertSame(
+            ['classic', 'role', 'acl', 'page_group', 'db_mount', 'file_mount', 'file_operations', 'category_mount', 'language', 'tsconfig'],
+            $this->getTypesOfferedByTheNewRecordWizard(),
+        );
+    }
 }

@@ -76,6 +76,9 @@ defined('TYPO3') or die();
     ExtensionManagementUtility::addToAllTCAtypes($table, $kindField, '', 'after:title');
     $GLOBALS['TCA'][$table]['types'][GroupKind::Classic->value] = $GLOBALS['TCA'][$table]['types'][0];
     $GLOBALS['TCA'][$table]['types'][GroupKind::Classic->value]['title'] = $labels . 'kind.classic';
+    // Type "0" stays the form of groups with an unknown kind, but it is no kind: the wizard
+    // "Create new record" must not offer it.
+    $GLOBALS['TCA'][$table]['types'][0]['creationOptions']['enableDirectRecordTypeCreation'] = false;
 
     // Each building block only shows (and may only carry) the fields of its concern.
     $hasField = static fn(string $field): bool => isset($GLOBALS['TCA'][$table]['columns'][$field]);

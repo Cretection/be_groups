@@ -74,6 +74,26 @@ test.describe('Forms of groups', () => {
     ]);
   });
 
+  test('offers the kinds, but no group without kind, in the wizard "Create new record"', async ({ backend }) => {
+    await backend.open('module/content/records?id=0');
+    await backend.contentFrame.getByRole('button', { name: 'Create new record' }).click();
+    const types = backend.contentFrame.locator('#be_groups-types a');
+    await expect(types.first()).toBeAttached();
+    expect(await types.evaluateAll((links) => links.map((link) => (link.textContent ?? '').trim()))).toEqual([
+      'Classic (all settings)',
+      'Role',
+      'Access rights',
+      'Page permission group',
+      'Page tree mount',
+      'File mount',
+      'File operations',
+      'Category mount',
+      'Languages',
+      'TSconfig',
+      'Workspace',
+    ]);
+  });
+
   test('meets WCAG 2.2 AA in the form of a role @a11y', async ({ backend }) => {
     await backend.openForm('Content manager');
     await backend.expectAccessible();

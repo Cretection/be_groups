@@ -15,10 +15,14 @@ declare(strict_types=1);
 
 namespace Cretection\BeGroups\Tests\Functional\Form;
 
+use Psr\EventDispatcher\EventDispatcherInterface;
 use Psr\Http\Message\ServerRequestFactoryInterface;
+use TYPO3\CMS\Backend\Controller\Event\ModifyNewRecordCreationLinksEvent;
 use TYPO3\CMS\Backend\Form\FormDataCompiler;
 use TYPO3\CMS\Backend\Form\FormDataGroup\TcaDatabaseRecord;
 use TYPO3\CMS\Core\Localization\LanguageServiceFactory;
+use TYPO3\CMS\Core\Schema\TcaSchema;
+use TYPO3\CMS\Core\Schema\TcaSchemaFactory;
 use TYPO3\TestingFramework\Core\Functional\FunctionalTestCase;
 
 /**
@@ -54,6 +58,46 @@ abstract class AbstractFormTestCase extends FunctionalTestCase
             ['request' => $request, 'tableName' => $table, 'vanillaUid' => $uid, 'command' => $command],
             $this->get(TcaDatabaseRecord::class),
         );
+    }
+
+    /**
+     * The types of groups the wizard "Create new record" links to: the record types of the TCA
+     * the core offers (NewRecordController::getRecordTypesForDirectCreation()), as changed by the
+     * listeners of ModifyNewRecordCreationLinksEvent.
+     *
+     * @return list<string>
+     */
+    protected function getTypesOfferedByTheNewRecordWizard(): array
+    {
+        $links = [];
+        foreach ($this->get(TcaSchemaFactory::class)->get('be_groups')->getSubSchemata() as $subSchema) {
+            self::assertInstanceOf(TcaSchema::class, $subSchema);
+            $creationOptions = $subSchema->getRawConfiguration()['creationOptions'] ?? [];
+            if (!is_array($creationOptions) || (bool)($creationOptions['enableDirectRecordTypeCreation'] ?? true)) {
+                $type = explode('.', $subSchema->getName(), 2)[1] ?? '';
+                $links[$type] = ['url' => '/typo3/record/edit?defVals[be_groups][tx_begroups_kind]=' . $type, 'icon' => '', 'label' => $type];
+            }
+        }
+        $request = $this->get(ServerRequestFactoryInterface::class)
+            ->createServerRequest('GET', 'https://example.org/typo3/record/new')
+            ->withAttribute('applicationType', self::BACKEND_REQUEST_TYPE);
+        $event = new ModifyNewRecordCreationLinksEvent(
+            ['backendaccess' => ['title' => 'Backend Access', 'icon' => '', 'items' => ['be_groups' => ['label' => 'Backend usergroup', 'icon' => '', 'types' => $links]]]],
+            [],
+            0,
+            $request,
+        );
+        $this->get(EventDispatcherInterface::class)->dispatch($event);
+
+        $group = $event->groupedCreationLinks['backendaccess'] ?? null;
+        self::assertIsArray($group);
+        $items = $group['items'] ?? null;
+        self::assertIsArray($items);
+        $item = $items['be_groups'] ?? null;
+        self::assertIsArray($item);
+        $types = $item['types'] ?? null;
+        self::assertIsArray($types);
+        return array_map(strval(...), array_keys($types));
     }
 
     /**
