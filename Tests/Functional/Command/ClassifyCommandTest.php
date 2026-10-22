@@ -54,7 +54,8 @@ final class ClassifyCommandTest extends FunctionalTestCase
         self::assertSame(Command::SUCCESS, $commandTester->execute(['--dry-run' => true]));
         $display = $commandTester->getDisplay();
         self::assertStringContainsString('kind: db_mount', $display);
-        self::assertStringContainsString('split: page_group, acl,', $display);
+        // The proposal wraps within its column.
+        self::assertMatchesRegularExpression('/split: page_group, acl,[^\n]*\n[^\n]*db_mount, file_operations,[^\n]*\n[^\n]*tsconfig /', $display);
         self::assertStringContainsString('3 group(s) would change their kind.', $display);
         self::assertStringContainsString('3 group(s) can be split', $display);
         self::assertSame(['classic', 'classic', 'classic'], $this->getKinds([1, 3, 5]));
