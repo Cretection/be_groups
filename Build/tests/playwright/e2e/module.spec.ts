@@ -43,6 +43,8 @@ test.describe('Module "Roles & Building Blocks"', () => {
     const teamLead = frame.getByRole('row').filter({ has: frame.getByRole('rowheader', { name: 'Team lead' }) });
     await expect(teamLead).toContainText('not a building block');
     await expect(teamLead.getByRole('link', { name: 'META: Content manager' })).toBeVisible();
+    // The explanation is text, not a tooltip, so it reaches keyboard and touch users as well
+    await expect(teamLead.getByText('TYPO3 still grants the permissions of this group')).toBeVisible();
   });
 
   test('filters the building blocks by kind', async ({ backend }) => {

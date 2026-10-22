@@ -106,7 +106,7 @@ final class OverviewControllerTest extends FunctionalTestCase
         $html = (string)$this->get(OverviewController::class)->indexAction($this->createModuleRequest())->getBody();
 
         self::assertMatchesRegularExpression(
-            '#<span class="badge badge-danger" title="Roles may only contain building blocks\.[^"]*">not a building block</span>(?:(?!</div>).)*>META: R editor</a>#s',
+            '#<span class="badge badge-danger">not a building block</span>(?:(?!</div>).)*>META: R editor</a>#s',
             $html,
         );
     }
@@ -125,6 +125,24 @@ final class OverviewControllerTest extends FunctionalTestCase
         self::assertSame(3, preg_match_all('#>ACL editing</a>\s*<span class="badge badge-default">disabled</span>#', $html));
         // Own row and "Used in" of "ACL editing" and "DBM site A"
         self::assertSame(3, preg_match_all('#>(?:META: )?R editor</a>\s*<span class="badge badge-default">disabled</span>#', $html));
+    }
+
+    #[Test]
+    public function explainsMembersThatAreNoBuildingBlocksInTheText(): void
+    {
+        $this->setUpBackendUserWithLanguage(1);
+
+        // "R other" contains the classic group "Classic all-in-one"
+        $html = $this->renderModule();
+
+        self::assertMatchesRegularExpression('#<p class="[^"]*">Roles may only contain building blocks\. TYPO3 still grants the permissions of this group; replace it with building blocks that grant the same\.</p>#', $html);
+        // A tooltip reaches neither keyboard nor touch users
+        self::assertStringNotContainsString('title="Roles may only contain building blocks', $html);
+
+        $this->get(ConnectionPool::class)->getConnectionForTable('be_groups')
+            ->update('be_groups', ['subgroup' => '5,9,1'], ['uid' => 7]);
+
+        self::assertMatchesRegularExpression('#<p class="[^"]*">Roles may only contain building blocks\. TYPO3 still grants the permissions of these groups; replace them with building blocks that grant the same\.</p>#', $this->renderModule());
     }
 
     #[Test]

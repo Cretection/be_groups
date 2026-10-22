@@ -101,10 +101,13 @@
                                     </f:if>
                                     <f:for each="{role.invalidMembers}" as="invalidMember">
                                         <div class="mb-1">
-                                            <span class="badge badge-danger" title="{f:translate(key: 'issue.invalidMember.description', domain: 'be_groups.modules.overview')}"><f:translate key="issue.invalidMember" domain="be_groups.modules.overview" /></span>
+                                            <span class="badge badge-danger"><f:translate key="issue.invalidMember" domain="be_groups.modules.overview" /></span>
                                             <f:render section="GroupLink" arguments="{group: invalidMember, returnUrl: returnUrl, withKind: 1}" />
                                         </div>
                                     </f:for>
+                                    <f:if condition="{role.invalidMembers}">
+                                        <p class="mb-1 text-body-secondary"><f:if condition="{f:count(subject: role.invalidMembers)} == 1"><f:then><f:translate key="issue.invalidMember.description" domain="be_groups.modules.overview" /></f:then><f:else><f:translate key="issue.invalidMembers.description" domain="be_groups.modules.overview" /></f:else></f:if></p>
+                                    </f:if>
                                     <f:for each="{role.missingMemberUids}" as="missingUid">
                                         <div class="mb-1"><span class="badge badge-danger"><f:translate key="issue.missingMember" domain="be_groups.modules.overview" arguments="{0: missingUid}" /></span></div>
                                     </f:for>
