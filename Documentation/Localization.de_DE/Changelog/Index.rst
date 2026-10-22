@@ -17,10 +17,10 @@ im Repository gepflegt (auf Englisch).
 
 Relaunch für TYPO3 14.3 LTS.
 
-*   Neues Typenmodell nach der offiziellen TYPO3-Empfehlung: Rollen,
-    Zugriffsrechte, Seitenrechte-Gruppen, Seitenbaum-Einstiegspunkte,
-    Dateifreigaben, Dateioperationen, Kategorie-Freigaben, Sprachen,
-    TSconfig, Workspace und Klassisch.
+*   Neues Typenmodell nach der offiziellen TYPO3-Empfehlung, mit den Typen
+    „Rolle“, „Zugriffsrechte“, „Seitenrechte-Gruppe“, „Seitenbaum-Freigabe“,
+    „Dateifreigabe“, „Dateioperationen“, „Kategorie-Freigabe“, „Sprachen“,
+    „TSconfig“, „Workspace“ und „Klassisch (alle Einstellungen)“.
 *   Rollen werden im Core-Feld :sql:`subgroup` zusammengesetzt. Die
     zusätzlichen Spalten :sql:`subgroup_*` früherer Versionen entfallen.
     Daten früherer Versionen werden nicht übernommen, siehe :ref:`migration`.

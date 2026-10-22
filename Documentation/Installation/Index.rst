@@ -45,16 +45,17 @@ Classic mode
 
 Download the extension from the
 `TYPO3 Extension Repository (TER) <https://extensions.typo3.org/extension/be_groups>`__
-or install it in the module :guilabel:`System > Extensions`. Then run the
-database analyzer in :guilabel:`Admin Tools > Maintenance`.
+or install it in the module :guilabel:`System > Extensions`. Then update the
+database schema in :guilabel:`System > Maintenance > Analyze Database
+Structure`.
 
 ..  _installation-after:
 
 After the installation
 ======================
 
-*   All existing backend groups are of kind "Classic". Nothing changes for
-    your users.
+*   All existing backend groups are of kind "Classic (all settings)".
+    Nothing changes for your users.
 *   Convert the existing groups with the assistants, see :ref:`migration`,
     or create the first building blocks and roles yourself, see
     :ref:`concept`.

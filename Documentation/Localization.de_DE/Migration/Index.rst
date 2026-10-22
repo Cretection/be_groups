@@ -17,9 +17,10 @@ Bestehende Gruppen umstellen
 Von einer TYPO3-Installation ohne diese Extension
 =================================================
 
-Nach der Installation sind alle Gruppen vom Typ „Klassisch“ und
-funktionieren unverändert. Zwei Assistenten stellen sie um, ohne wirksame
-Rechte zu verändern. Beide zeigen ihren Plan zuerst mit ``--dry-run``:
+Nach der Installation sind alle Gruppen vom Typ
+„Klassisch (alle Einstellungen)“ und funktionieren unverändert. Zwei
+Assistenten stellen sie um, ohne wirksame Rechte zu verändern. Beide zeigen
+ihren Plan zuerst mit ``--dry-run``:
 
 ..  code-block:: bash
 
@@ -32,13 +33,14 @@ Rechte zu verändern. Beide zeigen ihren Plan zuerst mit ``--dry-run``:
 ``begroups:classify`` schlägt für jede klassische Gruppe einen Typ vor und
 ändert den Typ dort, wo sich sonst nichts ändert:
 
-*   Eine Gruppe, deren Rechte alle zu einem Baustein-Typ gehören – zum
-    Beispiel nur Seitenbaum-Einstiegspunkte –, wird zu diesem Baustein,
-    sofern sie keinem Benutzer direkt zugewiesen ist.
+*   Eine Gruppe, deren Rechte alle zu einem Baustein-Typ gehören, wird zu
+    diesem Baustein, sofern sie keinem Benutzer direkt zugewiesen ist – zum
+    Beispiel wird eine Gruppe, die nur Seitenbaum-Einstiegspunkte hat, zu
+    einer „Seitenbaum-Freigabe“.
 *   Eine Gruppe, die selbst nichts gewährt, aber andere Gruppen
-    zusammenfasst, wird zur Rolle.
+    zusammenfasst, wird zur „Rolle“.
 *   Eine Gruppe, die nichts gewährt, aber Seiten besitzt, wird zur
-    Seitenrechte-Gruppe.
+    „Seitenrechte-Gruppe“.
 *   Alle anderen Gruppen werden aufgelistet: Gruppen zum Aufteilen und
     Gruppen, über die Sie entscheiden müssen, jeweils mit Begründung – zum
     Beispiel eine leere Gruppe, ein Rechtefeld, das zu keinem Typ gehört,

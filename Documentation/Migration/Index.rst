@@ -17,9 +17,9 @@ Converting existing groups
 From a TYPO3 installation without this extension
 ================================================
 
-After the installation, all groups are of kind "Classic" and keep working
-unchanged. Two assistants convert them without changing any effective
-permission. Both show their plan with ``--dry-run`` first:
+After the installation, all groups are of kind "Classic (all settings)" and
+keep working unchanged. Two assistants convert them without changing any
+effective permission. Both show their plan with ``--dry-run`` first:
 
 ..  code-block:: bash
 
@@ -32,12 +32,14 @@ permission. Both show their plan with ``--dry-run`` first:
 ``begroups:classify`` proposes a kind for every classic group and changes the
 kind where nothing else changes:
 
-*   A group whose permissions all belong to one kind of building block – for
-    example only page tree entry points – becomes that building block, unless
-    it is assigned to users directly.
+*   A group whose permissions all belong to one kind of building block
+    becomes that building block, unless it is assigned to users directly –
+    for example, a group with nothing but page tree entry points becomes a
+    "Page tree mount".
 *   A group that grants nothing itself but combines other groups becomes a
-    role.
-*   A group that grants nothing but owns pages becomes a page group.
+    "Role".
+*   A group that grants nothing but owns pages becomes a
+    "Page permission group".
 *   All other groups are listed: groups to split, and groups that need your
     decision, with the reason – for example an empty group, a permission
     field that belongs to no kind, the root of the page tree as page mount,
@@ -58,9 +60,9 @@ group that ``begroups:classify`` proposes to split:
     subgroups, so the precedence of TSconfig stays the same.
 *   TYPO3 makes the first group of a user the owner group of the pages the
     user creates. If that is the group itself – it has no active subgroups –
-    a new page group without permissions (``PG: Editors``) becomes
-    its first member and takes over this task. It belongs to the role alone,
-    so the owner group has exactly the same members as before.
+    a new page permission group without permissions (``PG: Editors``)
+    becomes its first member and takes over this task. It belongs to the
+    role alone, so the owner group has exactly the same members as before.
 *   The building blocks are always new, even if an identical one exists. An
     existing group may be referenced elsewhere – as owner group of pages, as
     workspace member or in TSconfig conditions – so making more users members
@@ -79,7 +81,7 @@ transaction, which is only committed if
     before: the merged permissions, the workspace permissions, the TSconfig
     in the order TYPO3 applies it, the group memberships apart from the new
     building blocks, and the owner group of new pages apart from the new
-    page group.
+    page permission group.
 
 Otherwise – for example because another extension changes data while
 saving – the transaction is rolled back and the group stays unchanged. This

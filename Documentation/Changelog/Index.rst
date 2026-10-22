@@ -17,10 +17,10 @@ in the repository.
 
 Relaunch for TYPO3 14.3 LTS.
 
-*   New kind model aligned with the official TYPO3 guideline: roles,
-    access rights, page permission groups, page tree entry points, file
-    mounts, file operations, category mounts, languages, TSconfig,
-    workspace and classic.
+*   New kind model aligned with the official TYPO3 guideline, with the
+    kinds "Role", "Access rights", "Page permission group",
+    "Page tree mount", "File mount", "File operations", "Category mount",
+    "Languages", "TSconfig", "Workspace" and "Classic (all settings)".
 *   Roles are composed in the core field :sql:`subgroup`. The additional
     columns :sql:`subgroup_*` of earlier versions are gone. Data of earlier
     versions is not migrated, see :ref:`migration`.

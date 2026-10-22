@@ -46,17 +46,17 @@ Klassischer Modus
 
 Laden Sie die Extension aus dem
 `TYPO3 Extension Repository (TER) <https://extensions.typo3.org/extension/be_groups>`__
-herunter oder installieren Sie sie im Modul :guilabel:`System > Extensions`.
-Führen Sie danach den Datenbank-Vergleich in
-:guilabel:`Admin Tools > Maintenance` aus.
+herunter oder installieren Sie sie im Modul :guilabel:`System > Extension`.
+Aktualisieren Sie danach das Datenbankschema in
+:guilabel:`System > Wartung > Analyze Database Structure`.
 
 ..  _installation-after:
 
 Nach der Installation
 =====================
 
-*   Alle bestehenden Backend-Gruppen sind vom Typ „Klassisch“. Für Ihre
-    Benutzer ändert sich nichts.
+*   Alle bestehenden Backend-Gruppen sind vom Typ
+    „Klassisch (alle Einstellungen)“. Für Ihre Benutzer ändert sich nichts.
 *   Stellen Sie die bestehenden Gruppen mit den Assistenten um, siehe
     :ref:`migration`, oder legen Sie die ersten Bausteine und Rollen selbst
     an, siehe :ref:`concept`.

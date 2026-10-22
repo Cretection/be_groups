@@ -6,8 +6,9 @@
 Konfiguration
 =============
 
-Die Extension wird unter :guilabel:`Admin Tools > Settings > Extension
-Configuration > be_groups` konfiguriert.
+Systemverantwortliche konfigurieren die Extension unter
+:guilabel:`System > Einstellungen > Extension Configuration > be_groups`;
+TYPO3 fragt dabei zuerst nach ihrem Passwort.
 
 ..  _configuration-allowClassicGroups:
 
@@ -19,7 +20,8 @@ Klassische Gruppen erlauben
     :type: boolean
     :default: true
 
-    Erlaubt Backend-Gruppen vom Typ „Klassisch“.
+    Erlaubt klassische Gruppen: Backend-Gruppen vom Typ
+    „Klassisch (alle Einstellungen)“.
 
     Aktiv (Standard)
         Klassische Gruppen können angelegt und Backend-Benutzern zugewiesen
@@ -27,14 +29,13 @@ Klassische Gruppen erlauben
         bestehenden Installation nötig.
 
     Deaktiviert
-        *   Das Formular bietet den Typ „Klassisch“ nicht mehr an, außer für
-            Gruppen, die bereits klassisch sind. Neue Gruppen beginnen als
-            „Rolle“.
+        *   Das Formular bietet den Typ „Klassisch (alle Einstellungen)“
+            nicht mehr an, außer für Gruppen, die bereits klassisch sind.
+            Neue Gruppen beginnen als „Rolle“.
         *   Es können keine neuen klassischen Gruppen angelegt werden, und
-            keine Gruppe kann auf den Typ „Klassisch“ umgestellt werden –
-            weder im Formular noch über die DataHandler-API. Eine über die API
-            ohne Typ angelegte Gruppe wird abgelehnt, weil ihr Standardtyp
-            „Klassisch“ wäre.
+            keine Gruppe kann klassisch werden – weder im Formular noch über
+            die DataHandler-API. Eine über die API ohne Typ angelegte Gruppe
+            wird abgelehnt, weil sie standardmäßig klassisch wäre.
         *   Backend-Benutzern können nur Rollen zugewiesen werden.
         *   Die Konsistenzprüfung (geplant, siehe :ref:`developer-planned`)
             meldet verbliebene klassische Gruppen als Fehler.
