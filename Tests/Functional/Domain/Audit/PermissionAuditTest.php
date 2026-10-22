@@ -106,6 +106,40 @@ final class PermissionAuditTest extends FunctionalTestCase
     }
 
     #[Test]
+    public function doesNotReportListsThatTypo3AndTheFormReadAlike(): void
+    {
+        $this->importCSVDataSet(__DIR__ . '/Fixtures/AuditData.csv');
+
+        $findings = [];
+        foreach ($this->get(PermissionAudit::class)->run() as $finding) {
+            $findings[$finding->table . ':' . $finding->uid][] = $finding->identifier;
+        }
+
+        // TYPO3, the backend form and the DataHandler ignore spaces, empty entries and "0" (no group) alike.
+        self::assertArrayNotHasKey('be_groups:14', $findings);
+        self::assertArrayNotHasKey('be_groups:15', $findings);
+        self::assertArrayNotHasKey('be_groups:16', $findings);
+        self::assertArrayNotHasKey('be_users:9', $findings);
+    }
+
+    #[Test]
+    public function reportsDuplicatesAndLeadingZerosBetweenSpaces(): void
+    {
+        $this->importCSVDataSet(__DIR__ . '/Fixtures/AuditData.csv');
+        $connection = $this->getConnectionPool()->getConnectionForTable('be_groups');
+        $connection->update('be_groups', ['subgroup' => '1, 1'], ['uid' => 15]);
+        $connection->update('be_groups', ['subgroup' => '0, 01'], ['uid' => 16]);
+
+        $findings = [];
+        foreach ($this->get(PermissionAudit::class)->run() as $finding) {
+            $findings[$finding->table . ':' . $finding->uid][] = $finding->identifier;
+        }
+
+        self::assertSame(['unclean-group-list'], $findings['be_groups:15']);
+        self::assertSame(['unclean-group-list'], $findings['be_groups:16']);
+    }
+
+    #[Test]
     public function marksDisabledRecordsAndSkipsDeletedRecordsAndAdministrators(): void
     {
         $this->importCSVDataSet(__DIR__ . '/Fixtures/AuditData.csv');

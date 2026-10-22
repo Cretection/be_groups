@@ -237,12 +237,18 @@ final readonly class PermissionAudit
 
     /**
      * Reports lists of groups that TYPO3 and the DataHandler read differently (see RelationList::isCanonical()).
+     * Spaces, empty entries and "0" (no group) are left out: TYPO3, the backend form and the DataHandler
+     * ignore them alike, and the form of a building block, which has no subgroups, could not remove them.
      *
      * @return list<AuditFinding>
      */
     private function checkList(string $table, DatabaseRow $record, string $fieldName, string $title): array
     {
-        if (RelationList::isCanonical($record->get($fieldName))) {
+        $entries = array_filter(
+            GeneralUtility::trimExplode(',', $record->get($fieldName), true),
+            static fn(string $entry): bool => $entry !== '0',
+        );
+        if (RelationList::isCanonical(implode(',', $entries))) {
             return [];
         }
         $disabledField = $table === self::USERS_TABLE ? 'disable' : 'hidden';
