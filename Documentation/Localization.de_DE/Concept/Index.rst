@@ -249,7 +249,7 @@ Die Regeln korrigieren die Daten, statt das Speichern abzubrechen; nur eine
 klassische Gruppe, die bei abgeschalteten klassischen Gruppen angelegt würde,
 wird gar nicht angelegt. Import- und Synchronisierungs-Werkzeuge
 funktionieren deshalb weiter. Jeder Eingriff wird ins Systemprotokoll
-(:guilabel:`Administration > Protokoll`) geschrieben und im Backend als
+(:guilabel:`Verwaltung > Protokoll`) geschrieben und im Backend als
 Meldung angezeigt: geleerte Felder eines früheren Typs als Information (das
 ist der Zweck eines Typwechsels), abgelehnte Werte und Datensätze als
 Bedienfehler. Felder, die der Aufrufer selbst leert, werden nicht gemeldet,

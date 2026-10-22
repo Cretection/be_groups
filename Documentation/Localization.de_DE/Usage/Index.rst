@@ -25,7 +25,8 @@ Formular zeigt nur die Einstellungen dieses Typs:
     :alt: Formular des Bausteins „ACL: Content editing“ mit dem Feld Typ und einer Reihe von Icons, eines pro Typ
 
     Ein Baustein vom Typ „Zugriffsrechte“: Seine Rechte stehen in den Reitern
-    „Record Permissions“ und „Module Permissions“.
+    „Datensatz-Berechtigungen“ und „Modul-Berechtigungen“ (im Bild aus dem
+    englischen Backend „Record Permissions“ und „Module Permissions“).
 
 Ein Wechsel des Typs ändert das Formular, deshalb fragt TYPO3, ob die Gruppe
 gespeichert und das Formular neu geladen werden soll (*Aktualisierung
@@ -192,7 +193,7 @@ die Caches.
 Das Modul „Rollen & Bausteine“
 ==============================
 
-Administratoren finden das Modul *Administration > Rollen & Bausteine* neben
+Administratoren finden das Modul *Verwaltung > Rollen & Bausteine* neben
 dem Modul *Benutzer*. Es ändert nichts, sondern zeigt:
 
 *   jede Rolle mit ihren Bausteinen, gruppiert nach Typ, und ihren Benutzern;
@@ -268,59 +269,59 @@ Konsistenzprüfung. Sie liest alle Gruppen und Benutzer und ändert nichts:
         - Schwere
         - Befund
     *   - ``unknown-kind``
-        - Fehler
+        - ``error``
         - Der Typ der Gruppe ist nicht konfiguriert, zum Beispiel der Typ
           einer deinstallierten Extension. Wählen Sie einen Typ.
     *   - ``classic-group``
-        - Warnung
+        - ``warning``
         - Eine klassische Gruppe. Teilen Sie sie in Bausteine und eine Rolle
           auf.
     *   - ``classic-group-disabled``
-        - Fehler
+        - ``error``
         - Eine klassische Gruppe, obwohl klassische Gruppen abgeschaltet
           sind, siehe :ref:`configuration`.
     *   - ``building-block-with-subgroups``
-        - Fehler
+        - ``error``
         - Ein Baustein hat Untergruppen.
     *   - ``foreign-permissions``
-        - Fehler
+        - ``error``
         - Eine Gruppe trägt Rechte, die ihr Typ nicht anzeigt. Sie wirken,
           bis die Gruppe erneut gespeichert wird.
     *   - ``role-missing-member``
-        - Fehler
+        - ``error``
         - Eine Rolle enthält eine Gruppe, die es nicht (mehr) gibt.
     *   - ``role-invalid-member``
-        - Fehler
+        - ``error``
         - Eine Rolle enthält eine Rolle, eine klassische Gruppe oder eine
           Gruppe mit unbekanntem Typ.
     *   - ``user-building-block``
-        - Fehler
+        - ``error``
         - Ein Baustein ist einem Benutzer direkt zugewiesen.
     *   - ``user-permissions``
-        - Warnung
+        - ``warning``
         - Ein Benutzer-Datensatz trägt eigene Rechte, die TYPO3 zu denen der
           Rollen hinzufügt. Neue Benutzer erhalten standardmäßig alle
           Dateioperationen (Core-Standardwert von :sql:`file_permissions`);
           entfernen Sie sie im Benutzer-Datensatz. Wie neue Benutzer ohne sie
           angelegt werden, steht unter :ref:`concept-limitations`.
     *   - ``unassigned-fields``
-        - Warnung
+        - ``warning``
         - Eine Rolle oder ein Baustein hat Werte in Feldern anderer
           Extensions, die zu keinem Typ gehören; sein Formular zeigt sie
           also nicht. Gewähren sie Rechte, ordnen Sie die Felder einem Typ
           zu, siehe :ref:`developer-fields`.
     *   - ``unclean-group-list``
-        - Warnung
+        - ``warning``
         - Die Untergruppen einer Gruppe oder die Gruppen eines Benutzers
           enthalten Duplikate oder Einträge, die TYPO3 und das
           Backend-Formular unterschiedlich lesen, etwa ``be_groups_5`` oder
           ``05``. Speichern im Backend kann Gruppen hinzufügen oder
           entfernen; prüfen Sie sie vorher.
     *   - ``user-ignores-group-mounts``
-        - Warnung
-        - Das Feld :sql:`options` eines Benutzers (im englischen Backend
-          :guilabel:`Mount from groups`) umfasst nicht alle Seitenbaum- und
-          Datei-Freigaben der Gruppen.
+        - ``warning``
+        - Das Feld :guilabel:`Freigaben aus Gruppen` (:sql:`options`) eines
+          Benutzers umfasst nicht alle Seitenbaum- und Datei-Freigaben der
+          Gruppen.
 
 Versteckte Gruppen und deaktivierte Benutzer werden ebenfalls geprüft und
 mit "(disabled)" markiert. Administratoren und gelöschte Datensätze werden

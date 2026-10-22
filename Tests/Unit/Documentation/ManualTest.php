@@ -15,6 +15,7 @@ declare(strict_types=1);
 
 namespace Cretection\BeGroups\Tests\Unit\Documentation;
 
+use Cretection\BeGroups\Domain\Audit\AuditSeverity;
 use Cretection\BeGroups\Domain\Kind\GroupKind;
 use PHPUnit\Framework\Attributes\CoversNothing;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -23,9 +24,10 @@ use TYPO3\TestingFramework\Core\Unit\UnitTestCase;
 
 /**
  * The manual names what the backend shows: the kinds by the labels of their select, the form as
- * TYPO3 shows it and the configuration TYPO3 14 reads. Both languages are compared with the labels
- * of the extension, and the example of the label override with the site package that the
- * functional test loads.
+ * TYPO3 shows it, the menus of a German backend in the German manual, the severities as the
+ * consistency check prints them and the configuration TYPO3 14 reads. Both languages are compared
+ * with the labels of the extension, and the example of the label override with the site package
+ * that the functional test loads.
  */
 #[CoversNothing]
 final class ManualTest extends UnitTestCase
@@ -125,6 +127,37 @@ final class ManualTest extends UnitTestCase
     {
         // The kind follows the title, and a change of the kind saves the group to reload the form
         self::assertSame(0, substr_count($this->readTextOfChapter($manual, 'Usage'), $formerText), $formerText);
+    }
+
+    #[Test]
+    public function theGermanManualNamesTheMenusOfAGermanBackend(): void
+    {
+        foreach (self::CHAPTERS as $chapter) {
+            $text = $this->readTextOfChapter('Localization.de_DE/', $chapter);
+
+            // A German backend shows "Verwaltung > …" and the core module "Berechtigungen"
+            self::assertSame(0, substr_count($text, 'Administration >'), $chapter . ': Administration >');
+            self::assertSame(0, substr_count($text, ':guilabel:`Permissions`'), $chapter . ': Permissions');
+        }
+    }
+
+    #[Test]
+    public function theChecksAreListedWithTheSeverityTheConsistencyCheckPrints(): void
+    {
+        $severities = [];
+        foreach (self::manualDataProvider() as $language => [$manual]) {
+            preg_match_all('/^\s*\*\s+-\s+``([a-z]+(?:-[a-z]+)+)``\s*\n\s+-\s+(.+?)\s*$/m', $this->readChapter($manual, 'Usage'), $rows, PREG_SET_ORDER);
+            foreach ($rows as $row) {
+                $severities[$language][$row[1]] = $row[2];
+            }
+        }
+        $printed = array_map(static fn(AuditSeverity $severity): string => '``' . $severity->value . '``', AuditSeverity::cases());
+
+        self::assertNotSame([], $severities['English'] ?? [], 'the table of the checks');
+        self::assertSame($severities['English'], $severities['German'] ?? null, 'both manuals list the same checks with the same severity');
+        foreach ($severities['English'] as $identifier => $severity) {
+            self::assertContains($severity, $printed, $identifier);
+        }
     }
 
     #[Test]

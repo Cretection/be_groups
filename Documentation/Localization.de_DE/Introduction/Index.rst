@@ -82,4 +82,4 @@ Was die Extension nicht macht
     das Ausrollen von Rechten ab und lassen sich mit dieser Extension
     kombinieren.
 *   Sie verwaltet keine Seitenrechte (Besitzer, Gruppe, Alle). Dafür gibt es
-    das Core-Modul :guilabel:`Permissions`.
+    das Core-Modul :guilabel:`Berechtigungen`.

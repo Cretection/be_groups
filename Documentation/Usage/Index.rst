@@ -257,54 +257,54 @@ consistency check. It reads all groups and users and changes nothing:
         - Severity
         - Finding
     *   - ``unknown-kind``
-        - error
+        - ``error``
         - The kind of the group is not configured, for example the kind of an
           uninstalled extension. Choose a kind.
     *   - ``classic-group``
-        - warning
+        - ``warning``
         - A classic group. Split it into building blocks and a role.
     *   - ``classic-group-disabled``
-        - error
+        - ``error``
         - A classic group, although classic groups are disabled, see
           :ref:`configuration`.
     *   - ``building-block-with-subgroups``
-        - error
+        - ``error``
         - A building block has subgroups.
     *   - ``foreign-permissions``
-        - error
+        - ``error``
         - A group carries permissions that its kind does not show. They are
           in effect until the group is saved again.
     *   - ``role-missing-member``
-        - error
+        - ``error``
         - A role contains a group that does not exist (any more).
     *   - ``role-invalid-member``
-        - error
+        - ``error``
         - A role contains a role, a classic group or a group with an unknown
           kind.
     *   - ``user-building-block``
-        - error
+        - ``error``
         - A building block is assigned to a user directly.
     *   - ``user-permissions``
-        - warning
+        - ``warning``
         - A user record carries permissions of its own, which TYPO3 adds to
           those of the roles. New users get all file operations by default
           (core default of :sql:`file_permissions`); clear them in the user
           record. To create new users without them, see
           :ref:`concept-limitations`.
     *   - ``unassigned-fields``
-        - warning
+        - ``warning``
         - A role or a building block has values in fields of other
           extensions that belong to no kind, so its form does not show them.
           If they grant permissions, assign the fields to a kind, see
           :ref:`developer-fields`.
     *   - ``unclean-group-list``
-        - warning
+        - ``warning``
         - The subgroups of a group or the groups of a user contain duplicates
           or entries that TYPO3 and the backend form read differently, such
           as ``be_groups_5`` or ``05``. Saving the record in the backend can
           add or remove groups; check them first.
     *   - ``user-ignores-group-mounts``
-        - warning
+        - ``warning``
         - The field :guilabel:`Mount from groups` (:sql:`options`) of a user
           does not include all page tree and file mounts of the groups.
 
