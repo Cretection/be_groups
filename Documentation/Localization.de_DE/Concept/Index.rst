@@ -28,8 +28,8 @@ Was nicht sichtbar ist, wirkt nicht
 
 Führen statt brechen
     Nach der Installation funktionieren alle bestehenden Gruppen unverändert
-    als Typ „Klassisch“. Assistenten und Prüfungen führen Schritt für
-    Schritt zum sauberen Modell.
+    als Typ „Klassisch (alle Einstellungen)“. Assistenten und Prüfungen
+    führen Schritt für Schritt zum sauberen Modell.
 
 ..  _concept-kinds:
 
@@ -68,11 +68,11 @@ ergänzt um „TSconfig“ und „Workspace“.
         -   ``PG``
         -   Keine eigenen Felder. Dient als Eigentümergruppe für Seitenrechte.
     *   -   ``db_mount``
-        -   Seitenbaum-Einstiegspunkte
+        -   Seitenbaum-Freigabe
         -   ``DBM``
         -   :sql:`db_mountpoints`
     *   -   ``file_mount``
-        -   Dateifreigaben
+        -   Dateifreigabe
         -   ``FM``
         -   :sql:`file_mountpoints`
     *   -   ``file_operations``
@@ -80,7 +80,7 @@ ergänzt um „TSconfig“ und „Workspace“.
         -   ``FO``
         -   :sql:`file_permissions`
     *   -   ``category_mount``
-        -   Kategorie-Freigaben
+        -   Kategorie-Freigabe
         -   ``CM``
         -   :sql:`category_perms`
     *   -   ``language``
@@ -96,7 +96,7 @@ ergänzt um „TSconfig“ und „Workspace“.
         -   ``WS``
         -   :sql:`workspace_perms` (nur mit EXT:workspaces)
     *   -   ``classic``
-        -   Klassisch
+        -   Klassisch (alle Einstellungen)
         -   –
         -   Alle Felder im Core-Layout. So funktionieren TYPO3-Gruppen ohne
             diese Extension.
@@ -128,8 +128,8 @@ R1: Ein Baustein vergibt nur, was sein Typ anzeigt
     Rechtefelder, die nicht zum Typ gehören, werden geleert. Verwaltet werden
     die Rechtefelder von :sql:`be_groups` im Core und jedes Feld, das im
     Formular einer Rolle oder eines Bausteins angezeigt wird. Das gilt auch
-    für Standardwerte: Eine neue Gruppe vom Typ „Seitenbaum-Einstiegspunkte“
-    bekommt nicht die Standard-Dateirechte.
+    für Standardwerte: Eine neue Gruppe vom Typ „Seitenbaum-Freigabe“ bekommt
+    nicht die Standard-Dateirechte.
 
 R2: Einer Rolle werden nur Bausteine hinzugefügt
     Rollen, klassische Gruppen, Gruppen mit unbekanntem Typ, gelöschte oder
@@ -180,8 +180,8 @@ Einzelheiten der Regeln:
     neue Gruppe bekommt den Standardtyp).
 
 Die Regeln korrigieren die Daten, statt das Speichern abzubrechen; nur eine
-Gruppe, die bei abgeschalteten klassischen Gruppen als „Klassisch“ angelegt
-würde, wird gar nicht angelegt. Import- und Synchronisierungs-Werkzeuge
+klassische Gruppe, die bei abgeschalteten klassischen Gruppen angelegt würde,
+wird gar nicht angelegt. Import- und Synchronisierungs-Werkzeuge
 funktionieren deshalb weiter. Jeder Eingriff wird ins Systemprotokoll
 (:guilabel:`Administration > Protokoll`) geschrieben und im Backend als
 Meldung angezeigt: geleerte Felder eines früheren Typs als Information (das
@@ -190,19 +190,19 @@ Bedienfehler. Felder, die der Aufrufer selbst leert, werden nicht gemeldet.
 Korrekturen werden gemeldet, nachdem das Speichern
 abgeschlossen ist: Wird das Speichern abgebrochen, zum Beispiel weil die
 Passwortabfrage des Sudo-Modus abgebrochen wird, wird keine Korrektur
-protokolliert. Ein abgelehnter Datensatz oder eine abgelehnte Umstellung auf
-„Klassisch“ wird sofort gemeldet.
+protokolliert. Ein abgelehnter Datensatz oder eine abgelehnte Umstellung in
+eine klassische Gruppe wird sofort gemeldet.
 
 ..  _concept-classic:
 
-Der Typ „Klassisch“
-===================
+Klassische Gruppen
+==================
 
-„Klassisch“ ist eine Backend-Gruppe, wie TYPO3 sie ohne diese Extension
-kennt: Sie zeigt alle Rechtefelder, darf Untergruppen haben und wird von den
-Regeln R1 und R3 nicht eingeschränkt. Nach der Installation sind alle
-bestehenden Gruppen vom Typ „Klassisch“, für Ihre Benutzer ändert sich also
-nichts.
+Eine Gruppe vom Typ „Klassisch (alle Einstellungen)“ ist eine Backend-Gruppe,
+wie TYPO3 sie ohne diese Extension kennt: Sie zeigt alle Rechtefelder, darf
+Untergruppen haben und wird von den Regeln R1 und R3 nicht eingeschränkt.
+Nach der Installation sind alle bestehenden Gruppen von diesem Typ, für Ihre
+Benutzer ändert sich also nichts.
 
 Klassische Gruppen sind die Brücke zum sauberen Modell: Stellen Sie sie
 Schritt für Schritt um und schalten Sie klassische Gruppen am Ende in der

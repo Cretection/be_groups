@@ -91,13 +91,13 @@ Seitenbaum-Einstiegspunkt als ``DBM: Redakteure``.
     *   - ``PG``
         - Seitenrechte-Gruppe
     *   - ``DBM``
-        - Seitenbaum-Einstiegspunkte
+        - Seitenbaum-Freigabe
     *   - ``FM``
-        - Dateifreigaben
+        - Dateifreigabe
     *   - ``FO``
         - Dateioperationen
     *   - ``CM``
-        - Kategorie-Freigaben
+        - Kategorie-Freigabe
     *   - ``L``
         - Sprachen
     *   - ``TS``

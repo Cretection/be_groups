@@ -28,7 +28,8 @@ What is not visible does not apply
 
 Guide, don't break
     After installation, all existing groups keep working unchanged as kind
-    "Classic". Wizards and checks lead step by step to the clean model.
+    "Classic (all settings)". Wizards and checks lead step by step to the
+    clean model.
 
 ..  _concept-kinds:
 
@@ -67,11 +68,11 @@ extended by "TSconfig" and "Workspace".
         -   ``PG``
         -   No own fields. Used as owner group for page permissions.
     *   -   ``db_mount``
-        -   Page tree entry points
+        -   Page tree mount
         -   ``DBM``
         -   :sql:`db_mountpoints`
     *   -   ``file_mount``
-        -   File mounts
+        -   File mount
         -   ``FM``
         -   :sql:`file_mountpoints`
     *   -   ``file_operations``
@@ -79,7 +80,7 @@ extended by "TSconfig" and "Workspace".
         -   ``FO``
         -   :sql:`file_permissions`
     *   -   ``category_mount``
-        -   Category mounts
+        -   Category mount
         -   ``CM``
         -   :sql:`category_perms`
     *   -   ``language``
@@ -95,7 +96,7 @@ extended by "TSconfig" and "Workspace".
         -   ``WS``
         -   :sql:`workspace_perms` (only with EXT:workspaces)
     *   -   ``classic``
-        -   Classic
+        -   Classic (all settings)
         -   –
         -   All fields in the core layout. This is how TYPO3 groups work
             without this extension.
@@ -125,8 +126,8 @@ R1: A building block only grants what its kind displays
     Permission fields that do not belong to the kind are cleared. The
     managed fields are the permission fields of :sql:`be_groups` in the core
     and every field shown in the form of a role or a building block. This
-    also applies to default values: a new "Page tree entry points" group does
-    not get the default file permissions.
+    also applies to default values: a new group of the kind "Page tree mount"
+    does not get the default file permissions.
 
 R2: A role only gets building blocks added
     Roles, classic groups, groups with an unknown kind, deleted or
@@ -169,8 +170,8 @@ Details of the rules:
     stored; the group keeps its kind (or a new group gets the default kind).
 
 The rules correct the data instead of aborting the save operation; only a
-group that would be created as "classic" while classic groups are disabled
-is not created at all. Import and synchronisation tools therefore keep
+classic group that would be created while classic groups are disabled is not
+created at all. Import and synchronisation tools therefore keep
 working. Every intervention is written to the system log
 (:guilabel:`Administration > Log`) and, in the backend, shown to the editor
 as message: emptied fields of a former kind as information (this is what a
@@ -179,17 +180,17 @@ error. Fields the caller empties itself are not reported. Corrections are
 reported after the save operation has completed:
 if a save is aborted, for example because the password confirmation of the
 sudo mode is cancelled, no correction is logged. A rejected record or a
-rejected change to "classic" is reported right away.
+rejected change to a classic group is reported right away.
 
 ..  _concept-classic:
 
-The kind "Classic"
-==================
+Classic groups
+==============
 
-"Classic" is a backend group as TYPO3 knows it without this extension: it
-shows all permission fields, may have subgroups and is not restricted by the
-rules R1 and R3. After installation, all existing groups are of kind
-"Classic", so nothing changes for your users.
+A group of the kind "Classic (all settings)" is a backend group as TYPO3
+knows it without this extension: it shows all permission fields, may have
+subgroups and is not restricted by the rules R1 and R3. After installation,
+all existing groups are of this kind, so nothing changes for your users.
 
 Classic groups are the bridge to the clean model: convert them step by step
 and finally switch off classic groups in the extension configuration.

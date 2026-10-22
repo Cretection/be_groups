@@ -88,13 +88,13 @@ called "Editors" appears as ``META: Editors``, its page tree entry point as
     *   - ``PG``
         - Page permission group
     *   - ``DBM``
-        - Page tree entry points
+        - Page tree mount
     *   - ``FM``
-        - File mounts
+        - File mount
     *   - ``FO``
         - File operations
     *   - ``CM``
-        - Category mounts
+        - Category mount
     *   - ``L``
         - Languages
     *   - ``TS``
