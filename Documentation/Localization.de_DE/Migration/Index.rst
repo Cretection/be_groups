@@ -44,9 +44,11 @@ ihren Plan zuerst mit ``--dry-run``:
 *   Alle anderen Gruppen werden aufgelistet: Gruppen zum Aufteilen und
     Gruppen, über die Sie entscheiden müssen, jeweils mit Begründung – zum
     Beispiel eine leere Gruppe, ein Rechtefeld, das zu keinem Typ gehört,
-    die Wurzel des Seitenbaums als Freigabe oder Untergruppen mit Duplikaten
+    die Wurzel des Seitenbaums als Freigabe, Untergruppen mit Duplikaten
     oder Einträgen, die TYPO3 und das Backend-Formular unterschiedlich lesen
-    (etwa ``be_groups_5`` oder ``05``).
+    (etwa ``be_groups_5`` oder ``05``), oder Seiten-, Datei- oder
+    Kategoriefreigaben mit Einträgen, die der DataHandler nicht in einen
+    Baustein übernehmen kann (etwa ``05``, ``pages_5`` oder leere Einträge).
 
 ``begroups:split`` teilt die per uid genannten Gruppen auf, oder mit
 ``--all`` jede Gruppe, für die ``begroups:classify`` das Aufteilen vorschlägt:
@@ -54,7 +56,10 @@ ihren Plan zuerst mit ``--dry-run``:
 *   Die Rechte wandern in je einen Baustein pro Typ. Die Bausteine erhalten
     den Titel der Gruppe; TYPO3 zeigt ihren Typ als Präfix, zum Beispiel
     ``ACL: Editors`` und ``DBM: Editors`` (siehe :ref:`usage-prefixes`).
-    Eine versteckte Gruppe bleibt versteckt; ihre Bausteine
+    Ihre Beschreibung nennt die Gruppe, zum Beispiel
+    ``Created by begroups:split from group 17 "Editors".``, immer auf
+    Englisch wie die Ausgaben der Befehle, weil sie mit dem Datensatz
+    gespeichert wird. Eine versteckte Gruppe bleibt versteckt; ihre Bausteine
     sind nur über sie erreichbar, sodass sie beim Wiedereinblenden die
     Rechte wie vorher gewährt.
 *   **Die Gruppe behält ihre uid und wird zur Rolle.** Benutzer und andere
@@ -72,6 +77,15 @@ ihren Plan zuerst mit ``--dry-run``:
     TSconfig-Bedingungen –, mehr Mitglieder könnten dadurch mehr Rechte
     erhalten. Führen Sie gleiche Bausteine selbst zusammen, wo das gewollt
     ist.
+
+Beide Assistenten zeigen ihren Plan als Tabelle, geben das Ergebnis jeder
+Gruppe aus, die sie umstellen – umgestellt oder fehlgeschlagen, mit
+Begründung –, und schließen mit einer Zusammenfassung. ``begroups:split``
+nennt außerdem jede per uid angegebene Gruppe, die es überspringt, mit
+Begründung. Der Exit-Code ist ``1``, wenn eine Umstellung fehlgeschlagen ist
+oder eine per uid angegebene Gruppe sich nicht aufteilen lässt (auch mit
+``--dry-run``), ``2`` bei ungültigen Argumenten von ``begroups:split`` und
+sonst ``0``.
 
 Beide Assistenten schreiben über den DataHandler: Jede Änderung steht im
 Systemprotokoll und in der Historie des Datensatzes. Jede Gruppe wird in
@@ -126,9 +140,11 @@ Danach:
     ``begroups:audit`` meldet jede dieser Rollen als Fehler und endet mit
     dem Exit-Code ``1``, bis sie aufgelöst sind; ein Deployment, das die
     Prüfung ausführt, bricht also dort ab. Die Assistenten lösen das nicht
-    selbst auf, weil die innere Rolle Seiten besitzen oder
-    Workspace-Mitglied sein kann. Prüfen Sie das zuerst: Ohne die innere
-    Rolle verlieren die Benutzer der äußeren Rolle diesen Zugriff.
+    selbst auf, weil die innere Rolle Seiten besitzen, Workspace-Mitglied
+    sein oder in TSconfig-Bedingungen verwendet werden kann. Prüfen Sie das
+    zuerst: Ohne die innere Rolle verlieren die Benutzer der äußeren Rolle
+    diesen Zugriff, und Bedingungen auf die innere Rolle treffen nicht mehr
+    zu.
 
     Ersetzen Sie die innere Rolle durch ihre Bausteine, wo das passt, und
     zwar an der Stelle der inneren Rolle. Das Feld hängt ausgewählte
@@ -152,7 +168,10 @@ Danach:
     klassische Gruppe, oder ersetzen Sie die Wurzel durch die Seiten auf der
     obersten Ebene des Seitenbaums und teilen Sie die Gruppe dann auf. Das
     ist nicht ganz dasselbe: Seiten, die später auf der obersten Ebene
-    entstehen, sind nicht freigegeben.
+    entstehen, sind nicht freigegeben. Das Backend-Formular zeigt die Wurzel
+    nicht als Freigabe: Wer eine solche Gruppe oder einen Baustein vom Typ
+    „Seitenbaum-Freigabe“ mit der Wurzel im Formular speichert, entfernt
+    sie.
 #.  Klassische Gruppen abschalten, siehe :ref:`configuration`, sobald
     ``begroups:audit`` keine klassische Gruppe (``classic-group``) mehr
     meldet. Verbliebene klassische Gruppen wirken weiter, werden ab dann
@@ -182,6 +201,11 @@ Das Ergebnis sind die Rollen „Editor“ und „Advanced Editor“ mit jeweils
 eigenen Bausteinen der Typen „Seitenrechte-Gruppe“ (die Eigentümergruppe
 neuer Seiten), „Zugriffsrechte“, „Seitenbaum-Freigabe“ und „Dateifreigabe“:
 ``PG: Editor``, ``ACL: Editor``, ``DBM: Editor`` und ``FM: Editor``.
+
+Die Vorlagen von TYPO3 erlauben die Live-Arbeitsumgebung nicht. Mit
+EXT:workspaces ergänzen Sie beide Rollen um einen Baustein vom Typ
+„Workspace“, der sie erlaubt (:guilabel:`Live bearbeiten (Online)`); sonst
+sehen ihre Benutzer kein Modul, siehe :ref:`concept-combination`.
 
 ..  attention::
 

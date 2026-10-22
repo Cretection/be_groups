@@ -43,8 +43,10 @@ kind where nothing else changes:
 *   All other groups are listed: groups to split, and groups that need your
     decision, with the reason – for example an empty group, a permission
     field that belongs to no kind, the root of the page tree as page mount,
-    or subgroups with duplicates or entries that TYPO3 and the backend form
-    read differently (such as ``be_groups_5`` or ``05``).
+    subgroups with duplicates or entries that TYPO3 and the backend form
+    read differently (such as ``be_groups_5`` or ``05``), or page, file or
+    category mounts with entries that the DataHandler cannot copy into a
+    building block (such as ``05``, ``pages_5`` or empty entries).
 
 ``begroups:split`` splits the groups you name by uid, or with ``--all`` every
 group that ``begroups:classify`` proposes to split:
@@ -52,7 +54,9 @@ group that ``begroups:classify`` proposes to split:
 *   The permissions move into one building block per kind. The building
     blocks get the title of the group; TYPO3 shows their kind as prefix,
     for example ``ACL: Editors`` and ``DBM: Editors`` (see
-    :ref:`usage-prefixes`). A hidden group stays hidden; its
+    :ref:`usage-prefixes`). Their description names the group, for example
+    ``Created by begroups:split from group 17 "Editors".`` A hidden group
+    stays hidden; its
     building blocks are only reachable through it, so showing the group
     again restores its permissions as before.
 *   **The group keeps its uid and becomes a role.** Users and other groups
@@ -68,6 +72,13 @@ group that ``begroups:classify`` proposes to split:
     workspace member or in TSconfig conditions – so making more users members
     of it could grant them more. Merge identical building blocks yourself
     where that is intended.
+
+Both assistants show their plan as a table, print the result of every group
+they convert – converted or failed, with the reason – and close with a
+summary. ``begroups:split`` also names every group given by uid that it
+skips, with the reason. The exit code is ``1`` if a conversion failed or a
+group given by uid cannot be split (also with ``--dry-run``), ``2`` if the
+arguments of ``begroups:split`` are invalid, and ``0`` otherwise.
 
 Both assistants write through the DataHandler: every change is in the system
 log and the history of the record. Each group is converted in a
@@ -120,8 +131,9 @@ Afterwards:
     each of these roles as an error and exits with code ``1`` until they are
     resolved, so a deployment that runs the check stops there. The
     assistants do not resolve them themselves, because the inner role may
-    own pages or be a member of a workspace. Check this first: without the
-    inner role, the users of the outer role lose that access.
+    own pages, be a member of a workspace or be used in TSconfig conditions.
+    Check this first: without the inner role, the users of the outer role
+    lose that access, and conditions on the inner role no longer match.
 
     Replace the inner role by its building blocks where that suits you, at
     the position of the inner role. The field adds selected items at the
@@ -140,7 +152,9 @@ Afterwards:
     TYPO3 does not store the root as page mount of a new building block.
     Keep it classic, or replace the root by the pages on the top level of
     the page tree and split the group then. This is not quite the same:
-    pages created on the top level later are not mounted.
+    pages created on the top level later are not mounted. The backend form
+    does not show the root as page mount: saving such a group in the form,
+    or a "Page tree mount" building block with the root, removes it.
 #.  Switch off classic groups, see :ref:`configuration`, once
     ``begroups:audit`` reports no classic group (``classic-group``) any
     more. Remaining classic groups keep working, but are reported as errors
@@ -169,6 +183,11 @@ The result is two roles, "Editor" and "Advanced Editor", each with its own
 building blocks of the kinds "Page permission group" (the owner group of new
 pages), "Access rights", "Page tree mount" and "File mount": ``PG: Editor``,
 ``ACL: Editor``, ``DBM: Editor`` and ``FM: Editor``.
+
+The presets of TYPO3 do not allow the live workspace. With EXT:workspaces,
+add a "Workspace" building block that allows it
+(:guilabel:`Edit Live (Online)`) to both roles, or their users see no module,
+see :ref:`concept-combination`.
 
 ..  attention::
 
