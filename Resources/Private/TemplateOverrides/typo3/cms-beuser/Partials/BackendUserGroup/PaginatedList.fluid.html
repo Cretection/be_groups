@@ -29,7 +29,7 @@
                             title="{f:if(condition: '{backendUserGroup.description}', then: '{backendUserGroup.description} (id={backendUserGroup.uid})', else: 'id={backendUserGroup.uid}')}"
                             aria-label="{f:translate(key: 'LLL:EXT:core/Resources/Private/Language/locallang_core.xlf:labels.contextMenu.open')}"
                         >
-                            <beuser:spriteIconForRecord table="be_groups" object="{backendUserGroup}" />
+                            <begroups:groupIcon uid="{backendUserGroup.uid}" hidden="{backendUserGroup.hidden}" />
                         </button>
                     </td>
                     <td class="col-50">

@@ -21,9 +21,11 @@ use TYPO3\CMS\Core\TypoScript\IncludeTree\Event\BeforeLoadedPageTsConfigEvent;
 
 /**
  * Shows the groups in the core module "Users" with the prefix of their kind, by overriding the
- * templates that print group titles (page TSconfig "templates", see BackendViewFactory).
+ * templates that print group titles (page TSconfig "templates", see BackendViewFactory). The list
+ * of groups also shows the icon of their kind.
  *
- * The overrides are copies of the templates of TYPO3 14.3 with only the group titles changed.
+ * The overrides are copies of the templates of TYPO3 14.3 with only the titles and icons of the
+ * groups changed.
  * They are only used while the templates of the core are exactly those copies: if the core
  * changes one of them (e.g. in a security release), the module falls back to the templates of
  * the core and shows the titles without prefix, and a test fails, so the copies are updated.

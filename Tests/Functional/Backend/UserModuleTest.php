@@ -15,10 +15,12 @@ declare(strict_types=1);
 
 namespace Cretection\BeGroups\Tests\Functional\Backend;
 
+use Cretection\BeGroups\Domain\Kind\GroupKind;
 use Cretection\BeGroups\Domain\Kind\GroupKindLookup;
 use Cretection\BeGroups\Domain\Kind\KindPrefix;
 use Cretection\BeGroups\EventListener\OverrideUserModuleTemplates;
 use Cretection\BeGroups\EventListener\PrefixGroupsInUserFilter;
+use Cretection\BeGroups\ViewHelpers\GroupIconViewHelper;
 use Cretection\BeGroups\ViewHelpers\GroupTitleViewHelper;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
@@ -28,6 +30,8 @@ use TYPO3\CMS\Backend\Utility\BackendUtility;
 use TYPO3\CMS\Backend\View\BackendViewFactory;
 use TYPO3\CMS\Beuser\Event\AfterBackendGroupFilterListIsAssembledEvent;
 use TYPO3\CMS\Core\Core\Environment;
+use TYPO3\CMS\Core\Imaging\IconFactory;
+use TYPO3\CMS\Core\Imaging\IconSize;
 use TYPO3\CMS\Core\Localization\LanguageServiceFactory;
 use TYPO3\CMS\Core\Package\PackageManager;
 use TYPO3\CMS\Core\View\ViewFactoryData;
@@ -42,6 +46,7 @@ use TYPO3\TestingFramework\Core\Functional\FunctionalTestCase;
 #[CoversClass(OverrideUserModuleTemplates::class)]
 #[CoversClass(PrefixGroupsInUserFilter::class)]
 #[CoversClass(GroupTitleViewHelper::class)]
+#[CoversClass(GroupIconViewHelper::class)]
 #[CoversClass(GroupKindLookup::class)]
 #[CoversClass(KindPrefix::class)]
 final class UserModuleTest extends FunctionalTestCase
@@ -85,7 +90,7 @@ final class UserModuleTest extends FunctionalTestCase
     }
 
     #[Test]
-    public function theOverridesOnlyDifferFromTheTemplatesOfTheCoreInTheGroupTitles(): void
+    public function theOverridesOnlyDifferFromTheTemplatesOfTheCoreInTheTitlesAndIconsOfGroups(): void
     {
         // Fails when the hashes were updated without copying the changed templates of the core again.
         $corePath = $this->get(PackageManager::class)->getPackage('beuser')->getPackagePath() . 'Resources/Private/';
@@ -97,8 +102,9 @@ final class UserModuleTest extends FunctionalTestCase
                     // A title as the only argument of a label, e.g. in a confirmation
                     '#arguments:\\{0:\'\\{begroups:groupTitle\\(uid: [\\w.]+, title: ([\\w.]+)\\)\\}\'\\}#',
                     '#\\{begroups:groupTitle\\(uid: [\\w.]+, title: ([\\w.]+)\\)\\}#',
+                    '#<begroups:groupIcon uid="\\{([\\w.]+)\\.uid\\}" hidden="\\{\\1\\.hidden\\}" />#',
                 ],
-                ['', 'arguments:\'{0:$1}\'', '{$1}'],
+                ['', 'arguments:\'{0:$1}\'', '{$1}', '<beuser:spriteIconForRecord table="be_groups" object="{$1}" />'],
                 (string)file_get_contents($overridePath . $file),
             );
             self::assertSame((string)file_get_contents($corePath . $file), $override, $file);
@@ -136,6 +142,27 @@ final class UserModuleTest extends FunctionalTestCase
         ]);
 
         self::assertSame('[META: Editors][ACL: Editors][Legacy &lt;b&gt;][Missing]', trim($view->render()));
+    }
+
+    #[Test]
+    public function rendersTheIconsOfGroupsForTheirKind(): void
+    {
+        $view = $this->get(ViewFactoryInterface::class)->create(new ViewFactoryData(templatePathAndFilename: __DIR__ . '/Fixtures/GroupIcon.fluid.html'));
+        $view->assign('groups', [
+            ['uid' => 1, 'hidden' => false],
+            ['uid' => '2', 'hidden' => true],
+            ['uid' => 3, 'hidden' => false],
+            ['uid' => 99, 'hidden' => false],
+        ]);
+
+        preg_match_all('#<li>(.*?)</li>#s', $view->render(), $matches);
+        $icons = $matches[1];
+        $identifiers = array_map(static fn(string $icon): string => preg_match('#data-identifier="([^"]+)"#', $icon, $match) === 1 ? $match[1] : '', $icons);
+        $overlays = array_map(static fn(string $icon): bool => str_contains($icon, 'icon-overlay-hidden'), $icons);
+
+        $defaultIcon = $this->get(IconFactory::class)->getIconForRecord('be_groups', ['uid' => 99], IconSize::SMALL)->getIdentifier();
+        self::assertSame([GroupKind::Role->iconIdentifier(), GroupKind::AccessControl->iconIdentifier(), GroupKind::Classic->iconIdentifier(), $defaultIcon], $identifiers);
+        self::assertSame([false, true, false, false], $overlays);
     }
 
     #[Test]

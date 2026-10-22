@@ -34,6 +34,19 @@ test.describe('Core module "Users"', () => {
     await expect(teamLead).toContainText('ACL: Page properties, TS: Clear page cache, META: Content manager');
   });
 
+  test('shows the icon of the kind of the groups', async ({ backend }) => {
+    await backend.open('module/users/management/BackendUser/groups');
+    const icons = {
+      'META: Team lead': 'actions-users',
+      'ACL: Content editing': 'actions-shield',
+      'DBM: Website': 'actions-pagetree-mount',
+      'Legacy newsletter': 'actions-key',
+    };
+    for (const [title, icon] of Object.entries(icons)) {
+      await expect(groupRow(backend, title).locator('td.col-icon [data-identifier]').first()).toHaveAttribute('data-identifier', icon);
+    }
+  });
+
   test('names the kind of a group in the confirmation of its deletion', async ({ backend }) => {
     await backend.open('module/users/management/BackendUser/groups');
     await expect(groupRow(backend, 'META: Team lead').locator('button.t3js-modal-trigger')).toHaveAttribute(
