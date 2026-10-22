@@ -50,5 +50,6 @@ final class PermissionAuditWithClassicGroupsDisabledTest extends FunctionalTestC
         self::assertCount(1, $classicFindings);
         self::assertSame(AuditSeverity::Error, $classicFindings[0]->severity);
         self::assertSame('classic-group-disabled', $classicFindings[0]->identifier);
+        self::assertStringContainsString('begroups:classify', $classicFindings[0]->message);
     }
 }

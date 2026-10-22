@@ -124,8 +124,8 @@ final readonly class PermissionAudit
         }
         if ($kind === GroupKind::Classic->value) {
             return $this->extensionSettings->isClassicGroupsAllowed()
-                ? [$finding(AuditSeverity::Warning, 'classic-group', 'Classic group: split it into building blocks and a role.')]
-                : [$finding(AuditSeverity::Error, 'classic-group-disabled', 'Classic groups are disabled, but this classic group still exists. Split it into building blocks and a role.')];
+                ? [$finding(AuditSeverity::Warning, 'classic-group', 'Classic group: convert it into a role or building blocks. begroups:classify shows how, or what needs your decision.')]
+                : [$finding(AuditSeverity::Error, 'classic-group-disabled', 'Classic groups are disabled, but this classic group still exists. Convert it into a role or building blocks: begroups:classify shows how, or what needs your decision.')];
         }
 
         $findings = [];

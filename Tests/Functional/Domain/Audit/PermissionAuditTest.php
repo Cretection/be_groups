@@ -88,6 +88,8 @@ final class PermissionAuditTest extends FunctionalTestCase
         self::assertStringContainsString('building block 1 "ACL: ACL ok"', $messages['be_users:3'][0]);
         self::assertStringContainsString(': file_permissions.', $messages['be_users:4'][0]);
         self::assertStringContainsString(': allowed_languages.', $messages['be_users:7'][0]);
+        // begroups:split leaves groups whose kind only changes to begroups:classify, which also names what needs a decision
+        self::assertStringContainsString('begroups:classify', $messages['be_groups:4'][0]);
     }
 
     #[Test]
