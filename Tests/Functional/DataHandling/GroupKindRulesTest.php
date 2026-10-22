@@ -210,6 +210,16 @@ final class GroupKindRulesTest extends FunctionalTestCase
     }
 
     #[Test]
+    public function recordsWithoutTitleAreNamedByTheirUid(): void
+    {
+        $this->get(ConnectionPool::class)->getConnectionForTable('be_groups')->update('be_groups', ['title' => ''], ['uid' => 1]);
+
+        $this->writeGroup(1, ['tx_begroups_kind' => 'db_mount']);
+
+        self::assertSame('[1]', $this->getLastExtensionLogEntry()['data']['record'] ?? null);
+    }
+
+    #[Test]
     public function correctionsOfNewUsersAreLoggedForTheCreatedUser(): void
     {
         $dataHandler = $this->processDatamap(['be_users' => ['NEW1' => ['pid' => 0, 'username' => 'new', 'password' => 'Secret-Password-1234', 'usergroup' => '5,1']]]);
@@ -552,6 +562,16 @@ final class GroupKindRulesTest extends FunctionalTestCase
     {
         $this->processDatamap(['be_groups' => [7 => ['subgroup' => '']]], true);
         $this->writeGroup(7, ['subgroup' => '5,1']);
+
+        self::assertSame('1', $this->getRecord('be_groups', 7)['subgroup']);
+    }
+
+    #[Test]
+    public function aWriteOutsideOfTheImportEndsWhatTheImportHasEmptied(): void
+    {
+        $this->processDatamap(['be_groups' => [7 => ['subgroup' => '']]], true);
+        $this->writeGroup(7, ['subgroup' => '']);
+        $this->processDatamap(['be_groups' => [7 => ['subgroup' => 'be_groups_5,be_groups_1']]], true);
 
         self::assertSame('1', $this->getRecord('be_groups', 7)['subgroup']);
     }

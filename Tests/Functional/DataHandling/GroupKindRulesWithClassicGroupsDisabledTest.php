@@ -93,6 +93,19 @@ final class GroupKindRulesWithClassicGroupsDisabledTest extends FunctionalTestCa
     }
 
     #[Test]
+    public function rejectedNewGroupsWithoutTitleAreNamedByTheirPlaceholder(): void
+    {
+        $this->processDatamap(['be_groups' => ['NEW1' => ['pid' => 0, 'title' => ' ']]]);
+
+        $logData = $this->get(ConnectionPool::class)->getConnectionForTable('sys_log')
+            ->select(['log_data'], 'sys_log', ['type' => 4])
+            ->fetchOne();
+        $arguments = json_decode(is_string($logData) ? $logData : '', true);
+        self::assertIsArray($arguments);
+        self::assertSame('NEW1', $arguments['record'] ?? null);
+    }
+
+    #[Test]
     public function rejectedChangesToClassicNameTheGroup(): void
     {
         $this->writeGroup(2, ['tx_begroups_kind' => 'classic']);
