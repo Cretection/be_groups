@@ -133,6 +133,26 @@ abstract class AbstractFormTestCase extends FunctionalTestCase
 
     /**
      * @param array<array-key, mixed> $formData
+     * @return string|null the label of the group of a grouped list that lists the value, null if none does
+     */
+    protected function getItemGroupLabelOf(array $formData, string $field, string $value): ?string
+    {
+        $groupLabel = null;
+        foreach ($this->getItems($formData, $field) as $item) {
+            if (!is_array($item) || !is_scalar($item['value'] ?? null)) {
+                continue;
+            }
+            if ($item['value'] === '--div--') {
+                $groupLabel = is_scalar($item['label'] ?? null) ? (string)$item['label'] : '';
+            } elseif ((string)$item['value'] === $value) {
+                return $groupLabel;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * @param array<array-key, mixed> $formData
      * @return list<string>
      */
     protected function getItemValues(array $formData, string $field): array

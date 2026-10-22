@@ -20,8 +20,10 @@ use Cretection\BeGroups\Configuration\ExtensionSettings;
 use Cretection\BeGroups\Domain\Kind\KindPrefix;
 use Cretection\BeGroups\EventListener\HideClassicKindInNewRecordWizard;
 use Cretection\BeGroups\Form\FormDataProvider\KindSelection;
+use Cretection\BeGroups\Form\ItemsProcessor\UnknownKindItemGroup;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
+use TYPO3\CMS\Core\Database\ConnectionPool;
 
 /**
  * The group and user forms must never drop stored relations: a select field only keeps
@@ -32,6 +34,7 @@ use PHPUnit\Framework\Attributes\Test;
 #[CoversClass(GroupRecordTitle::class)]
 #[CoversClass(KindPrefix::class)]
 #[CoversClass(HideClassicKindInNewRecordWizard::class)]
+#[CoversClass(UnknownKindItemGroup::class)]
 final class GroupAndUserFormTest extends AbstractFormTestCase
 {
     #[Test]
@@ -58,6 +61,28 @@ final class GroupAndUserFormTest extends AbstractFormTestCase
         $formData = $this->compileForm('be_groups', 7);
 
         self::assertSame(['5', '1'], $this->getRowValues($formData, 'subgroup'));
+    }
+
+    /**
+     * Groups of a kind that is not configured (any more) or of no kind can neither be added to a role
+     * nor be assigned to a user. They stay in the lists, so that stored relations are kept.
+     */
+    #[Test]
+    public function groupsWithAnUnknownKindAreListedAsNotAllowed(): void
+    {
+        $connection = $this->get(ConnectionPool::class)->getConnectionForTable('be_groups');
+        $connection->update('be_groups', ['tx_begroups_kind' => 'my_uninstalled_kind'], ['uid' => 3]);
+        $connection->update('be_groups', ['tx_begroups_kind' => ''], ['uid' => 4]);
+        $roleForm = $this->compileForm('be_groups', 6);
+        $userForm = $this->compileForm('be_users', 4);
+
+        foreach (['3', '4'] as $uid) {
+            self::assertSame('Groups with an unknown kind (cannot be added to a role)', $this->getItemGroupLabelOf($roleForm, 'subgroup', $uid), $uid);
+            self::assertSame('Groups with an unknown kind (cannot be assigned)', $this->getItemGroupLabelOf($userForm, 'usergroup', $uid), $uid);
+        }
+        // The other groups keep the group of their kind
+        self::assertSame('Access rights', $this->getItemGroupLabelOf($roleForm, 'subgroup', '1'));
+        self::assertSame('Roles', $this->getItemGroupLabelOf($userForm, 'usergroup', '6'));
     }
 
     /**

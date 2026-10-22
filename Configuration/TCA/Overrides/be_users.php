@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Cretection\BeGroups\Domain\Kind\GroupKind;
+use Cretection\BeGroups\Form\ItemsProcessor\UnknownKindItemGroup;
 use TYPO3\CMS\Core\Utility\ExtensionManagementUtility;
 
 defined('TYPO3') or die();
@@ -22,11 +23,14 @@ defined('TYPO3') or die();
             $itemGroups[$kind->value] = $labels . 'kind.group.notAssignable.' . $kind->value;
         }
     }
+    $itemGroups[UnknownKindItemGroup::GROUP] = $labels . 'kind.group.notAssignable.unknown';
 
     $usergroupConfig = &$GLOBALS['TCA']['be_users']['columns']['usergroup'];
     $usergroupConfig['description'] = $labels . 'be_users.usergroup.description';
     $usergroupConfig['config']['foreign_table_item_group'] = GroupKind::FIELD_NAME;
     $usergroupConfig['config']['itemGroups'] = $itemGroups;
+    // Groups of an unknown kind are grouped under a heading of their own, not under their stored kind.
+    $usergroupConfig['config']['itemsProcessors'][100] = ['class' => UnknownKindItemGroup::class];
     // Each kind heading takes a row: keep the five rows of the core for the groups.
     $usergroupConfig['config']['size'] = 5 + count($itemGroups);
 })();

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Cretection\BeGroups\Backend\GroupRecordTitle;
 use Cretection\BeGroups\Domain\Kind\GroupKind;
+use Cretection\BeGroups\Form\ItemsProcessor\UnknownKindItemGroup;
 use TYPO3\CMS\Core\Utility\ExtensionManagementUtility;
 
 defined('TYPO3') or die();
@@ -129,11 +130,16 @@ defined('TYPO3') or die();
     }
     $memberGroups[GroupKind::Role->value] = $labels . 'kind.group.notAllowedInRole.role';
     $memberGroups[GroupKind::Classic->value] = $labels . 'kind.group.notAllowedInRole.classic';
+    $memberGroups[UnknownKindItemGroup::GROUP] = $labels . 'kind.group.notAllowedInRole.unknown';
     $GLOBALS['TCA'][$table]['types'][GroupKind::Role->value]['columnsOverrides']['subgroup'] = [
         'description' => $labels . 'be_groups.subgroup.role.description',
         'config' => [
             'foreign_table_item_group' => $kindField,
             'itemGroups' => $memberGroups,
+            // Groups of an unknown kind are grouped under a heading of their own, not under their stored kind.
+            'itemsProcessors' => [
+                100 => ['class' => UnknownKindItemGroup::class],
+            ],
             // Each kind heading takes a row: keep the five rows of the core for the groups.
             'size' => 5 + count($memberGroups),
         ],

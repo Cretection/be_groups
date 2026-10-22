@@ -102,6 +102,9 @@
       <trans-unit id="kind.group.notAllowedInRole.classic">
         <source>Classic groups (cannot be added to a role)</source>
       </trans-unit>
+      <trans-unit id="kind.group.notAllowedInRole.unknown">
+        <source>Groups with an unknown kind (cannot be added to a role)</source>
+      </trans-unit>
       <trans-unit id="kind.group.notAssignable.acl">
         <source>Access rights (building blocks, assign through a role)</source>
       </trans-unit>
@@ -131,6 +134,9 @@
       </trans-unit>
       <trans-unit id="kind.group.notAssignable.classic">
         <source>Classic groups (disabled, cannot be assigned)</source>
+      </trans-unit>
+      <trans-unit id="kind.group.notAssignable.unknown">
+        <source>Groups with an unknown kind (cannot be assigned)</source>
       </trans-unit>
     </body>
   </file>

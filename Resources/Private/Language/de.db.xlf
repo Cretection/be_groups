@@ -135,6 +135,10 @@
         <source>Classic groups (cannot be added to a role)</source>
         <target>Klassische Gruppen (können keiner Rolle hinzugefügt werden)</target>
       </trans-unit>
+      <trans-unit id="kind.group.notAllowedInRole.unknown" approved="yes">
+        <source>Groups with an unknown kind (cannot be added to a role)</source>
+        <target>Gruppen mit unbekanntem Typ (können keiner Rolle hinzugefügt werden)</target>
+      </trans-unit>
       <trans-unit id="kind.group.notAssignable.acl" approved="yes">
         <source>Access rights (building blocks, assign through a role)</source>
         <target>Zugriffsrechte (Bausteine, über eine Rolle zuweisen)</target>
@@ -174,6 +178,10 @@
       <trans-unit id="kind.group.notAssignable.classic" approved="yes">
         <source>Classic groups (disabled, cannot be assigned)</source>
         <target>Klassische Gruppen (abgeschaltet, können nicht zugewiesen werden)</target>
+      </trans-unit>
+      <trans-unit id="kind.group.notAssignable.unknown" approved="yes">
+        <source>Groups with an unknown kind (cannot be assigned)</source>
+        <target>Gruppen mit unbekanntem Typ (können nicht zugewiesen werden)</target>
       </trans-unit>
     </body>
   </file>
