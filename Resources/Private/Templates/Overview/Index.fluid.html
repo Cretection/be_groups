@@ -238,11 +238,9 @@
 <f:section name="Group">
     <core:icon identifier="{group.iconIdentifier}" size="small" />
     <f:render section="GroupLink" arguments="{group: group, returnUrl: returnUrl}" />
-    <f:if condition="{group.hidden}">
-        <span class="badge badge-default"><f:translate key="label.hidden" domain="be_groups.modules.overview" /></span>
-    </f:if>
 </f:section>
 
+<f:comment>TYPO3 does not apply hidden groups, so they are marked wherever they are listed. Nothing may follow the badge, as the lists put commas right after this section.</f:comment>
 <f:section name="GroupLink">
     <f:if condition="{withKind}"><core:icon identifier="{group.iconIdentifier}" size="small" /></f:if>
     <be:link.editRecord
@@ -250,7 +248,7 @@
         table="be_groups"
         returnUrl="{returnUrl}"
         title="{f:translate(key: 'label.edit', domain: 'be_groups.modules.overview', arguments: {0: group.title})}"
-    ><f:if condition="{withKind}"><f:then><begroups:groupTitle uid="{group.uid}" title="{group.title}" /></f:then><f:else>{group.title}</f:else></f:if></be:link.editRecord></f:section>
+    ><f:if condition="{withKind}"><f:then><begroups:groupTitle uid="{group.uid}" title="{group.title}" /></f:then><f:else>{group.title}</f:else></f:if></be:link.editRecord><f:if condition="{group.hidden}"> <span class="badge badge-default"><f:translate key="label.hidden" domain="be_groups.modules.overview" /></span></f:if></f:section>
 
 <f:section name="UserList">
     <f:if condition="{users}">

@@ -112,6 +112,22 @@ final class OverviewControllerTest extends FunctionalTestCase
     }
 
     #[Test]
+    public function marksDisabledGroupsWhereverTheyAreListed(): void
+    {
+        $this->setUpBackendUserWithLanguage(1);
+        $connection = $this->get(ConnectionPool::class)->getConnectionForTable('be_groups');
+        $connection->update('be_groups', ['hidden' => 1], ['uid' => 1]);
+        $connection->update('be_groups', ['hidden' => 1], ['uid' => 6]);
+
+        $html = $this->renderModule();
+
+        // TYPO3 does not apply hidden groups: own row and the rows of the roles "R editor" and "R other"
+        self::assertSame(3, preg_match_all('#>ACL editing</a>\s*<span class="badge badge-default">disabled</span>#', $html));
+        // Own row and "Used in" of "ACL editing" and "DBM site A"
+        self::assertSame(3, preg_match_all('#>(?:META: )?R editor</a>\s*<span class="badge badge-default">disabled</span>#', $html));
+    }
+
+    #[Test]
     public function escapesGroupTitles(): void
     {
         $this->setUpBackendUserWithLanguage(1);
@@ -135,13 +151,24 @@ final class OverviewControllerTest extends FunctionalTestCase
         self::assertSame('', (string)$response->getBody());
     }
 
+    /**
+     * @param array<string, string> $moduleData
+     */
+    private function renderModule(array $moduleData = []): string
+    {
+        return (string)$this->get(OverviewController::class)->indexAction($this->createModuleRequest($moduleData))->getBody();
+    }
+
     private function setUpBackendUserWithLanguage(int $uid): void
     {
         $backendUser = $this->setUpBackendUser($uid);
         $GLOBALS['LANG'] = $this->get(LanguageServiceFactory::class)->createFromUserPreferences($backendUser);
     }
 
-    private function createModuleRequest(): ServerRequestInterface
+    /**
+     * @param array<string, string> $moduleData
+     */
+    private function createModuleRequest(array $moduleData = []): ServerRequestInterface
     {
         $module = $this->get(ModuleProvider::class)->getModule(OverviewController::MODULE_IDENTIFIER);
         self::assertNotNull($module);
@@ -157,7 +184,7 @@ final class OverviewControllerTest extends FunctionalTestCase
             ->withAttribute('normalizedParams', new NormalizedParams($serverParams, [], Environment::getPublicPath() . '/typo3/index.php', Environment::getPublicPath() . '/'))
             ->withAttribute('route', new Route('/module/users/roles', ['packageName' => 'cretection/be-groups', '_identifier' => OverviewController::MODULE_IDENTIFIER, 'module' => $module]))
             ->withAttribute('module', $module)
-            ->withAttribute('moduleData', ModuleData::createFromModule($module, []));
+            ->withAttribute('moduleData', ModuleData::createFromModule($module, $moduleData));
         $GLOBALS['TYPO3_REQUEST'] = $request;
         return $request;
     }

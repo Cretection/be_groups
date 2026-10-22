@@ -59,7 +59,8 @@ final readonly class OverviewBuilder
                 $row->getUid(),
                 $row->get('title'),
                 $kind,
-                $row->get('hidden') === '1',
+                // Like the HiddenRestriction of TYPO3: only 0 is visible
+                $row->get('hidden') !== '0',
                 isset($definitions['kind:' . $kind]) ? $definitions['kind:' . $kind]->iconIdentifier : self::FALLBACK_ICON,
             );
             $members[$row->getUid()] = RelationList::fromStoredValue($row->get('subgroup'))->getUids();

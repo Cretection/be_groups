@@ -210,6 +210,25 @@ final class OverviewBuilderTest extends UnitTestCase
     }
 
     #[Test]
+    public function groupsAreHiddenUnlessTheirHiddenFlagIsZeroLikeInTypo3(): void
+    {
+        // The HiddenRestriction of TYPO3 only lets "hidden = 0" pass
+        $overview = $this->subject->build(
+            [
+                DatabaseRow::fromArray(['uid' => 1, 'title' => 'ACL a', 'tx_begroups_kind' => 'acl', 'subgroup' => '', 'hidden' => 2]),
+                DatabaseRow::fromArray(['uid' => 2, 'title' => 'ACL b', 'tx_begroups_kind' => 'acl', 'subgroup' => '', 'hidden' => 0]),
+            ],
+            [],
+            [new KindDefinition('acl', 'Access rights', 'actions-shield')],
+            OverviewBuilder::SORT_TITLE,
+            '',
+        );
+
+        self::assertTrue($this->findBuildingBlock($overview, 'ACL a')->group->hidden);
+        self::assertFalse($this->findBuildingBlock($overview, 'ACL b')->group->hidden);
+    }
+
+    #[Test]
     public function classicGroupsAreListedSeparately(): void
     {
         self::assertSame(['Classic'], array_map(static fn(GroupItem $group): string => $group->title, $this->build()->classicGroups));
