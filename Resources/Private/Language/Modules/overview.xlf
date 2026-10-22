@@ -141,6 +141,9 @@
       <trans-unit id="unknownKind.badge">
         <source>kind "%1$s"</source>
       </trans-unit>
+      <trans-unit id="unknownKind.badge.empty">
+        <source>no kind</source>
+      </trans-unit>
     </body>
   </file>
 </xliff>

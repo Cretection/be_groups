@@ -228,7 +228,7 @@
             <f:for each="{overview.unknownKindGroups}" as="unknownKindGroup">
                 <li class="mb-1">
                     <f:render section="Group" arguments="{group: unknownKindGroup, returnUrl: returnUrl}" />
-                    <span class="badge badge-warning"><f:translate key="unknownKind.badge" domain="be_groups.modules.overview" arguments="{0: unknownKindGroup.kind}" /></span>
+                    <span class="badge badge-warning"><f:if condition="{unknownKindGroup.kind} == ''"><f:then><f:translate key="unknownKind.badge.empty" domain="be_groups.modules.overview" /></f:then><f:else><f:translate key="unknownKind.badge" domain="be_groups.modules.overview" arguments="{0: unknownKindGroup.kind}" /></f:else></f:if></span>
                 </li>
             </f:for>
         </ul>

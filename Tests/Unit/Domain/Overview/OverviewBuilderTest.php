@@ -16,6 +16,7 @@ declare(strict_types=1);
 namespace Cretection\BeGroups\Tests\Unit\Domain\Overview;
 
 use Cretection\BeGroups\DataHandling\RelationList;
+use Cretection\BeGroups\Domain\Kind\GroupKind;
 use Cretection\BeGroups\Domain\Kind\KindDefinition;
 use Cretection\BeGroups\Domain\Overview\BuildingBlockItem;
 use Cretection\BeGroups\Domain\Overview\BuildingBlockSection;
@@ -287,6 +288,17 @@ final class OverviewBuilderTest extends UnitTestCase
             array_map(static fn(BuildingBlockItem $buildingBlock): string => $buildingBlock->group->title, $overview->buildingBlockSections[0]->buildingBlocks),
         );
         self::assertSame(['anna', 'Ömer', 'zoe'], array_map(static fn(UserItem $user): string => $user->username, $this->findRole($overview, 'Autoren')->users));
+    }
+
+    #[Test]
+    public function groupsWithUnknownKindsDoNotUseTheIconOfRoles(): void
+    {
+        $unknownKindGroups = $this->build()->unknownKindGroups;
+
+        self::assertNotSame([], $unknownKindGroups);
+        foreach ($unknownKindGroups as $group) {
+            self::assertNotSame(GroupKind::Role->iconIdentifier(), $group->iconIdentifier, $group->title);
+        }
     }
 
     #[Test]

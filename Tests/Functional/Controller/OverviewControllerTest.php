@@ -128,6 +128,22 @@ final class OverviewControllerTest extends FunctionalTestCase
     }
 
     #[Test]
+    public function namesAMissingKindOfAGroup(): void
+    {
+        $this->setUpBackendUserWithLanguage(1);
+        $connection = $this->get(ConnectionPool::class)->getConnectionForTable('be_groups');
+        $connection->update('be_groups', ['tx_begroups_kind' => ''], ['uid' => 9]);
+        $connection->update('be_groups', ['tx_begroups_kind' => '0'], ['uid' => 5]);
+
+        $html = $this->renderModule();
+
+        self::assertStringContainsString('<span class="badge badge-warning">no kind</span>', $html);
+        self::assertStringNotContainsString('kind &quot;&quot;', $html);
+        // The numeric kind of old versions is still named
+        self::assertStringContainsString('<span class="badge badge-warning">kind &quot;0&quot;</span>', $html);
+    }
+
+    #[Test]
     public function sortsTitlesForTheLanguageOfTheEditor(): void
     {
         $this->setUpBackendUser(1);

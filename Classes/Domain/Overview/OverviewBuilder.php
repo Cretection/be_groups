@@ -33,7 +33,8 @@ final readonly class OverviewBuilder
     public const SORT_USAGE = 'usage';
     public const SORTINGS = [self::SORT_TITLE, self::SORT_USAGE];
 
-    private const FALLBACK_ICON = 'actions-users';
+    // Groups of an unknown kind are neither roles nor building blocks, so they do not look like either
+    private const UNKNOWN_KIND_ICON = 'actions-question-circle';
 
     /**
      * @param list<DatabaseRow> $groupRows fields: uid, title, tx_begroups_kind, subgroup, hidden
@@ -66,7 +67,7 @@ final readonly class OverviewBuilder
                 $kind,
                 // Like the HiddenRestriction of TYPO3: only 0 is visible
                 $row->get('hidden') !== '0',
-                isset($definitions['kind:' . $kind]) ? $definitions['kind:' . $kind]->iconIdentifier : self::FALLBACK_ICON,
+                isset($definitions['kind:' . $kind]) ? $definitions['kind:' . $kind]->iconIdentifier : self::UNKNOWN_KIND_ICON,
             );
             $members[$row->getUid()] = $this->readSubgroups($row->get('subgroup'));
         }

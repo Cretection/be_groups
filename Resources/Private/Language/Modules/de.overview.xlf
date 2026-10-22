@@ -187,6 +187,10 @@
         <source>kind "%1$s"</source>
         <target>Typ „%1$s“</target>
       </trans-unit>
+      <trans-unit id="unknownKind.badge.empty" approved="yes">
+        <source>no kind</source>
+        <target>kein Typ</target>
+      </trans-unit>
     </body>
   </file>
 </xliff>
