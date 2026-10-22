@@ -124,8 +124,8 @@
         <target>Weisen Sie Rollen zu. Bausteine werden Benutzern nicht direkt zugewiesen, sondern in Rollen zusammengefasst, und klassische Gruppen sind abgeschaltet; eine Zuweisung hier wird beim Speichern abgelehnt.</target>
       </trans-unit>
       <trans-unit id="extConf.allowClassicGroups" approved="yes">
-        <source>Allow classic groups: groups of kind "classic" can be created and assigned to users. Switch this off after migrating to roles and building blocks to enforce the clean model. Existing assignments keep working.</source>
-        <target>Klassische Gruppen erlauben: Gruppen vom Typ „Klassisch“ können angelegt und Benutzern zugewiesen werden. Nach der Umstellung auf Rollen und Bausteine abschalten, um das saubere Modell zu erzwingen. Bestehende Zuweisungen wirken weiter.</target>
+        <source>Allow classic groups: Groups of kind "Classic" can be created and assigned to users. Switch this off after migrating to roles and building blocks to enforce the clean model: new groups then start as roles, and users can only be assigned roles. Existing classic groups and their assignments keep working.</source>
+        <target>Klassische Gruppen erlauben: Gruppen vom Typ „Klassisch“ können angelegt und Benutzern zugewiesen werden. Nach der Umstellung auf Rollen und Bausteine abschalten, um das saubere Modell zu erzwingen: Neue Gruppen beginnen dann als Rolle, und Benutzern können nur noch Rollen zugewiesen werden. Bestehende klassische Gruppen und ihre Zuweisungen wirken weiter.</target>
       </trans-unit>
       <trans-unit id="kind.group.notAllowedInRole.role" approved="yes">
         <source>Roles (cannot be added to a role)</source>

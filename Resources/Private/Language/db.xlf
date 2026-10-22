@@ -94,7 +94,7 @@
         <source>Assign roles. Building blocks are not assigned to users directly but combined in roles, and classic groups are disabled; assigning them here is rejected when saving.</source>
       </trans-unit>
       <trans-unit id="extConf.allowClassicGroups">
-        <source>Allow classic groups: groups of kind "classic" can be created and assigned to users. Switch this off after migrating to roles and building blocks to enforce the clean model. Existing assignments keep working.</source>
+        <source>Allow classic groups: Groups of kind "Classic" can be created and assigned to users. Switch this off after migrating to roles and building blocks to enforce the clean model: new groups then start as roles, and users can only be assigned roles. Existing classic groups and their assignments keep working.</source>
       </trans-unit>
       <trans-unit id="kind.group.notAllowedInRole.role">
         <source>Roles (cannot be added to a role)</source>
