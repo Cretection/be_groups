@@ -102,11 +102,15 @@ final class SplitCommand extends Command
             } elseif (!$all) {
                 $skipped++;
                 $io->writeln(ConsoleTextUtility::escape(sprintf(
-                    'be_groups:%d %s%s: skipped. %s',
+                    'be_groups:%d %s%s: skipped. %s%s',
                     $classification->uid,
                     $classification->title,
                     $classification->hidden ? ' (disabled)' : '',
                     $classification->reason,
+                    // begroups:audit asks to convert every classic group, so name the assistant that does it.
+                    $classification->action === ClassificationAction::ChangeKind
+                        ? sprintf(' begroups:classify changes its kind to "%s".', $classification->targetKind)
+                        : '',
                 )));
             }
         }

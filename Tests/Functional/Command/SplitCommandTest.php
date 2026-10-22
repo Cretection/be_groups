@@ -135,7 +135,8 @@ final class SplitCommandTest extends FunctionalTestCase
 
         self::assertSame(Command::FAILURE, $commandTester->execute(['uids' => ['1', '10', '11', '99']]));
         $display = $commandTester->getDisplay();
-        self::assertStringContainsString('be_groups:1 Mounts only: skipped. Only grants permissions of the kind "db_mount".', $display);
+        // The audit advises to convert every classic group; this one changes its kind instead.
+        self::assertStringContainsString('be_groups:1 Mounts only: skipped. Only grants permissions of the kind "db_mount". begroups:classify changes its kind to "db_mount".', $display);
         self::assertStringContainsString('be_groups:10 Role: skipped. It is a group of the kind "role", not a classic group.', $display);
         self::assertStringContainsString('be_groups:11 Deleted: skipped. The group is deleted.', $display);
         self::assertStringContainsString('be_groups:99: skipped. The group does not exist.', $display);
