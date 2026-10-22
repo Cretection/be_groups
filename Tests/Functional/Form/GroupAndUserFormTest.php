@@ -18,6 +18,7 @@ namespace Cretection\BeGroups\Tests\Functional\Form;
 use Cretection\BeGroups\Backend\GroupRecordTitle;
 use Cretection\BeGroups\Configuration\ExtensionSettings;
 use Cretection\BeGroups\Domain\Kind\KindPrefix;
+use Cretection\BeGroups\EventListener\HideClassicKindInNewRecordWizard;
 use Cretection\BeGroups\Form\FormDataProvider\KindSelection;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
@@ -30,6 +31,7 @@ use PHPUnit\Framework\Attributes\Test;
 #[CoversClass(ExtensionSettings::class)]
 #[CoversClass(GroupRecordTitle::class)]
 #[CoversClass(KindPrefix::class)]
+#[CoversClass(HideClassicKindInNewRecordWizard::class)]
 final class GroupAndUserFormTest extends AbstractFormTestCase
 {
     #[Test]

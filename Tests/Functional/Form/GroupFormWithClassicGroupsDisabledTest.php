@@ -16,12 +16,14 @@ declare(strict_types=1);
 namespace Cretection\BeGroups\Tests\Functional\Form;
 
 use Cretection\BeGroups\Configuration\ExtensionSettings;
+use Cretection\BeGroups\EventListener\HideClassicKindInNewRecordWizard;
 use Cretection\BeGroups\Form\FormDataProvider\KindSelection;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 
 #[CoversClass(KindSelection::class)]
 #[CoversClass(ExtensionSettings::class)]
+#[CoversClass(HideClassicKindInNewRecordWizard::class)]
 final class GroupFormWithClassicGroupsDisabledTest extends AbstractFormTestCase
 {
     protected array $configurationToUseInTestInstance = [
@@ -56,5 +58,14 @@ final class GroupFormWithClassicGroupsDisabledTest extends AbstractFormTestCase
         $formData = $this->compileForm('be_groups', 2);
 
         self::assertNotContains('classic', $this->getItemValues($formData, 'tx_begroups_kind'));
+    }
+
+    #[Test]
+    public function newRecordWizardDoesNotOfferTheClassicKind(): void
+    {
+        self::assertSame(
+            ['role', 'acl', 'page_group', 'db_mount', 'file_mount', 'file_operations', 'category_mount', 'language', 'tsconfig'],
+            $this->getTypesOfferedByTheNewRecordWizard(),
+        );
     }
 }
