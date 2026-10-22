@@ -119,11 +119,14 @@ final readonly class GroupClassifier
             }
         }
         $subgroups = $group->get('subgroup');
-        $hasSubgroups = $subgroups !== '';
+        // Like begroups:audit (unclean-group-list): TYPO3, the backend form and the DataHandler ignore
+        // spaces, empty entries and "0" alike.
+        $subgroupEntries = array_filter(GeneralUtility::trimExplode(',', $subgroups, true), static fn(string $entry): bool => $entry !== '0');
+        $hasSubgroups = $subgroupEntries !== [];
         $proposal = static fn(ClassificationAction $action, ?string $targetKind, string $reason): Classification
             => new Classification($group->getUid(), $group->get('title'), $group->get('hidden') === '1', $action, $targetKind, $concerns, $reason);
 
-        if (!RelationList::isCanonical($subgroups)) {
+        if (!RelationList::isCanonical(implode(',', $subgroupEntries))) {
             return $proposal(ClassificationAction::Manual, null, sprintf(
                 'The subgroups "%s" contain duplicates or entries that TYPO3 and the backend form read differently, e.g. "be_groups_5" or "05". Clean them up first; saving the group in the backend can add or remove groups.',
                 $subgroups,

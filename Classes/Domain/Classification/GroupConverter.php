@@ -85,7 +85,13 @@ final readonly class GroupConverter
             }
             // Also covers permission fields of other extensions, which TYPO3 does not merge itself.
             foreach ($this->kindFieldResolver->getManagedFieldNames() as $fieldName) {
-                if (!$this->kindFieldResolver->isSameValue($fieldName, $groupBefore->get($fieldName), $after->get($fieldName))) {
+                $isSame = $this->kindFieldResolver->isSameValue($fieldName, $groupBefore->get($fieldName), $after->get($fieldName))
+                    // The rules empty the subgroups of a building block, which may hold nothing but spaces, empty
+                    // entries or "0": no groups for TYPO3 either way.
+                    || ($fieldName === 'subgroup'
+                        && RelationList::fromStoredValue($groupBefore->get($fieldName))->entries === []
+                        && RelationList::fromStoredValue($after->get($fieldName))->entries === []);
+                if (!$isSame) {
                     return new ConversionResult($uid, ConversionStatus::Failed, sprintf('The field "%s" would change; nothing was changed.', $fieldName));
                 }
             }

@@ -134,6 +134,34 @@ final class GroupClassifierTest extends FunctionalTestCase
     }
 
     /**
+     * @return array<string, array{int, string, string}>
+     */
+    public static function subgroupsTypo3AndTheBackendFormReadAlikeDataProvider(): array
+    {
+        // begroups:audit does not report these lists either (unclean-group-list).
+        return [
+            'spaces' => [3, ' 1, 2 ', 'change-kind role'],
+            'empty entry' => [3, '1,,2', 'change-kind role'],
+            'no group' => [3, '0,1,2', 'change-kind role'],
+            'only no group' => [1, '0', 'change-kind db_mount'],
+            'only empty entries' => [1, ', ,', 'change-kind db_mount'],
+            'spaces in a group to split' => [9, ' 4', 'split acl, file_operations'],
+        ];
+    }
+
+    #[Test]
+    #[DataProvider('subgroupsTypo3AndTheBackendFormReadAlikeDataProvider')]
+    public function convertsGroupsWhoseSubgroupsTypo3AndTheBackendFormReadAlike(int $uid, string $subgroups, string $expected): void
+    {
+        $this->getConnectionPool()->getConnectionForTable('be_groups')->update('be_groups', ['subgroup' => $subgroups], ['uid' => $uid]);
+
+        $classification = $this->get(GroupClassifier::class)->classify($uid);
+
+        self::assertNotNull($classification);
+        self::assertSame($expected, $this->summarize([$classification])[$uid]);
+    }
+
+    /**
      * @return array<string, array{string, string}>
      */
     public static function relationsTheDataHandlerCanNotCopyDataProvider(): array

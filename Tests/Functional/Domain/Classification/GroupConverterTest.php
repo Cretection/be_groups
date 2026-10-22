@@ -202,6 +202,22 @@ final class GroupConverterTest extends FunctionalTestCase
     }
 
     #[Test]
+    public function convertsGroupsWhoseSubgroupsTypo3AndTheBackendFormReadAlike(): void
+    {
+        $connection = $this->getConnectionPool()->getConnectionForTable('be_groups');
+        $connection->update('be_groups', ['subgroup' => ', ,'], ['uid' => 1]);
+        $connection->update('be_groups', ['subgroup' => ' 4'], ['uid' => 9]);
+        $converter = $this->get(GroupConverter::class);
+
+        // A building block has no subgroups: the rules empty the field, which grants nothing either way.
+        self::assertSame(ConversionStatus::Converted, $converter->changeKind(1)->status);
+        self::assertSame(['tx_begroups_kind' => 'db_mount', 'subgroup' => ''], $this->getGroup(1, ['tx_begroups_kind', 'subgroup']));
+        $result = $converter->split(9);
+        self::assertSame(ConversionStatus::Converted, $result->status, $result->message);
+        self::assertSame(implode(',', [4, ...$result->createdBlockUids]), $this->getGroup(9, ['subgroup'])['subgroup']);
+    }
+
+    #[Test]
     public function keepsTheRootPageMount(): void
     {
         $connection = $this->getConnectionPool()->getConnectionForTable('be_groups');
