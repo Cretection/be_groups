@@ -83,12 +83,52 @@ final class SplitCommandTest extends FunctionalTestCase
     #[Test]
     public function failsForGroupsThatCanNotBeSplit(): void
     {
+        $groupCount = $this->countGroups();
         $commandTester = new CommandTester($this->get(SplitCommand::class));
 
-        self::assertSame(Command::FAILURE, $commandTester->execute(['uids' => ['1', '99']]));
+        self::assertSame(Command::FAILURE, $commandTester->execute(['uids' => ['1', '10', '11', '99']]));
         $display = $commandTester->getDisplay();
-        self::assertStringContainsString('be_groups:1 Mounts only: skipped, Only grants permissions of the kind "db_mount".', $display);
-        self::assertStringContainsString('be_groups:99: skipped, no classic group.', $display);
+        self::assertStringContainsString('be_groups:1 Mounts only: skipped. Only grants permissions of the kind "db_mount".', $display);
+        self::assertStringContainsString('be_groups:10 Role: skipped. It is a group of the kind "role", not a classic group.', $display);
+        self::assertStringContainsString('be_groups:11 Deleted: skipped. The group is deleted.', $display);
+        self::assertStringContainsString('be_groups:99: skipped. The group does not exist.', $display);
+        self::assertStringContainsString('[ERROR] None of the named groups can be split.', $display);
+        self::assertStringNotContainsString('[OK]', $display);
+        self::assertSame($groupCount, $this->countGroups());
+    }
+
+    #[Test]
+    public function failsInADryRunIfANamedGroupCanNotBeSplit(): void
+    {
+        $commandTester = new CommandTester($this->get(SplitCommand::class));
+
+        self::assertSame(Command::FAILURE, $commandTester->execute(['uids' => ['2', '99'], '--dry-run' => true]));
+        $display = $commandTester->getDisplay();
+        self::assertStringContainsString('1 group(s) would be split. Nothing was changed (--dry-run).', $display);
+        self::assertStringContainsString('[ERROR] 1 of the named groups cannot be split, see above.', $display);
+    }
+
+    #[Test]
+    public function countsTheGroupsThatWereSplitAndThoseThatWereNot(): void
+    {
+        $commandTester = new CommandTester($this->get(SplitCommand::class));
+
+        self::assertSame(Command::FAILURE, $commandTester->execute(['uids' => ['6', '99']]));
+        $display = $commandTester->getDisplay();
+        self::assertStringContainsString('be_groups:6 Direct mounts: converted', $display);
+        self::assertStringContainsString('[ERROR] 1 group(s) split, 1 not split, see above.', $display);
+    }
+
+    #[Test]
+    public function splitsAGroupNamedTwiceOnce(): void
+    {
+        $commandTester = new CommandTester($this->get(SplitCommand::class));
+
+        self::assertSame(Command::SUCCESS, $commandTester->execute(['uids' => ['2', '2']]));
+        $display = $commandTester->getDisplay();
+        self::assertSame(1, substr_count($display, 'be_groups:2 Editors: converted'));
+        self::assertStringNotContainsString('skipped', $display);
+        self::assertStringContainsString('1 group(s) split.', $display);
     }
 
     #[Test]
@@ -97,8 +137,13 @@ final class SplitCommandTest extends FunctionalTestCase
         $commandTester = new CommandTester($this->get(SplitCommand::class));
 
         self::assertSame(Command::INVALID, $commandTester->execute([]));
+        self::assertStringContainsString('Name the groups to split by uid, or use --all.', $commandTester->getDisplay());
         self::assertSame(Command::INVALID, $commandTester->execute(['uids' => ['2'], '--all' => true]));
-        self::assertSame(Command::INVALID, $commandTester->execute(['uids' => ['2x']]));
+        self::assertStringContainsString('Name the groups to split by uid or use --all, not both.', $commandTester->getDisplay());
+        self::assertSame(Command::INVALID, $commandTester->execute(['uids' => ['2', '2x']]));
+        self::assertStringContainsString('"2x" is no uid.', $commandTester->getDisplay());
+        self::assertSame(Command::INVALID, $commandTester->execute(['uids' => ['0']]));
+        self::assertStringContainsString('"0" is no uid.', $commandTester->getDisplay());
     }
 
     private function countGroups(): int

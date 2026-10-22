@@ -20,7 +20,9 @@ use Cretection\BeGroups\Domain\Classification\ClassificationAction;
 use Cretection\BeGroups\Domain\Classification\ConversionStatus;
 use Cretection\BeGroups\Domain\Classification\GroupClassifier;
 use Cretection\BeGroups\Domain\Classification\GroupConverter;
+use Cretection\BeGroups\Domain\Kind\GroupKind;
 use Cretection\BeGroups\Domain\Kind\KindPrefix;
+use Cretection\BeGroups\Domain\Repository\BackendGroupRepository;
 use Cretection\BeGroups\Utility\ConsoleTextUtility;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
@@ -45,6 +47,7 @@ final class SplitCommand extends Command
         private readonly GroupClassifier $groupClassifier,
         private readonly GroupConverter $groupConverter,
         private readonly KindPrefix $kindPrefix,
+        private readonly BackendGroupRepository $backendGroupRepository,
     ) {
         parent::__construct();
     }
@@ -67,14 +70,22 @@ final class SplitCommand extends Command
     {
         $io = new SymfonyStyle($input, $output);
         $uids = $this->getUids($input);
+        if (is_string($uids)) {
+            $io->error(ConsoleTextUtility::escape(sprintf('"%s" is no uid. Name the groups to split by uid, or use --all.', $uids)));
+            return Command::INVALID;
+        }
         $all = $input->getOption('all') === true;
-        if ($uids === null || ($uids === [] && !$all) || ($uids !== [] && $all)) {
+        if ($uids === [] && !$all) {
             $io->error('Name the groups to split by uid, or use --all.');
+            return Command::INVALID;
+        }
+        if ($uids !== [] && $all) {
+            $io->error('Name the groups to split by uid or use --all, not both.');
             return Command::INVALID;
         }
         $io->title('Split classic groups');
 
-        $failed = false;
+        $skipped = 0;
         $proposals = [];
         foreach ($this->groupClassifier->classifyAll() as $proposal) {
             $proposals[$proposal->uid] = $proposal;
@@ -83,29 +94,40 @@ final class SplitCommand extends Command
         foreach ($all ? $proposals : $uids as $item) {
             $classification = $item instanceof Classification ? $item : ($proposals[$item] ?? null);
             if ($classification === null) {
-                $failed = true;
-                $io->writeln(sprintf('be_groups:%d: skipped, no classic group.', $item));
+                $skipped++;
+                $io->writeln(ConsoleTextUtility::escape($this->describeGroupThatIsNotClassic($item)));
             } elseif ($classification->action === ClassificationAction::Split) {
                 $classifications[] = $classification;
             } elseif (!$all) {
-                $failed = true;
-                $io->writeln(ConsoleTextUtility::escape(sprintf('be_groups:%d %s: skipped, %s', $classification->uid, $classification->title, $classification->reason)));
+                $skipped++;
+                $io->writeln(ConsoleTextUtility::escape(sprintf('be_groups:%d %s: skipped. %s', $classification->uid, $classification->title, $classification->reason)));
             }
         }
         if ($classifications === []) {
+            if ($skipped > 0) {
+                $io->error('None of the named groups can be split.');
+                return Command::FAILURE;
+            }
             $io->success('There is no group to split.');
-            return $failed ? Command::FAILURE : Command::SUCCESS;
+            return Command::SUCCESS;
         }
         $io->table(['Group', 'Building block', 'Permissions'], $this->describePlan($classifications));
 
         if ($input->getOption('dry-run') === true) {
             $io->note(sprintf('%d group(s) would be split. Nothing was changed (--dry-run).', count($classifications)));
-            return $failed ? Command::FAILURE : Command::SUCCESS;
+            if ($skipped > 0) {
+                $io->error(sprintf('%d of the named groups cannot be split, see above.', $skipped));
+                return Command::FAILURE;
+            }
+            return Command::SUCCESS;
         }
         Bootstrap::initializeBackendAuthentication();
+        $split = 0;
         foreach ($classifications as $planned) {
             $result = $this->groupConverter->split($planned->uid);
-            $failed = $failed || $result->status !== ConversionStatus::Converted;
+            if ($result->status === ConversionStatus::Converted) {
+                $split++;
+            }
             $io->writeln(ConsoleTextUtility::escape(sprintf(
                 'be_groups:%d %s: %s %s%s',
                 $result->uid,
@@ -115,28 +137,42 @@ final class SplitCommand extends Command
                 $result->createdBlockUids !== [] ? ' Created: ' . implode(', ', $result->createdBlockUids) . '.' : '',
             )));
         }
-        if ($failed) {
-            $io->error('At least one group was not split and was left unchanged.');
+        $notSplit = $skipped + count($classifications) - $split;
+        if ($notSplit > 0) {
+            $io->error(sprintf('%d group(s) split, %d not split, see above.', $split, $notSplit));
             return Command::FAILURE;
         }
-        $io->success(sprintf('%d group(s) split. Check the result with begroups:audit.', count($classifications)));
+        $io->success(sprintf('%d group(s) split. Check the result with begroups:audit.', $split));
         return Command::SUCCESS;
     }
 
     /**
-     * @return list<int>|null null if an argument is no uid
+     * @return list<int>|string the uids without duplicates, or the first argument that is no uid
      */
-    private function getUids(InputInterface $input): ?array
+    private function getUids(InputInterface $input): array|string
     {
         $arguments = $input->getArgument('uids');
         $uids = [];
         foreach (is_array($arguments) ? $arguments : [] as $argument) {
-            if (!is_string($argument) || preg_match('/^[1-9]\d*$/', $argument) !== 1) {
-                return null;
+            $argument = is_scalar($argument) ? (string)$argument : '';
+            if (preg_match('/^[1-9]\d*$/', $argument) !== 1) {
+                return $argument;
             }
             $uids[] = (int)$argument;
         }
-        return $uids;
+        return array_values(array_unique($uids));
+    }
+
+    private function describeGroupThatIsNotClassic(int $uid): string
+    {
+        $group = $this->backendGroupRepository->findFieldsByUid($uid, ['title', 'deleted', GroupKind::FIELD_NAME]);
+        if ($group === null) {
+            return sprintf('be_groups:%d: skipped. The group does not exist.', $uid);
+        }
+        if ($group->get('deleted') !== '0') {
+            return sprintf('be_groups:%d %s: skipped. The group is deleted.', $uid, $group->get('title'));
+        }
+        return sprintf('be_groups:%d %s: skipped. It is a group of the kind "%s", not a classic group.', $uid, $group->get('title'), $group->get(GroupKind::FIELD_NAME));
     }
 
     /**
