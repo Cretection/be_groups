@@ -119,15 +119,28 @@ Einen eigenen Typ ergänzen
 Verwenden Sie eine nicht numerische Kennung mit Präfix (``my_news``, nicht
 ``news``), damit sie nicht mit künftigen Typen dieser Extension kollidiert.
 Die Item-Gruppe ``buildingBlocks`` listet den Typ bei den Bausteinen des
-Felds :guilabel:`Typ`; ohne sie steht der Typ über allen Gruppen.
+Felds :guilabel:`Typ`; ohne sie steht der Typ über allen Gruppen. Die
+Datensatzlisten von TYPO3 sortieren Gruppen nach der Kennung ihres Typs und
+dann nach Titel; die Kennung bestimmt also auch, wo die Gruppen Ihres Typs
+dort stehen, siehe :ref:`usage-prefixes`.
 
 Die Bezeichnung Ihres Typs erscheint als Präfix vor den Titeln seiner
-Gruppen, siehe :ref:`usage-prefixes`.
+Gruppen, siehe :ref:`usage-prefixes`. Geben Sie Ihrem Typ ein Icon in seinem
+Eintrag und in ``typeicon_classes``, wie oben: Das Icon des Eintrags zeigt
+TYPO3 im Feld :guilabel:`Typ` und im Modul „Rollen & Bausteine“, das aus
+``typeicon_classes`` als Icon seiner Gruppen, zum Beispiel in den
+Datensatzlisten und im Core-Modul :guilabel:`Benutzer`. Ohne Icon im Eintrag
+zeigt das Modul ein Fragezeichen, wie bei Gruppen mit unbekanntem Typ; ohne
+``typeicon_classes`` bekommen die Gruppen Ihres Typs das Icon der Rollen.
 
 Optional geben Sie Ihrem Typ eine Bezeichnung in den nach Typ gruppierten
-Listen der Rollen- und Benutzerformulare (sonst wird die Kennung angezeigt).
-Im Formular einer Rolle bleiben die Gruppen, die keiner Rolle hinzugefügt
-werden können, am Ende:
+Listen der Rollen- und Benutzerformulare (sonst zeigen die Listen seine
+Kennung als Überschrift). Gruppen eines Typs, der nicht (mehr) konfiguriert
+ist, zum Beispiel nach der Deinstallation Ihrer Extension, stehen im
+Formular einer Rolle unter „Gruppen mit unbekanntem Typ (können keiner Rolle
+hinzugefügt werden)“ und im Formular eines Benutzers unter „Gruppen mit
+unbekanntem Typ (können nicht zugewiesen werden)“. Im Formular einer Rolle
+bleiben die Gruppen, die keiner Rolle hinzugefügt werden können, am Ende:
 
 ..  code-block:: php
     :caption: EXT:my_extension/Configuration/TCA/Overrides/be_groups.php

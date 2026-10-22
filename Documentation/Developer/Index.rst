@@ -117,14 +117,28 @@ Add your own kind
 Use a prefixed, non-numeric identifier for your kind (``my_news``, not
 ``news``) to avoid collisions with future kinds of this extension. The item
 group ``buildingBlocks`` lists the kind among the building blocks of the
-field :guilabel:`Kind`; without it, the kind is listed above all groups.
+field :guilabel:`Kind`; without it, the kind is listed above all groups. The
+record lists of TYPO3 sort groups by the identifier of their kind and then
+by title, so the identifier also decides where the groups of your kind are
+listed there, see :ref:`usage-prefixes`.
 
 The label of your kind is shown as prefix in front of the titles of its
-groups, see :ref:`usage-prefixes`.
+groups, see :ref:`usage-prefixes`. Give your kind an icon in its item and in
+``typeicon_classes``, as above: TYPO3 shows the icon of the item in the field
+:guilabel:`Kind` and in the module "Roles & Building Blocks", and the one of
+``typeicon_classes`` as the icon of its groups, for example in the record
+lists and in the core module :guilabel:`Users`. Without an icon in the item,
+the module shows a question mark, as for groups of an unknown kind; without
+``typeicon_classes``, the groups of your kind get the icon of roles.
 
 Optionally give your kind a label in the lists of the role and user forms,
-which are grouped by kind (otherwise the identifier is shown). In the form of
-a role, keep the groups that cannot be added to a role at the end:
+which are grouped by kind (otherwise the lists show its identifier as
+heading). Groups of a kind that is not configured (any more), for example
+after your extension is uninstalled, are listed under "Groups with an
+unknown kind (cannot be added to a role)" in the form of a role and under
+"Groups with an unknown kind (cannot be assigned)" in the form of a user. In
+the form of a role, keep the groups that cannot be added to a role at the
+end:
 
 ..  code-block:: php
     :caption: EXT:my_extension/Configuration/TCA/Overrides/be_groups.php

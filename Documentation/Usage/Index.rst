@@ -48,9 +48,10 @@ Composing a role
 ----------------
 
 The field :guilabel:`Building blocks` of a role is the side-by-side list of
-the core. The available groups are grouped by kind; roles and classic groups
-appear in groups of their own, marked as not allowed. Adding one of them, or
-a group with an unknown kind, is rejected when the role is saved. The order
+the core. The available groups are grouped by kind; roles, classic groups and
+groups with an unknown kind appear at the end in groups of their own, marked
+as not allowed, for example "Groups with an unknown kind (cannot be added to
+a role)". Adding one of them is rejected when the role is saved. The order
 of the selected building blocks is kept. It matters twice: later building
 blocks override the TSconfig of earlier ones, and the first one becomes the
 owner group of the pages created by users who have this role as their first
@@ -88,10 +89,12 @@ Assigning roles to users
 
 The field :guilabel:`Group` of a backend user lists all groups, grouped into
 roles, classic groups and building blocks of each kind. Building blocks are
-marked "assign through a role"; assigning one directly is rejected when the
-user is saved. While classic groups are disabled (see :ref:`configuration`),
-the classic groups are listed under "Classic groups (disabled, cannot be
-assigned)", and assigning one is rejected as well.
+marked "assign through a role", and groups with an unknown kind are listed
+under "Groups with an unknown kind (cannot be assigned)"; assigning one of
+them is rejected when the user is saved. While classic groups are disabled
+(see :ref:`configuration`), the classic groups are listed under "Classic
+groups (disabled, cannot be assigned)", and assigning one is rejected as
+well.
 
 Neither list is filtered. A filtered list would drop every stored value that
 is not part of it whenever the form is saved – with the full list, saving a
@@ -143,8 +146,11 @@ called "Editors" appears as ``META: Editors``, its page tree entry point as
         - Workspace
 
 Classic groups and groups with an unknown kind have no prefix. Kinds of other
-extensions use their label. A group without a title is shown as, for example,
-``DBM: [No title]``.
+extensions use their label. A group without a title is shown as
+``[No title]``, behind the prefix of its kind, for example
+``DBM: [No title]`` – wherever the prefix appears, also in the core module
+:guilabel:`Users`, its group filter and the module
+:ref:`Roles & Building Blocks <usage-module>`.
 
 Lists that TYPO3 builds from the TCA – the record lists and the group fields
 of the forms – sort groups by kind (in the order of the kind identifiers)
@@ -241,7 +247,8 @@ permissions; replace it with building blocks that grant the same. Converting
 groups with the assistants often leaves such roles, see
 :ref:`migration-vanilla`.
 
-Kinds added by other extensions are shown with their own label and icon.
+Kinds added by other extensions are shown with their own label and icon, or
+with a question mark if they have no icon.
 
 Click a title to edit the group or user in the regular record form. The
 button :guilabel:`New role` in the document header creates a role, the menu

@@ -113,9 +113,13 @@ Gültig sind nur die konfigurierten Typen: die Einträge des Felds
 :sql:`tx_begroups_kind`, die ein eigenes Formular haben. Ein gespeicherter
 Wert, der kein solcher Eintrag ist – zum Beispiel der Typ einer
 deinstallierten Extension oder ein per SQL geschriebener Wert –, ist weder
-Rolle noch Baustein. Solche Gruppen
-werden nicht verändert, können keiner Rolle hinzugefügt werden und werden im
-Modul gesondert aufgeführt.
+Rolle noch Baustein. TYPO3 zeigt eine solche Gruppe im vollständigen
+Formular des Core, sodass jeder wirksame Wert sichtbar bleibt, und die Regeln
+leeren keinen davon. Die Gruppe behält ihre gespeicherten Untergruppen,
+bekommt aber keine neuen, bis ein Typ gewählt ist (R3). Sie kann keiner
+Rolle hinzugefügt und keinem Benutzer zugewiesen werden: Die Formulare von
+Rollen und Benutzern listen sie unter einer eigenen Überschrift, und das
+Modul führt sie gesondert auf.
 
 ..  _concept-combination:
 
@@ -197,8 +201,10 @@ R2: Einer Rolle werden nur Bausteine hinzugefügt
     hinzugefügt werden. Eine Rolle hat keine eigenen Rechtefelder (folgt aus
     R1).
 
-R3: Bausteine haben keine Untergruppen
-    Nur Rollen und klassische Gruppen dürfen Untergruppen haben.
+R3: Nur Rollen und klassische Gruppen haben Untergruppen
+    Bausteine haben keine (folgt aus R1). Eine Gruppe mit unbekanntem Typ
+    behält ihre gespeicherten Untergruppen, bekommt aber keine neuen, bis ein
+    Typ gewählt ist.
 
 R4: Backend-Benutzern werden nur Rollen zugewiesen
     Solange klassische Gruppen erlaubt sind (siehe :ref:`configuration`),
@@ -216,8 +222,9 @@ Einzelheiten der Regeln:
     gespeichertes ``be_groups_12`` ist für TYPO3 keine Verknüpfung, das
     Hinzufügen von Gruppe 12 wird also geprüft. Auch ein Import von
     EXT:impexp, der bestehende Datensätze aktualisiert, behält gespeicherte
-    Verknüpfungen, obwohl er die Felder zuerst leer schreibt und die
-    Verknüpfungen dann wieder setzt.
+    Verknüpfungen, obwohl er die Felder zuerst leer oder mit ihrem
+    Standardwert aus dem TCA schreibt und die Verknüpfungen dann wieder
+    setzt.
 *   **Die Reihenfolge bleibt erhalten.** Die Reihenfolge der Mitglieder einer
     Rolle und der Gruppen eines Benutzers ist für die TSconfig-Vererbung
     wichtig; abgelehnte Einträge werden entfernt, die übrigen behalten ihre
@@ -266,8 +273,9 @@ Rechte-Werte, die nicht zum Typ der Gruppe gehören (R1, R3), werden geleert
 und als Information gemeldet: nach einem Typwechsel – das ist sein Zweck –
 ebenso wie dann, wenn der Aufrufer sie in Feldern eines anderen Typs
 sendet, zum Beispiel ein Synchronisierungs-Werkzeug, das bei allen Gruppen
-dieselben Felder setzt. Abgelehnte Verknüpfungen (R2, R4), unbekannte Typen
-und abgelehnte Datensätze werden als Bedienfehler gemeldet. Felder, die der
+dieselben Felder setzt. Abgelehnte Verknüpfungen (R2, R4 und die neuen
+Untergruppen einer Gruppe mit unbekanntem Typ, R3), unbekannte Typen und
+abgelehnte Datensätze werden als Bedienfehler gemeldet. Felder, die der
 Aufrufer selbst leert, werden nicht gemeldet, ebenso wenig Standardwerte,
 die eine neue Gruppe nie bekommt. Korrekturen werden gemeldet, nachdem das
 Speichern abgeschlossen ist: Wird das Speichern abgebrochen, zum Beispiel weil die

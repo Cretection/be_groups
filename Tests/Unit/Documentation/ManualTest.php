@@ -160,6 +160,14 @@ final class ManualTest extends UnitTestCase
             'German: the form does not show fields of no kind' => ['Localization.de_DE/', 'sein Formular zeigt sie also nicht'],
             'English: permission sets combine with the kinds' => ['', 'can be combined with this extension'],
             'German: permission sets combine with the kinds' => ['Localization.de_DE/', 'lassen sich mit dieser Extension kombinieren'],
+            'English: R3 only concerns building blocks' => ['', 'R3: Building blocks have no subgroups'],
+            'German: R3 only concerns building blocks' => ['Localization.de_DE/', 'R3: Bausteine haben keine Untergruppen'],
+            'English: groups of an unknown kind are listed like building blocks' => ['', 'Adding one of them, or a group with an unknown kind'],
+            'German: groups of an unknown kind are listed like building blocks' => ['Localization.de_DE/', 'Wird eine davon oder eine Gruppe mit unbekanntem Typ hinzugefügt'],
+            'English: lists show unknown kinds by their identifier' => ['', 'otherwise the identifier is shown'],
+            'German: lists show unknown kinds by their identifier' => ['Localization.de_DE/', 'sonst wird die Kennung angezeigt'],
+            'English: an import only empties relations' => ['', 'it first writes the fields empty and then sets the relations again'],
+            'German: an import only empties relations' => ['Localization.de_DE/', 'er die Felder zuerst leer schreibt und die Verknüpfungen dann wieder setzt'],
         ];
     }
 

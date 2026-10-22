@@ -110,9 +110,12 @@ front of it, see :ref:`usage-prefixes`.
 Only the configured kinds are valid: the items of the field
 :sql:`tx_begroups_kind` that have a form of their own. A stored value that is
 no such item – for example the kind of an uninstalled extension, or a value
-written by SQL – is neither
-a role nor a building block. Such groups are not changed, cannot be added to
-roles and are listed separately in the module.
+written by SQL – is neither a role nor a building block. TYPO3 shows such a
+group in the full form of the core, so every value in effect stays visible,
+and the rules empty none of them. The group keeps its stored subgroups, but
+gets no new ones until a kind is chosen (R3). It cannot be added to a role or
+assigned to a user: the forms of roles and users list it under a heading of
+its own, and the module lists it separately.
 
 ..  _concept-combination:
 
@@ -186,8 +189,9 @@ R2: A role only gets building blocks added
     non-existing groups and the role itself cannot be added to a role. A
     role has no own permission fields (follows from R1).
 
-R3: Building blocks have no subgroups
-    Only roles and classic groups may have subgroups.
+R3: Only roles and classic groups have subgroups
+    Building blocks have none (follows from R1). A group of an unknown kind
+    keeps its stored subgroups, but gets no new ones until a kind is chosen.
 
 R4: Backend users only get roles assigned
     As long as classic groups are allowed (see :ref:`configuration`),
@@ -203,8 +207,8 @@ Details of the rules:
     relation counts as stored only if TYPO3 reads it: a stored
     ``be_groups_12`` is no relation for TYPO3, so adding group 12 is checked.
     An import of EXT:impexp with :guilabel:`Update records` keeps stored
-    relations as well, although it first writes the fields empty and then
-    sets the relations again.
+    relations as well, although it first writes the fields empty, or with
+    their default in the TCA, and then sets the relations again.
 *   **The order is kept.** The order of the members of a role and of the
     groups of a user matters for the TSconfig inheritance; rejected entries
     are removed, the others keep their position.
@@ -247,8 +251,9 @@ Permission values that do not belong to the kind of the group (R1, R3) are
 emptied and reported as information: after a change of the kind – this is
 what the change is meant to do – as well as when the caller sends them in
 fields of another kind, for example a synchronisation tool that sets the
-same fields for all groups. Rejected relations (R2, R4), unknown kinds and
-rejected records are reported as user error. Fields the caller empties
+same fields for all groups. Rejected relations (R2, R4, and the new
+subgroups of a group with an unknown kind, R3), unknown kinds and rejected
+records are reported as user error. Fields the caller empties
 itself are not reported, nor are default values a new group never gets.
 Corrections are reported after the save operation has completed:
 if a save is aborted, for example because the password confirmation of the

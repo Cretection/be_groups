@@ -91,19 +91,19 @@ Alle Typen haben außerdem Titel, Beschreibung und den Schalter „Die Gruppe is
 ### 4.2 Rollen zusammenstellen (Kernfunktion)
 Die Rolle nutzt das Core-Feld `subgroup` mit `columnsOverrides`:
 - `renderType` bleibt die zweispaltige Auswahl des Core (`selectMultipleSideBySide`). Sie behält die Reihenfolge der Mitglieder, die für die TSconfig-Vererbung zählt.
-- Die verfügbaren Gruppen sind **nach Typ gruppiert** (`foreign_table_item_group` und `itemGroups`). Rollen und klassische Gruppen stehen in eigenen, als „nicht zulässig“ markierten Gruppen.
+- Die verfügbaren Gruppen sind **nach Typ gruppiert** (`foreign_table_item_group` und `itemGroups`). Rollen, klassische Gruppen und Gruppen mit unbekanntem Typ stehen am Ende in eigenen, als „nicht zulässig“ markierten Gruppen. Gruppen unbekannter Typen ordnet ein Items-Processor (`UnknownKindItemGroup`) unter einer eigenen Überschrift ein; er entfernt keinen Eintrag, und der DataHandler führt für Select-Felder keine Items-Processors aus.
 - **Die Liste wird nicht gefiltert.** Ein Auswahlfeld behält beim Speichern nur Werte, die in seinen Items vorkommen. Eine nach Typ gefilterte Liste würde deshalb jede gespeicherte Zuordnung, die nicht mehr passt, beim nächsten Speichern stillschweigend löschen (Review-Befund, per Test nachgewiesen). Welche Gruppen hinzugefügt werden dürfen, setzt der DataHandler-Hook durch (R2).
 
 Eine Variante mit `selectCheckBox` wurde im Spike gerendert, aber verworfen: Sie sortiert die Mitglieder beim Speichern nach Titel um.
 
 ### 4.3 Benutzer
-- `be_users.usergroup` listet alle Gruppen, gruppiert in Rollen, klassische Gruppen und Bausteine je Typ („über eine Rolle zuweisen“).
+- `be_users.usergroup` listet alle Gruppen, gruppiert in Rollen, klassische Gruppen, Bausteine je Typ („über eine Rolle zuweisen“) und Gruppen mit unbekanntem Typ („können nicht zugewiesen werden“).
 - Auch hier gibt es keinen Filter, aus demselben Grund wie in 4.2. Eine direkte Zuweisung von Bausteinen lehnt der Hook beim Speichern ab (R4).
 - Ob „Klassisch“ im Gruppenformular angeboten wird, entscheidet zur Laufzeit ein FormEngine-Data-Provider (`KindSelection`), nicht das TCA. Die Option `allowClassicGroups` wirkt deshalb sofort, ohne Cache-Leerung. Bei abgeschalteten klassischen Gruppen beginnen neue Gruppen als Rolle.
 - Bei abgeschalteten klassischen Gruppen bietet auch der Assistent für neue Datensätze („Create new record“) den Typ nicht an (Listener `HideClassicKindInNewRecordWizard`), und das Benutzerformular markiert klassische Gruppen als „abgeschaltet, können nicht zugewiesen werden“, statt sie auszublenden (`KindSelection`). Den Typ `0` bietet der Assistent nie an; er bleibt das Formular der Gruppen mit unbekanntem Typ.
 
 ### 4.4 Listen und Bezeichnungen
-- Ein Icon pro Typ, sortiert nach Typ und Titel.
+- Ein Icon pro Typ, sortiert nach Typ und Titel. Typen ohne Icon und unbekannte Typen zeigt das Modul mit einem Fragezeichen.
 - Präfixe (`R_`, `ACL_` …) werden optional automatisch angezeigt. Sie müssen nicht mehr im Gruppennamen gepflegt werden.
 
 ### 4.5 Übersichtsmodul „Rollen & Bausteine“ (M2, Übersicht ohne Bearbeitung umgesetzt)
@@ -127,18 +127,18 @@ Geplant war ein Typ-Filter für die Gruppenliste über `AfterBackendGroupListCon
 |---|---|
 | R1 | Ein Baustein vergibt nur, was sein Typ anzeigt. Bei jedem Speichern werden Rechtefelder geleert, die nicht zum Typ gehören, auch Standardwerte neuer Datensätze. Verwaltet werden nur Rechtefelder (die des Core und alle Felder, die im Formular einer Rolle oder eines Bausteins stehen, außer Feldern, die die Formulare aller Typen zeigen); andere Daten, z. B. Sync-Kennungen, bleiben unberührt. |
 | R2 | Einer Rolle werden nur Bausteine hinzugefügt. Abgelehnt werden Rollen, klassische Gruppen, Gruppen mit unbekanntem Typ, gelöschte oder fehlende Gruppen und die Rolle selbst. |
-| R3 | Bausteine haben keine Untergruppen (folgt aus R1). |
+| R3 | Nur Rollen und klassische Gruppen haben Untergruppen. Bausteine haben keine (folgt aus R1); Gruppen mit unbekanntem Typ behalten die gespeicherten, bekommen aber keine neuen. |
 | R4 | Benutzern werden nur Rollen zugewiesen (und klassische Gruppen, solange sie erlaubt sind). |
 
 **Umsetzung:**
 - Ein DataHandler-Hook für `be_groups` und `be_users` setzt die Regeln durch. In v14 gibt es für das Speichern weiterhin keine PSR-14-Events, Hooks sind dort die API.
-- **Gespeicherte Verknüpfungen bleiben:** R2 und R4 prüfen nur hinzukommende Verknüpfungen. Die Reihenfolge bleibt erhalten.
+- **Gespeicherte Verknüpfungen bleiben:** R2, R3 (bei unbekanntem Typ) und R4 prüfen nur hinzukommende Verknüpfungen, auch bei Importen von EXT:impexp, die die Felder zuerst leer oder mit ihrem TCA-Standardwert schreiben. Die Reihenfolge bleibt erhalten.
 - **Jede Schreibweise:** `NEW…`-Platzhalter (aufgelöst über den Datamap bzw. `substNEWwithIDs`), `uid|label`, URL-kodierte und tabellenpräfixierte Werte werden verstanden. So lässt sich R4 nicht umgehen.
 - **Gelöschte Datensätze** folgen den Regeln ebenfalls, damit ein Wiederherstellen keinen verbotenen Stand zurückbringt.
 - **Typ neuer Datensätze:** Ohne gültigen Typ im Datamap gilt, was der DataHandler setzen würde (TCA-Default, `TCAdefaults` aus User-TSconfig und globalem Page-TSconfig, denn Gruppen liegen auf der Wurzelebene), oder der Typ, den ein Listener von `ModifyKindOfNewGroupEvent` wählt. Genau dieser Typ wird geprüft und ausdrücklich gespeichert.
 - **Tolerant:** Der Hook korrigiert, statt Exceptions zu werfen. Nur eine Gruppe, die bei abgeschalteten klassischen Gruppen als „Klassisch“ entstünde, wird gar nicht angelegt.
 - **Protokoll:** Korrekturen werden in `processDatamap_afterAllOperations` gemeldet (Systemprotokoll und Hinweis). Bricht der Sudo-Mode das Speichern ab, entsteht kein falscher Eintrag. Ablehnungen werden sofort gemeldet. Der Hook ist `shared: false`, also pro DataHandler-Lauf eine eigene Instanz. Jede Meldung nennt den Datensatz (Präfix, Titel, uid).
-- **Stufen:** Geleerte Rechtefelder (R1, R3) sind Informationen, nach einem Typwechsel ebenso wie bei Werten, die ein Aufrufer ohne Typwechsel in Feldern eines anderen Typs sendet (Sync-Werkzeuge). Abgelehnte Verknüpfungen (R2, R4), unbekannte Typen und abgelehnte Datensätze sind Bedienfehler.
+- **Stufen:** Geleerte Rechtefelder (R1, R3) sind Informationen, nach einem Typwechsel ebenso wie bei Werten, die ein Aufrufer ohne Typwechsel in Feldern eines anderen Typs sendet (Sync-Werkzeuge). Abgelehnte Verknüpfungen (R2, R4 und neue Untergruppen von Gruppen mit unbekanntem Typ nach R3), unbekannte Typen und abgelehnte Datensätze sind Bedienfehler.
 - **Sudo-Mode:** Die Core-Prüfung läuft in `processDatamap_postProcessFieldArray` auf dem finalen Feldarray. Geleerte, geschützte Felder lösen sie also aus, und das ist gewollt.
 
 **Konsistenzprüfung (umgesetzt, M2):**

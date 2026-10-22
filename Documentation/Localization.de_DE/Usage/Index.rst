@@ -51,13 +51,14 @@ Eine Rolle zusammenstellen
 --------------------------
 
 Das Feld :guilabel:`Bausteine` einer Rolle ist die zweispaltige Auswahlliste
-des Core. Die verfügbaren Gruppen sind nach Typ gruppiert; Rollen und
-klassische Gruppen stehen in eigenen Gruppen und sind als nicht zulässig
-gekennzeichnet. Wird eine davon oder eine Gruppe mit unbekanntem Typ
-hinzugefügt, wird das beim Speichern der Rolle abgelehnt. Die Reihenfolge der
-gewählten Bausteine bleibt erhalten. Sie zählt doppelt: Spätere Bausteine
-überschreiben das TSconfig früherer, und der erste wird zur Eigentümergruppe
-der Seiten, die Benutzer mit dieser Rolle als erster Rolle anlegen.
+des Core. Die verfügbaren Gruppen sind nach Typ gruppiert; Rollen, klassische
+Gruppen und Gruppen mit unbekanntem Typ stehen am Ende in eigenen Gruppen und
+sind als nicht zulässig gekennzeichnet, zum Beispiel „Gruppen mit unbekanntem
+Typ (können keiner Rolle hinzugefügt werden)“. Wird eine davon hinzugefügt,
+wird das beim Speichern der Rolle abgelehnt. Die Reihenfolge der gewählten
+Bausteine bleibt erhalten. Sie zählt doppelt: Spätere Bausteine überschreiben
+das TSconfig früherer, und der erste wird zur Eigentümergruppe der Seiten, die
+Benutzer mit dieser Rolle als erster Rolle anlegen.
 
 ..  figure:: /Images/RoleForm.png
     :alt: Formular der Rolle „META: Content manager“ mit ihren Bausteinen links und den verfügbaren Gruppen rechts, nach Typ gruppiert
@@ -93,11 +94,13 @@ Rollen an Benutzer vergeben
 
 Das Feld :guilabel:`Gruppe` eines Backend-Benutzers listet alle Gruppen,
 gruppiert in Rollen, klassische Gruppen und Bausteine je Typ. Bausteine sind
-mit „über eine Rolle zuweisen“ gekennzeichnet; eine direkte Zuweisung wird
-beim Speichern des Benutzers abgelehnt. Solange klassische Gruppen
-abgeschaltet sind (siehe :ref:`configuration`), stehen die klassischen
-Gruppen unter „Klassische Gruppen (abgeschaltet, können nicht zugewiesen
-werden)“, und auch ihre Zuweisung wird abgelehnt.
+mit „über eine Rolle zuweisen“ gekennzeichnet, und Gruppen mit unbekanntem
+Typ stehen unter „Gruppen mit unbekanntem Typ (können nicht zugewiesen
+werden)“; eine direkte Zuweisung wird beim Speichern des Benutzers
+abgelehnt. Solange klassische Gruppen abgeschaltet sind (siehe
+:ref:`configuration`), stehen die klassischen Gruppen unter „Klassische
+Gruppen (abgeschaltet, können nicht zugewiesen werden)“, und auch ihre
+Zuweisung wird abgelehnt.
 
 Keine der beiden Listen ist gefiltert. Eine gefilterte Liste würde beim
 Speichern jeden gespeicherten Wert verwerfen, der nicht in ihr enthalten ist –
@@ -152,7 +155,10 @@ Seitenbaum-Einstiegspunkt als ``DBM: Redakteure``.
 
 Klassische Gruppen und Gruppen mit unbekanntem Typ haben kein Präfix. Typen
 anderer Extensions verwenden ihre Bezeichnung. Eine Gruppe ohne Titel
-erscheint zum Beispiel als ``DBM: [Kein Titel]``.
+erscheint als ``[Kein Titel]``, hinter dem Präfix ihres Typs, zum Beispiel
+als ``DBM: [Kein Titel]`` – überall, wo das Präfix erscheint, auch im
+Core-Modul :guilabel:`Benutzer`, seinem Gruppenfilter und im Modul
+:ref:`Rollen & Bausteine <usage-module>`.
 
 Listen, die TYPO3 aus dem TCA aufbaut – die Datensatzlisten und die
 Gruppenfelder der Formulare –, sortieren Gruppen nach Typ (in der Reihenfolge
@@ -252,7 +258,7 @@ gewähren. Solche Rollen bleiben nach dem
 Umstellen mit den Assistenten häufig übrig, siehe :ref:`migration-vanilla`.
 
 Typen anderer Extensions werden mit ihrer eigenen Bezeichnung und ihrem
-eigenen Icon angezeigt.
+eigenen Icon angezeigt, ohne Icon mit einem Fragezeichen.
 
 Ein Klick auf einen Titel öffnet die Gruppe oder den Benutzer im gewohnten
 Formular. Die Schaltfläche :guilabel:`Neue Rolle` im Kopfbereich legt eine
