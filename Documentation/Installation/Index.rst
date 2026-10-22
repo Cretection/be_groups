@@ -81,7 +81,49 @@ flushed, saving groups and users can fail with an error.
 Uninstallation
 ==============
 
-Remove the extension with :bash:`composer remove cretection/be-groups` (or
-in the extension manager). All permissions stay in the core fields and keep
-working: roles become plain groups with subgroups. Afterwards the database
-analyzer offers to remove the column :sql:`be_groups.tx_begroups_kind`.
+Remove the extension with :bash:`composer remove cretection/be-groups` (in
+classic mode in the module :guilabel:`System > Extensions`). All permissions
+stay in the core fields and keep working: roles become plain groups with
+subgroups.
+
+Long lists of subgroups
+    The extension enlarges the field :sql:`be_groups.subgroup` to 2048
+    characters, because roles combine many building blocks. Without the
+    extension, TYPO3 defines the field with 255 characters again: the
+    database analyzer offers to change it back, and :bash:`extension:setup`
+    changes it without asking. Longer lists are then cut off (MySQL and
+    MariaDB without strict mode), or the change fails (in strict mode and on
+    PostgreSQL). Look for such lists before you remove the extension:
+
+    ..  code-block:: sql
+
+        SELECT uid, title FROM be_groups WHERE LENGTH(subgroup) > 255;
+
+    If the query finds groups, keep the length in your site package:
+
+    ..  code-block:: php
+        :caption: EXT:my_sitepackage/Configuration/TCA/Overrides/be_groups.php
+
+        <?php
+
+        declare(strict_types=1);
+
+        defined('TYPO3') or die();
+
+        $GLOBALS['TCA']['be_groups']['columns']['subgroup']['config']['dbFieldLength'] = 2048;
+
+The kinds
+    After the removal, the database analyzer offers to remove the column
+    :sql:`be_groups.tx_begroups_kind`. It holds the kinds of the groups.
+    Keep it if you may install the extension again: every group then has
+    its kind as before. If you remove it, all groups are of kind
+    "Classic (all settings)" after a new installation, with unchanged
+    permissions. The analyzer first renames the column to
+    :sql:`zzz_deleted_tx_begroups_kind`. As long as that column exists, you
+    can restore the kinds after a new installation, and then check the
+    groups with ``begroups:audit``:
+
+    ..  code-block:: sql
+
+        UPDATE be_groups SET tx_begroups_kind = zzz_deleted_tx_begroups_kind
+            WHERE zzz_deleted_tx_begroups_kind <> '';
