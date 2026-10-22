@@ -23,9 +23,12 @@ use Cretection\BeGroups\ViewHelpers\GroupTitleViewHelper;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use Psr\EventDispatcher\EventDispatcherInterface;
+use Psr\Http\Message\ServerRequestFactoryInterface;
 use TYPO3\CMS\Backend\Utility\BackendUtility;
+use TYPO3\CMS\Backend\View\BackendViewFactory;
 use TYPO3\CMS\Beuser\Event\AfterBackendGroupFilterListIsAssembledEvent;
 use TYPO3\CMS\Core\Core\Environment;
+use TYPO3\CMS\Core\Localization\LanguageServiceFactory;
 use TYPO3\CMS\Core\Package\PackageManager;
 use TYPO3\CMS\Core\View\ViewFactoryData;
 use TYPO3\CMS\Core\View\ViewFactoryInterface;
@@ -43,6 +46,11 @@ use TYPO3\TestingFramework\Core\Functional\FunctionalTestCase;
 #[CoversClass(KindPrefix::class)]
 final class UserModuleTest extends FunctionalTestCase
 {
+    /**
+     * Value of SystemEnvironmentBuilder::REQUESTTYPE_BE, which is @internal.
+     */
+    private const BACKEND_REQUEST_TYPE = 2;
+
     protected array $coreExtensionsToLoad = ['beuser'];
 
     protected array $testExtensionsToLoad = ['cretection/be-groups'];
@@ -103,10 +111,10 @@ final class UserModuleTest extends FunctionalTestCase
             copy($corePath . $file, $copyPath . $file);
         }
         file_put_contents($copyPath . 'Templates/BackendUserGroup/Show.fluid.html', "\n", FILE_APPEND);
-        unlink($copyPath . 'Templates/Permission/ChangeGroupSelector.fluid.html');
+        unlink($copyPath . 'Partials/Compare/Information.fluid.html');
 
         self::assertSame(
-            ['Templates/BackendUserGroup/Show.fluid.html', 'Templates/Permission/ChangeGroupSelector.fluid.html'],
+            ['Templates/BackendUserGroup/Show.fluid.html', 'Partials/Compare/Information.fluid.html'],
             $listener->findChangedTemplates($copyPath),
         );
     }
@@ -126,6 +134,30 @@ final class UserModuleTest extends FunctionalTestCase
     }
 
     #[Test]
+    public function showsTheGroupsInTheGroupSelectorOfThePermissionsModuleWithThePrefixOnce(): void
+    {
+        // The module "Permissions" gets the groups from BackendUtility::getGroupNames() (@internal),
+        // which sorts them by their record title, so the label_userFunc of be_groups already applies.
+        $groups = [];
+        foreach ([2, 3, 1] as $uid) {
+            $groups[$uid] = ['title' => BackendUtility::getRecordTitle('be_groups', BackendUtility::getRecord('be_groups', $uid) ?? []), 'uid' => $uid];
+        }
+
+        $html = $this->renderTemplateOfTheUsersModule('Permission/ChangeGroupSelector', [
+            'elementId' => 'g_1',
+            'pageId' => 1,
+            'groupUid' => 2,
+            'groupname' => 'ACL: Editors',
+            'groups' => $groups,
+            'addCurrentGroup' => false,
+        ]);
+
+        preg_match_all('#<option value="(\\d+)"[^>]*>([^<]*)</option>#', $html, $options);
+        self::assertSame(['0', '2', '3', '1'], $options[1]);
+        self::assertSame(['', 'ACL: Editors', 'Legacy &lt;b&gt;', 'META: Editors'], $options[2]);
+    }
+
+    #[Test]
     public function showsTheGroupFilterWithThePrefixOfTheKinds(): void
     {
         $group = self::createStub(DomainObjectInterface::class);
@@ -135,5 +167,21 @@ final class UserModuleTest extends FunctionalTestCase
         $this->get(EventDispatcherInterface::class)->dispatch($event);
 
         self::assertSame(['', ['uid' => 2, 'title' => 'ACL: Editors']], $event->backendGroups);
+    }
+
+    /**
+     * Renders a template of EXT:beuser as the module does, with the overrides of the page TSconfig.
+     *
+     * @param array<string, mixed> $variables
+     */
+    private function renderTemplateOfTheUsersModule(string $template, array $variables): string
+    {
+        $GLOBALS['LANG'] = $this->get(LanguageServiceFactory::class)->create('default');
+        $request = $this->get(ServerRequestFactoryInterface::class)
+            ->createServerRequest('GET', 'https://example.org/typo3/module/users/permissions')
+            ->withAttribute('applicationType', self::BACKEND_REQUEST_TYPE);
+        $view = $this->get(BackendViewFactory::class)->create($request, ['typo3/cms-beuser']);
+        $view->assignMultiple($variables);
+        return $view->render($template);
     }
 }

@@ -28,6 +28,9 @@ use TYPO3\CMS\Core\TypoScript\IncludeTree\Event\BeforeLoadedPageTsConfigEvent;
  * changes one of them (e.g. in a security release), the module falls back to the templates of
  * the core and shows the titles without prefix, and a test fails, so the copies are updated.
  *
+ * The module "Permissions" of the same extension needs no override: it gets the titles from
+ * BackendUtility::getGroupNames(), which already applies the label_userFunc of be_groups.
+ *
  * @internal
  */
 final readonly class OverrideUserModuleTemplates
@@ -45,7 +48,6 @@ final readonly class OverrideUserModuleTemplates
         'Templates/BackendUserGroup/Compare.fluid.html' => '91b9cb5ca0511bf492df0eceb527456714c024fc5a41aa20afcf52fcc3361490',
         'Templates/BackendUserGroup/Show.fluid.html' => 'd7a10385b63b7f0eef7052d3fce41e73e9521fa4975fc4b0681a3efbbab4db8a',
         'Partials/Compare/Information.fluid.html' => '7caf98fd5e3e8ff05ac319646da0193c2cc408e07995a0681ea6de2124d09a32',
-        'Templates/Permission/ChangeGroupSelector.fluid.html' => '735cf4c37605e789995ef99ceec56c43dba0b4052c6498671f425138d24eff81',
     ];
 
     public function __construct(
