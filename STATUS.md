@@ -1,6 +1,6 @@
 # Arbeitsstand be_groups-Relaunch
 
-Stand: **2026-10-23** · Branch **`dev`** (Standard), `main` nur für Releases · Ziel: **1.0.0 für TYPO3 14.3 LTS**
+Stand: **2026-10-29** · Branch **`dev`** (Standard), `main` nur für Releases · Ziel: **1.0.0 für TYPO3 14.3 LTS**
 
 Dieses Dokument ist der Einstiegspunkt, um die Arbeit fortzusetzen. Das Konzept steht in [`RELAUNCH.md`](RELAUNCH.md), die verbindlichen Regeln für den Code in [`CODING_GUIDELINES.de.md`](CODING_GUIDELINES.de.md) bzw. [`CODING_GUIDELINES.md`](CODING_GUIDELINES.md).
 
@@ -33,7 +33,7 @@ Dieses Dokument ist der Einstiegspunkt, um die Arbeit fortzusetzen. Das Konzept 
   - **Klicktest durch Agenten** (2026-10-22/23, M4): 13 Testbereiche aus Abschnitt 5 und dem Handbuch, dann 5 Lückentests, jeder auf einer eigenen frischen Instanz (TYPO3 14.3.10, Base Distribution, SQLite) mit Playwright und CLI; `begroups-test` blieb unberührt. 180 Meldungen, zusammengeführt zu 120 Problemen, jedes unabhängig reproduziert (bei Core-Verdacht auch ohne be_groups) und gegen Code, Doku und Abschnitt 8/9 bewertet: 71 bestätigt, 21 Core, 26 Vorschläge, 2 kein Problem bzw. beabsichtigt. Alle 71 sind behoben (zwei Korrekturrunden, je Thema ein Zweig mit Tests, die vorher fehlschlugen, und unabhängigem Review). Kritisch war: Ein „Update records“-Import von EXT:impexp entfernte gespeicherte Verstöße (Rolle in Rolle, Baustein am Benutzer) und nahm Benutzern Rechte; nachgeprüft am 2026-10-23 mit echtem impexp. Die Core-Funde stehen in Abschnitt 6, die Vorschläge sind offen (Abschnitt 7).
   - **Laufzeit** (2026-10-08, M4): bei 1.000 Gruppen und 5.000 Benutzern `classify` 24 s statt 199 s, `split --all` 100 s statt über 10 Minuten.
 - **Testbasis:** Alle Prüfungen sind grün, auf allen Datenbanken, mit PHP 8.2 und 8.5, auf TYPO3 14.3 und 15-dev (Stand je Zeile in Abschnitt 3).
-- **Nächster Schritt:** Release 1.0.0 (Abschnitt 7, „Weg zu 1.0.0“). Am 2026-10-22/23: PHPStan 2.3 (Dependabot) und der Job `typo3-next` gegen TYPO3 15-dev behoben, Klicktest durch Agenten mit allen Korrekturen (siehe Reviews), Screenshots neu; alle Prüfungen lokal grün mit TYPO3 14.3.10. Der Wochenlauf vom 2026-10-19 war bis auf `typo3-next` grün, inklusive `mutation`. Der erste Lauf des Jobs `mutation` auf GitHub ist grün (2026-10-09, [Lauf 37924063344](https://github.com/Cretection/be_groups/actions/runs/37924063344), `dev` auf `dfa1a62`): Covered Code MSI 82 % bei Minimum 80 %, 1.111 Mutanten erkannt, 240 abgedeckte nicht.
+- **Nächster Schritt:** Jonathans Klicktest ab Schritt 2, dann Release 1.0.0 (Abschnitt 7, „Weg zu 1.0.0“). Am 2026-10-22/23: PHPStan 2.3 (Dependabot) und der Job `typo3-next` gegen TYPO3 15-dev behoben, Klicktest durch Agenten mit allen Korrekturen (siehe Reviews), Screenshots neu; alle Prüfungen lokal grün mit TYPO3 14.3.10. Der Wochenlauf vom 2026-10-19 war bis auf `typo3-next` grün, inklusive `mutation`. Der erste Lauf des Jobs `mutation` auf GitHub ist grün (2026-10-09, [Lauf 37924063344](https://github.com/Cretection/be_groups/actions/runs/37924063344), `dev` auf `dfa1a62`): Covered Code MSI 82 % bei Minimum 80 %, 1.111 Mutanten erkannt, 240 abgedeckte nicht.
 
 ---
 
@@ -286,13 +286,13 @@ Beim Ändern von Typ oder Rollenzusammensetzung fragt TYPO3 nach dem Passwort. D
 
 ## 7. Nächste Aufgaben (Reihenfolge)
 
-**Weg zu 1.0.0** (Stand 2026-10-22):
+**Weg zu 1.0.0** (Stand 2026-10-29):
 
 | # | Schritt | Wer | Stand |
 |---|---|---|---|
-| 1 | Lokale Commits auf `dev` pushen (`git push origin dev`, über 100 Commits seit `29164e6`), CI abwarten | Jonathan | offen |
-| 2 | Dependabot-PR #10 schließen (siehe unten) | Jonathan | offen |
-| 3 | Klicktest in `begroups-test` (Abschnitt 5) | Jonathan | offen; Sichtprüfung vom 2026-10-08 und Klicktest durch Agenten vom 2026-10-22/23 (alle Funde behoben) sind erledigt. `begroups-test` hat noch den alten Szenario-Stand (Content manager ohne PG/WS); für den Klicktest neu aufsetzen oder so lassen. |
+| 1 | Lokale Commits auf `dev` pushen, CI abwarten | Jonathan | ✅ 2026-10-23 (`061e292`, CI grün, Wochenlauf vom 2026-10-26 grün). Dependabot-PR #17 (Rector 2.7.0) lokal übernommen, Push steht aus |
+| 2 | Dependabot-PR #10 schließen | – | ✅ Dependabot hat ihn selbst geschlossen (Regel für `@types/node`); #4–#9, #11–#16 sind übernommen |
+| 3 | Klicktest in `begroups-test` (Abschnitt 5) | Jonathan | läuft: Schritt 1 (Modul) am 2026-10-23 bestanden, weiter mit Schritt 2 beim nächsten Start. `begroups-test` hat das neue Szenario (Content manager mit „PG: Content pages“, „Editor defaults“ und „WS: Drafts“; altes Skript als `create-docs-scenario.php.bak-2026-10-23`). Vorher erledigt: Sichtprüfung vom 2026-10-08, Klicktest durch Agenten vom 2026-10-22/23 (alle Funde behoben). |
 | 4 | TER-Token erneuern und Secret `TYPO3_API_TOKEN` in der Environment `ter` ersetzen (abgelaufen am 2026-10-15) | Jonathan | offen |
 | 5 | Webhook von docs.typo3.org einrichten, alten Branch `documentation-draft` löschen (Abschnitt 6) | Jonathan | offen |
 | 6 | Release-Commit: `setVersion.php 1.0.0`, Changelogs mit Datum, `checkReleaseVersion.php 1.0.0` | Entwicklung | nach 3 |
@@ -307,6 +307,15 @@ Crowdin blockiert 1.0.0 nicht: Deutsch liegt im Repo, Crowdin bringt weitere Spr
    - Die Testabdeckung wird zusammengeführt und geprüft (Job `coverage`, siehe Abschnitt 3).
    - **Dependabot** (erste Runde am 2026-10-16, PRs #4–#11): #4–#9 und #11 sind lokal auf `dev` übernommen (Commits von `dependabot[bot]`, per Cherry-Pick); Dependabot schließt die PRs selbst, sobald die Versionen auf `dev` liegen. #11 (PHPStan 2.3.1) brauchte vorher die Korrektur in `SplitCommand`. #10 (`@types/node` 26) wird nicht übernommen, weil die Tests auf Node 24 laufen; die neue Regel in `.github/dependabot.yml` verhindert solche Vorschläge, den PR von Hand schließen.
 2. **Klicktest von Jonathan** in `begroups-test` (Abschnitt 5, aktuelles Szenario). Befunde zuerst als Test reproduzieren, dann beheben.
+   - **Klickliste** (TYPO3-14-Menüpfade; Start: `cd ~/Developer/Local/begroups-test && ddev start`, https://begroups-test.ddev.site/typo3, Zugang in `ADMIN-LOGIN.txt`). Änderungen an Gruppen und Benutzern fragen nach dem Passwort (Sudo-Mode des Core, gilt dann etwa 15 Minuten):
+     1. ✅ (2026-10-23) Administration > Roles & Building Blocks: „Inconsistencies found: 1“ (Team lead), „Content manager“ mit TSconfig-Vorrang (Clear page cache, Editor defaults) und anna, Sortierung und Filter mit Haken, Titel öffnet das Formular, „Close“ führt zurück.
+     2. „New building block“ > „Page tree mount“: Baustein „Test-Seiten“ mit einer Seite; das Formular öffnet direkt im Typ. „New role“: „Testrolle“ mit „PG: Content pages“, „ACL: Content editing“, „DBM: Test-Seiten“; rechts nach Typ gruppiert, „Roles“ und „Classic groups“ unten.
+     3. Administration > Users > anna: „ACL: Media“ direkt zuweisen wird abgelehnt (Meldung nennt anna und den Baustein mit uid), die Rolle bleibt. „META: Content manager“ als Mitglied von „Marketing“ wird abgelehnt.
+     4. „Test-Seiten“ auf „File mount“ umstellen: Seiten-Freigabe geleert, Meldung mit Labels („Page tree mount“), in Administration > Log als Information.
+     5. Administration > Users > anna > „Switch to user“: nur Seitenbaum „Website“, Module Layout, Records, Media; zurückwechseln.
+     6. Users-Modul: Gruppen mit Präfix und Icon ihres Typs; Administration > Permissions: Präfix nur einmal.
+     7. System > Settings > Extension Configuration > be_groups: klassische Gruppen aus, dann kein „Classic“ in neuen Gruppenformularen, neue Gruppen starten als Rolle, Benutzerformular markiert klassische Gruppen als nicht zuweisbar; wieder einschalten.
+     8. Konsole: `ddev typo3 begroups:audit` (1 Fehler: Team lead), `begroups:classify --dry-run`, `begroups:split --all --dry-run` (lesbar, ändert nichts). Zum Schluss Administration > Log ohne unerwartete Fehler.
    - Sichtprüfung am 2026-10-08 abgeschlossen: alle Typ-Formulare, Ablehnungen im Formular (Rolle in Rolle, Baustein am Benutzer) mit Titel und uid in der Meldung, Typ-Auswahl bei abgeschalteten klassischen Gruppen (neue Gruppen starten als Rolle, bestehende klassische Gruppen behalten „Classic“), Rollenformular mit über 3.000 Gruppen in der Auswahl (Aufbau etwa 1 s).
    - Vorschlag: Das Modul zeigt die Bausteine einer Rolle nach Typ gruppiert, nicht in der gespeicherten Reihenfolge, die den TSconfig-Vorrang bestimmt. Die Reihenfolge zusätzlich anzeigen. ✅ Entschieden von Jonathan (2026-10-08): ja, nur wo sie zählt. Umgesetzt (`f8d5d29`): „Vorrang im TSconfig“ ab zwei sichtbaren TSconfig-Bausteinen.
    - Hinweis zur Testumgebung: Mit EXT:workspaces ist der Standardwert von `workspace_perms` 0, für Benutzer wie für Gruppen. Ohne einen Baustein vom Typ „Workspace“ (oder eine Workspace-Mitgliedschaft) sehen Benutzer dann kein Modul („No workspace access“). Für den Testbenutzer `editor` ist der Wert am Benutzer gesetzt.
